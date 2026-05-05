@@ -1,0 +1,131 @@
+These instructions are for Linux (specifically of the Debian flavour,
+such as Ubuntu or Mint). Please adapt to your system, if necessary.
+
+Supposedly (since you are reading this) you have already downloaded
+the source code for the macronizer and are standing in the directory
+called "latin-macronizer".
+
+Install prerequisite packages:
+
+  sudo apt install build-essential libfl-dev python3-psycopg2 unzip
+
+It is here assumed that you invoke Python with the command "python"
+but your system may lack such a command, without the version number.
+Try it now! If you get the error message "Command 'python' not found",
+you probably want to also install
+
+  sudo apt install python-is-python3
+
+Download the specially adapted version of Morpheus, and compile it:
+
+  git clone https://github.com/Alatius/morpheus.git
+  cd morpheus/src
+  make
+  make install
+  cd ..
+  ./update.sh
+  ./update.sh
+  echo "salve" | MORPHLIB=stemlib bin/cruncher -L
+  cd ..
+
+(Yes, run the update script twice. And check that it did in fact parse
+"salve" correctly!)
+
+And the patched version of the Latin Dependency Treebank:
+
+  git clone https://github.com/Alatius/treebank_data.git
+
+Now download and compile RFTagger:
+
+  wget https://www.cis.uni-muenchen.de/~schmid/tools/RFTagger/data/RFTagger.zip
+  unzip RFTagger.zip
+  cd RFTagger/src
+  make
+  sudo make install
+  cd ../..
+
+Convert the corpus and train RFTagger:
+
+  ./train-rftagger.sh
+
+If RFTagger is installed somewhere else than /usr/local/bin,
+or if you have done other customizations, you will have to
+edit the main script macronizer.py and set the constants in
+the beginning to the correct values:
+
+  RFTAGGER_DIR = '/usr/local/bin'
+  MORPHEUS_DIR = os.path.join(os.path.dirname(__file__), 'morpheus')
+
+Finally, initialize the macronizer (populating the database):
+
+  python macronize.py --initialize
+
+You can now test it with the following command
+
+  python macronize.py --test
+
+If you are presented with "Ō orbis terrārum tē salūtō!", you know the
+Macronizer works as it should.
+
+To recover a couple of hundred megabytes of disk space you can delete
+the RFTagger and the treebank directories:
+
+  rm -Rf RFTagger treebank_data
+
+If you have followed this guide to the letter it is probably the case
+that the main directory latin-macronizer resides within your home
+dir. To make a more clean and robust installation, it is probably a
+good idea to move it to /opt/ or /usr/local/. I will choose the later:
+
+  cd ..
+  sudo mv latin-macronizer /usr/local/
+
+Edit the front-end script macronize.py and update the constant to
+point to the right directory:
+
+  MACRONIZER_LIB = '/usr/local/latin-macronizer/'
+
+Then add a symlink in /usr/local/bin/:
+
+  sudo ln -s /usr/local/latin-macronizer/macronize.py /usr/local/bin/macronize
+  sudo chmod 755 /usr/local/bin/macronize
+
+Changing the owner to root doesn't hurt:
+
+  sudo chown -R root.root /usr/local/latin-macronizer/
+
+You should now be able to invoke "macronize" from any location.
+
+If all is well so far, you may finally consider running the web script
+locally. The right way to set up Apache may vary on different systems,
+and you have many options to configure in the way you prefer, so this
+is just a quick and dirty guide to get something working. Adapt to your
+own needs!
+
+  sudo apt-get install apache2
+  sudo a2enmod cgi
+  sudo nano /etc/apache2/apache2.conf
+
+Edit the following part to look like this:
+
+   <Directory /var/www/>
+	Options Indexes FollowSymLinks ExecCGI
+	AddHandler cgi-script .py
+	AllowOverride None
+	Require all granted
+  </Directory>
+
+Then save the configuration, and restart:
+
+  sudo systemctl restart apache2
+
+Make a link to the script, and make it executable:
+
+  sudo ln -s /usr/local/latin-macronizer/macronize.py /var/www/html/macronize.py
+  sudo chmod 755 /var/www/html/macronize.py
+
+Hopefully, you can now find the macronizer working at http://localhost/macronize.py
+
+Good luck! In case of problems, contact me at johan.winge@gmail.com
+and I will do my best to assist you.
+

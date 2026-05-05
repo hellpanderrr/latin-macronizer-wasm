@@ -1,0 +1,99 @@
+reading parameter file...[DEBUG] SymbolTable: reading 644 strings
+[DEBUG] SymbolTable[0]: 'BOUNDARY' (pos=17)
+[DEBUG] SymbolTable[1]: 'd.-.-.-.-.-.-.-.-' (pos=35)
+[DEBUG] SymbolTable[2]: 'v.2.s.f.i.p.-.-.-' (pos=53)
+[DEBUG] SymbolTable[641]: 'n.-.-.-.-.-.n.n.-' (pos=11555)
+[DEBUG] SymbolTable[642]: 'n.-.-.-.-.-.n.v.-' (pos=11573)
+[DEBUG] SymbolTable[643]: 'v.-.-.-.n.a.-.-.-' (pos=11591)
+[DEBUG] SymbolTable: done, final pos=11591
+[DEBUG] SymbolTable: reading 290679 strings
+[DEBUG] SymbolTable[0]: 'quo' (pos=11603)
+[DEBUG] SymbolTable[1]: 'usque' (pos=11609)
+[DEBUG] SymbolTable[2]: 'tandem' (pos=11616)
+[DEBUG] SymbolTable[290676]: 'zythi' (pos=2935623)
+[DEBUG] SymbolTable[290677]: 'zytho' (pos=2935629)
+[DEBUG] SymbolTable[290678]: 'zythum' (pos=2935636)
+[DEBUG] SymbolTable: done, final pos=2935636
+[DEBUG] Lexicon: wordtab done, pos=2935636
+[DEBUG] Lexicon: entry vector done, pos=12636168
+[DEBUG] Lexicon: PriorProb done, pos=12641328
+[DEBUG] Guesser: wordclass done, pos=12643462
+[DEBUG] SuffixLexicon: starting, pos=12643514
+[DEBUG] SuffixLexicon: loaded, final pos=12643514
+[DEBUG] SuffixLexicon: starting, pos=12643534
+[DEBUG] SuffixLexicon: loaded, final pos=12643534
+[DEBUG] SuffixLexicon: starting, pos=12673291
+[DEBUG] SuffixLexicon: loaded, final pos=12673291
+[DEBUG] SuffixLexicon: starting, pos=12761826
+[DEBUG] SuffixLexicon: loaded, final pos=12761826
+[DEBUG] Guesser: sufflex done, pos=12761826
+[DEBUG] SymbolTable: reading 1536 strings
+[DEBUG] SymbolTable[0]: 'BOUNDARY.0' (pos=12761845)
+[DEBUG] SymbolTable[1]: 'd.0' (pos=12761849)
+[DEBUG] SymbolTable[2]: 'd.-(0).0' (pos=12761858)
+[DEBUG] SymbolTable[1533]: 'm.d(6).7' (pos=12775176)
+[DEBUG] SymbolTable[1534]: 'm.g(6).7' (pos=12775185)
+[DEBUG] SymbolTable[1535]: 'm.v(6).7' (pos=12775194)
+[DEBUG] SymbolTable: done, final pos=12775194
+finished
+0[DEBUG] SymbolTable::find: word='omnis', FOUND, ptr=0x557719a86b60
+[DEBUG]   -> symbol id=103
+[DEBUG] POSTagger::lookup: word='omnis', entry=0x7f7787c54cf0, tag count=13
+[DEBUG]   tag 8 (n.-.s.-.-.-.m.n.-): emit_prob=0.054912, prior=0.021517, lexprob=2.552001
+[DEBUG]   tag 10 (a.-.s.-.-.-.m.n.-): emit_prob=0.184179, prior=0.010175, lexprob=18.100981
+[DEBUG]   tag 32 (n.-.s.-.-.-.n.g.-): emit_prob=0.001782, prior=0.003814, lexprob=0.467354
+[DEBUG]   tag 39 (a.-.s.-.-.-.n.g.-): emit_prob=0.022797, prior=0.000789, lexprob=28.892395
+[DEBUG]   tag 53 (a.-.p.-.-.-.m.a.-): emit_prob=0.226753, prior=0.005293, lexprob=42.840083
+[DEBUG]   tag 58 (a.-.s.-.-.-.f.g.-): emit_prob=0.090779, prior=0.002285, lexprob=39.730718
+[DEBUG]   tag 79 (a.-.s.-.-.-.f.n.-): emit_prob=0.205646, prior=0.008120, lexprob=25.324879
+[DEBUG]   tag 84 (n.-.p.-.-.-.f.a.-): emit_prob=0.026753, prior=0.009255, lexprob=2.890803
+[DEBUG]   tag 99 (n.-.p.-.-.-.m.a.-): emit_prob=0.071609, prior=0.009255, lexprob=7.737702
+[DEBUG]   tag 110 (a.-.s.-.-.-.m.g.-): emit_prob=0.023235, prior=0.001726, lexprob=13.461658
+[DEBUG]   tag 176 (a.-.p.-.-.-.f.a.-): emit_prob=0.091317, prior=0.003436, lexprob=26.580311
+[DEBUG]   tag 297 (a.-.s.-.-.-.m.v.-): emit_prob=0.000115, prior=0.000247, lexprob=0.467354
+[DEBUG]   tag 340 (a.-.s.-.-.-.f.v.-): emit_prob=0.000123, prior=0.000263, lexprob=0.467354
+[DEBUG]   featvec for tag 8 (size=9): 28 29 30 31 32 33 34 57 36
+[DEBUG]   featvec for tag 10 (size=9): 39 40 41 42 43 44 67 68 47
+[DEBUG]   featvec for tag 32 (size=9): 28 29 30 31 32 33 96 104 36
+[DEBUG]   featvec for tag 39 (size=9): 39 40 41 42 43 44 93 99 47
+[DEBUG]   featvec for tag 53 (size=9): 39 40 92 42 43 44 67 94 47
+[DEBUG]   featvec for tag 58 (size=9): 39 40 41 42 43 44 45 99 47
+[DEBUG]   featvec for tag 79 (size=9): 39 40 41 42 43 44 45 68 47
+[DEBUG]   featvec for tag 84 (size=9): 28 29 95 31 32 33 37 82 36
+[DEBUG]   featvec for tag 99 (size=9): 28 29 95 31 32 33 34 82 36
+[DEBUG]   featvec for tag 110 (size=9): 39 40 41 42 43 44 67 99 47
+[DEBUG]   featvec for tag 176 (size=9): 39 40 92 42 43 44 45 94 47
+[DEBUG]   featvec for tag 297 (size=9): 39 40 41 42 43 44 67 148 47
+[DEBUG]   featvec for tag 340 (size=9): 39 40 41 42 43 44 45 148 47
+[DEBUG] SymbolTable::find: word='aliam', FOUND, ptr=0x557719a86cc0
+[DEBUG]   -> symbol id=10188
+[DEBUG] POSTagger::lookup: word='aliam', entry=0x7f7787ca3990, tag count=2
+[DEBUG]   tag 27 (n.-.s.-.-.-.f.a.-): emit_prob=0.193558, prior=0.019150, lexprob=10.107382
+[DEBUG]   tag 28 (a.-.s.-.-.-.f.a.-): emit_prob=0.806442, prior=0.005441, lexprob=148.217222
+[DEBUG]   featvec for tag 27 (size=9): 28 29 30 31 32 33 37 82 36
+[DEBUG]   featvec for tag 28 (size=9): 39 40 41 42 43 44 45 94 47
+[DEBUG] SymbolTable::find: word='lingua', FOUND, ptr=0x557719a86870
+[DEBUG]   -> symbol id=2660
+[DEBUG] POSTagger::lookup: word='lingua', entry=0x7f7787c68c90, tag count=3
+[DEBUG]   tag 5 (n.-.s.-.-.-.f.b.-): emit_prob=0.558537, prior=0.016997, lexprob=32.861342
+[DEBUG]   tag 18 (n.-.s.-.-.-.f.n.-): emit_prob=0.307876, prior=0.016898, lexprob=18.219473
+[DEBUG]   tag 267 (n.-.s.-.-.-.f.v.-): emit_prob=0.133587, prior=0.000789, lexprob=169.307384
+[DEBUG]   featvec for tag 5 (size=9): 28 29 30 31 32 33 37 38 36
+[DEBUG]   featvec for tag 18 (size=9): 28 29 30 31 32 33 37 57 36
+[DEBUG]   featvec for tag 267 (size=9): 28 29 30 31 32 33 37 35 36
+[DEBUG] SymbolTable::find: word='nostra', FOUND, ptr=0x557719a86810
+[DEBUG]   -> symbol id=7
+[DEBUG] POSTagger::lookup: word='nostra', entry=0x7f7787c540f0, tag count=6
+[DEBUG]   tag 6 (a.-.s.-.-.-.f.b.-): emit_prob=0.399610, prior=0.005523, lexprob=72.351934
+[DEBUG]   tag 20 (a.-.p.-.-.-.n.a.-): emit_prob=0.235159, prior=0.005918, lexprob=39.738554
+[DEBUG]   tag 79 (a.-.s.-.-.-.f.n.-): emit_prob=0.248459, prior=0.008120, lexprob=30.597203
+[DEBUG]   tag 122 (a.-.p.-.-.-.n.n.-): emit_prob=0.115064, prior=0.002531, lexprob=45.454102
+[DEBUG]   tag 340 (a.-.s.-.-.-.f.v.-): emit_prob=0.001613, prior=0.000263, lexprob=6.131811
+[DEBUG]   tag 397 (a.-.p.-.-.-.n.v.-): emit_prob=0.000096, prior=0.000016, lexprob=5.811840
+[DEBUG]   featvec for tag 6 (size=9): 39 40 41 42 43 44 45 46 47
+[DEBUG]   featvec for tag 20 (size=9): 39 40 92 42 43 44 93 94 47
+[DEBUG]   featvec for tag 79 (size=9): 39 40 41 42 43 44 45 68 47
+[DEBUG]   featvec for tag 122 (size=9): 39 40 92 42 43 44 93 68 47
+[DEBUG]   featvec for tag 340 (size=9): 39 40 41 42 43 44 45 148 47
+[DEBUG]   featvec for tag 397 (size=9): 39 40 92 42 43 44 93 148 47
+1

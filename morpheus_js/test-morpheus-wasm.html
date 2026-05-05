@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morpheus WASM Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #333; }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .word-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #28a745;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .analysis-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+        .lemma { font-weight: bold; color: #007bff; }
+        .form-info { color: #555; margin-top: 5px; }
+        .status {
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .loading { color: #007bff; }
+        .ready { color: #28a745; }
+        .failed { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Morpheus WASM Test</h1>
+
+    <div class="status" id="status">
+        Status: <span class="loading">⏳ Loading WASM module...</span>
+    </div>
+
+    <div class="test-section">
+        <h2>Single Word Analysis</h2>
+        <div class="word-input">
+            <input type="text" id="wordInput" placeholder="Enter Latin word (e.g., puellam, amat, bonus)" value="puellam">
+            <button id="analyzeBtn" disabled>Analyze</button>
+        </div>
+        <div id="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Batch Analysis</h2>
+        <div class="word-input">
+            <input type="text" id="batchInput" placeholder="Comma-separated words" value="Gallia, est, omnis, divisa">
+            <button id="batchBtn" disabled>Analyze Batch</button>
+        </div>
+        <div id="batchResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Cases</h2>
+        <p>Click to test known forms:</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+            <button class="test-case" data-word="puellam">puellam (acc sg fem)</button>
+            <button class="test-case" data-word="amat">amat (pres ind act 3rd sg)</button>
+            <button class="test-case" data-word="bonus">bonus (nom sg masc)</button>
+            <button class="test-case" data-word="puer">puer (nom sg masc)</button>
+            <button class="test-case" data-word="regina">regina (nom sg fem)</button>
+            <button class="test-case" data-word="sum">sum (pres ind act 1st sg)</button>
+            <button class="test-case" data-word="esse">esse (inf pres act)</button>
+            <button class="test-case" data-word="amant">amant (pres ind act 3rd pl)</button>
+        </div>
+    </div>
+
+    <!-- Load WASM module -->
+    <script src="../public/wasm/cruncher.js"></script>
+    <!-- Load MorpheusTagger wrapper (global) -->
+    <script src="./MorpheusTagger.js"></script>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const batchBtn = document.getElementById('batchBtn');
+        const wordInput = document.getElementById('wordInput');
+        const batchInput = document.getElementById('batchInput');
+        const resultEl = document.getElementById('result');
+        const batchResultEl = document.getElementById('batchResult');
+
+        let tagger = null;
+
+        // Initialize
+        async function init() {
+            try {
+                tagger = new MorpheusTagger();
+                await tagger.initialize();
+                statusEl.innerHTML = '<span class="ready">✅ WASM module loaded and ready</span>';
+                analyzeBtn.disabled = false;
+                batchBtn.disabled = false;
+            } catch (err) {
+                statusEl.innerHTML = `<span class="failed">❌ Error: ${err.message}</span>`;
+                console.error(err);
+            }
+        }
+
+        // Analyze single word
+        function analyzeWord(word) {
+            if (!tagger) return;
+            const start = performance.now();
+            const result = tagger.analyze(word, { strictCase: false });
+            const elapsed = (performance.now() - start).toFixed(2);
+            displayResult(result, resultEl, elapsed);
+        }
+
+        // Analyze batch
+        function analyzeBatch(wordsStr) {
+            if (!tagger) return;
+            const words = wordsStr.split(',').map(w => w.trim()).filter(w => w);
+            const start = performance.now();
+            const results = tagger.analyzeBatch(words, { strictCase: false });
+            const elapsed = (performance.now() - start).toFixed(2);
+
+            let html = `<p><strong>Batch analysis (${words.length} words) in ${elapsed}ms:</strong></p>`;
+            results.forEach((result, i) => {
+                html += `<div class="analysis-item">
+                    <strong>${words[i]}</strong>: `;
+                if (result.success) {
+                    html += `${result.analyses.length} analysis(s) found`;
+                    result.analyses.forEach(a => {
+                        html += `<div class="form-info">
+                            • ${a.lemma} — ${a.formInfo.partOfSpeech}
+                            ${a.formInfo.case ? `, ${a.formInfo.case}` : ''}
+                            ${a.formInfo.number ? ` ${a.formInfo.number}` : ''}
+                            ${a.formInfo.gender ? ` ${a.formInfo.gender}` : ''}
+                            ${a.formInfo.tense ? `, ${a.formInfo.tense}` : ''}
+                            ${a.formInfo.mood ? ` ${a.formInfo.mood}` : ''}
+                            ${a.formInfo.voice ? ` ${a.formInfo.voice}` : ''}
+                            ${a.formInfo.person ? ` ${a.formInfo.person}` : ''}
+                        </div>`;
+                    });
+                } else {
+                    html += `<span class="error">No analysis found</span>`;
+                }
+                html += `</div>`;
+            });
+            batchResultEl.innerHTML = html;
+        }
+
+        function displayResult(result, container, elapsed) {
+            let html = `<p><strong>Analysis for "${result.word}" in ${elapsed}ms:</strong></p>`;
+            if (result.success) {
+                html += `<p>Found ${result.analyses.length} analysis(s):</p>`;
+                result.analyses.forEach(a => {
+                    html += `<div class="analysis-item">
+                        <div class="lemma">Lemma: ${a.lemma}</div>
+                        <div class="form-info">
+                            Part of Speech: ${a.formInfo.partOfSpeech}<br>
+                            ${a.formInfo.case ? `Case: ${a.formInfo.case}<br>` : ''}
+                            ${a.formInfo.number ? `Number: ${a.formInfo.number}<br>` : ''}
+                            ${a.formInfo.gender ? `Gender: ${a.formInfo.gender}<br>` : ''}
+                            ${a.formInfo.tense ? `Tense: ${a.formInfo.tense}<br>` : ''}
+                            ${a.formInfo.mood ? `Mood: ${a.formInfo.mood}<br>` : ''}
+                            ${a.formInfo.voice ? `Voice: ${a.formInfo.voice}<br>` : ''}
+                            ${a.formInfo.person ? `Person: ${a.formInfo.person}<br>` : ''}
+                            ${a.formInfo.degree ? `Degree: ${a.formInfo.degree}` : ''}
+                        </div>
+                        <pre style="font-size:12px;color:#666;margin-top:8px;">Raw: ${a.raw}</pre>
+                        <pre style="font-size:12px;color:#999;">Stem: ${a.stem} | Ending: ${a.ending}</pre>
+                    </div>`;
+                });
+            } else {
+                html += `<div class="error">❌ No morphological analysis found for "${result.word}"</div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        // Event listeners
+        analyzeBtn.addEventListener('click', () => {
+            const word = wordInput.value.trim();
+            if (word) analyzeWord(word);
+        });
+
+        batchBtn.addEventListener('click', () => {
+            const words = batchInput.value.trim();
+            if (words) analyzeBatch(words);
+        });
+
+        // Test case buttons
+        document.querySelectorAll('.test-case').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const word = btn.getAttribute('data-word');
+                wordInput.value = word;
+                analyzeWord(word);
+            });
+        });
+
+        // Enter key
+        wordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') analyzeBtn.click();
+        });
+        batchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') batchBtn.click();
+        });
+
+        // Start initialization
+        init();
+    </script>
+</body>
+</html>

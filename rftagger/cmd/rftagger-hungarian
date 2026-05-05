@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Set these paths appropriately
+
+BIN=./bin
+CMD=./cmd
+LIB=./lib
+
+TAGGER=${BIN}/rft-annotate
+TOKENIZER=${CMD}/tokenize.perl
+ABBR_LIST=${LIB}/hungarian-abbreviations
+PARFILE=${LIB}/hungarian.par
+
+$TOKENIZER -a $ABBR_LIST $* |
+${CMD}/mwl-lookup.perl -f $LIB/hungarian-mwls |
+perl -e 'while(<>){print; print "\n" if /^[.?\!]$/}' |
+$TAGGER $PARFILE

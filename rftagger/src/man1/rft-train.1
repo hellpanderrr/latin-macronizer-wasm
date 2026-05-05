@@ -1,0 +1,151 @@
+.TH rft-train 1 "September 2008" "" "RFT"
+.SH NAME
+rft-train \- training program of the RFTagger
+.SH SYNOPSIS
+.B rft-train
+.I corpus
+.I wordclass-automaton
+.I parfile
+.PP
+.SH DESCRIPTION
+.B rft-train
+is used to train the tagger on a manually annotated training
+corpus. It requires the training corpus and a wordclass automaton. The
+wordclass automaton is used to assign classes to unknown words. The
+POS guesser for unknown words deals with each class separately. The
+parameter are stored in binary format in
+.I parfile.
+.SH OPTIONS
+.TP
+.B \-l f
+Additional lexicon entries are supplied in file f.
+.TP
+.B \-o f
+The possible POS tags of unknown words are restricted to those listed in file f.
+.TP
+.B \-c n
+The n preceding tags are used as context (default 2).
+.TP
+.B \-p v
+The information gain pruning threshold is set to v (default 6).
+.TP
+.B \-s v
+The smoothing weight for transition probs is set to v (default 1).
+.TP
+.B \-ls v
+The smoothing weight for lexical probs is set to v (default 1).
+.TP
+.B \-g v
+The information gain threshold for suffix tree pruning is set to v (default 1).
+.TP
+.B \-lt v
+The pruning threshold for guesser tags is set to a probability of v (default 0.001).
+.TP
+.B \-q
+The quiet mode is turned on.
+.TP
+.B \-v
+The verbose mode is turned on.
+.TP
+.B \-vv
+An even more verbose mode is turned on.
+.TP
+.B \-h
+Information about program usage is printed.
+.SH "FILE FORMATS"
+The
+.I corpus
+file contains the manually annotated training corpus and has two
+columns which are separated by a tab character. The words/tokens of
+the training corpus are found in the first column and the respective POS tags in the second column. Each sentence is followed by an empty line. 
+.PP
+Example:
+.PP
+Texaner N.Reg.Nom.Sg.Masc
+.br
+gibt    VFIN.Full.3.Sg.Pres.Ind
+.br
+nur     ADV
+.br
+vage    ADJA.Pos.Acc.Sg.Fem
+.br
+Auskunft        N.Reg.Acc.Sg.Fem
+.br
+ ...
+.PP
+The optional lexicon file supplied with option 
+.I -l
+has three columns which are separated by tab characters. The first
+column contains the wordform, the second column a (possible) POS tag
+for this word and the third columns contains the lemma (base form) of
+the word. Words with more than one possible POS tag require several
+entries in the lexicon. The lemma information is currently not used by
+the tagger.
+.PP
+Example:
+.PP
+a.      APPR    a.
+.br
+ab      APPR    ab
+.br
+ab      PART.Verb       ab
+.br
+abarbeiten      VFIN.Full.1.Pl.Pres.Ind abarbeiten
+.br
+ ...
+.PP
+The file with the open class POS tags supplied with option
+.I -o
+contains the list of possible POS tags of unknown words (usually noun,
+adjective, adverb, and verb POS tags) separated by whitespace.
+.PP
+Example:
+.PP
+ADJA.Comp.Acc.Pl.Fem
+.br
+ADJA.Comp.Acc.Pl.Masc
+.br
+ADJA.Comp.Acc.Pl.Neut
+.br
+ADJA.Comp.Acc.Sg.Fem
+.br
+ ...
+.PP
+The
+.I wordclass-automaton
+file has three columns which are separated by tab characters. Each
+line either contains information about a state transition or about a
+final state. State transitions entries consist of a state number
+(column 1), a single character (column 2), and a target character
+(column 3). Final state entries consists of a state number (column 1),
+the string "wordclass" (column 2), and the number of the word
+class. States are numbered starting at 0. Word classes are numbered
+starting at 1. Word class 0 is the default word class which is
+assigned to all words which are not recognized by the automaton.
+.PP
+Example:
+.PP
+ ...
+.br
+5       8       3
+.br
+5       9       3
+.br
+1       wordclass       2
+.br
+3       wordclass       1
+.br
+4       wordclass       3
+.PP
+.RE
+.SH "EXIT STATUS"
+.B rft-train
+returns 0 unless some error occurs.
+.SH "SEE ALSO"
+rft-annotate rft-print
+.SH AUTHOR
+Helmut Schmid,
+Institute for Computational Linguistics,
+University of Stuttgart,
+Email: schmid@ims.uni-stuttgart.de,
+All Rights Reserved
