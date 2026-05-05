@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Algorithm Comparison Test - TS vs Python</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 1000px; margin: 50px auto; padding: 20px; }
+    h1 { color: #333; }
+    .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+    .status.success { background: #d4edda; color: #155724; }
+    .status.error { background: #f8d7da; color: #721c24; }
+    .status.loading { background: #fff3cd; color: #856404; }
+    textarea { width: 100%; height: 120px; font-family: 'Times New Roman', serif; font-size: 18px; }
+    pre { background: #f5f5f5; padding: 15px; overflow-x: auto; font-size: 14px; line-height: 1.6; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px; }
+    table { border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 5px 10px; text-align: left; }
+    th { background: #eee; }
+    .ambig { background: #fff3cd; }
+    .unknown { background: #f8d7da; }
+  </style>
+  <!-- Load WASM module globally (like other test pages) -->
+  <script src="public/wasm/rftagger.js?v=7"></script>
+</head>
+<body>
+  <h1>Integration Test: TypeScript Macronizer vs Python Reference</h1>
+  
+  <div id="status" class="status loading">Initializing engines...</div>
+  
+  <div style="margin-top:20px;">
+    <h3>Input Text:</h3>
+    <textarea id="input">Hi omnes lingua, institutis, legibus inter se differunt. Gallos ab Aquitanis Garumna flumen, a Belgis Matrona et Sequana dividit. Horum omnium fortissimi sunt Belgae, propterea quod a cultu atque humanitate provinciae longissime absunt, minimeque ad eos mercatores saepe commeant atque ea quae ad effeminandos animos pertinent important, proximique sunt Germanis, qui trans Rhenum incolunt, quibuscum continenter bellum gerunt.</textarea>
+    <br><br>
+    
+    <h3>Expected Output (Python reference):</h3>
+    <pre id="expected" style="background:#eee;padding:10px;"></pre>
+    
+    <h3>Wordlist (macrons.txt):</h3>
+    <input type="file" id="wordlistFile" accept=".txt">
+    <button id="loadWordlistBtn">Load Wordlist from File</button>
+    <span id="wordlistStatus" style="font-size:12px; color:#666; margin-left:10px;"></span>
+    <br><br>
+    <button id="autoLoadBtn">Auto-load from latin_macronizer/macrons.txt (if served)</button>
+    <br><br>
+    
+    <button id="runBtn" disabled>Run Test</button>
+  </div>
+  
+  <div id="results" style="margin-top:20px;"></div>
+
+  <!-- Embedded expected output (from dist/output.txt) -->
+  <script type="text/plain" id="expected-output">
+Hī omnēs linguā, īnstitūtīs, lēgibus inter sē differunt. Gallōs ab Aquītānīs Garumnā flūmen, ā Belgīs Matrona et Sēquana dīvidit. Hōrum omnium fortissimī sunt Belgae, proptereā quod ā cultū atque hūmānitāte prōvinciae longissimē absunt, minimēque ad eōs mercātōrēs saepe commeant atque ea quae ad effēminandōs animōs pertinent important, proximīque sunt Germānīs, quī trāns Rhēnum incolunt, quibuscum continenter bellum gerunt.
+  </script>
+
+  <script type="module">
+    // Import compiled modules from dist
+    import { Tokenization } from './dist/core/Tokenization.js';
+    import { LemmaEngine } from './dist/analysis/LemmaEngine.js';
+    import { EndingPatternEngine } from './dist/analysis/EndingPatternEngine.js';
+    import { WordlistEngine } from './dist/analysis/WordlistEngine.js';
+    import { WasmTagger } from './dist/analysis/WasmTagger.js';
+
+    // State
+    let wasmTagger = null;
+    let lemmaEngine = null;
+    let endingEngine = null;
+    let wordlistEngine = null;
+    let inputText = '';
+    let expectedOutput = '';
+
+    // DOM elements
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+    const inputEl = document.getElementById('input');
+    const expectedEl = document.getElementById('expected');
+    const wordlistStatusEl = document.getElementById('wordlistStatus');
+    const runBtn = document.getElementById('runBtn');
+    const loadWordlistBtn = document.getElementById('loadWordlistBtn');
+    const autoLoadBtn = document.getElementById('autoLoadBtn');
+
+    // Initialize all engines
+    async function init() {
+      try {
+        statusEl.textContent = 'Initializing WASM tagger...';
+        wasmTagger = new WasmTagger();
+        await wasmTagger.initialize();
+
+        statusEl.textContent = 'Loading LemmaEngine...';
+        lemmaEngine = new LemmaEngine();
+        await lemmaEngine.load();
+
+        statusEl.textContent = 'Loading EndingPatternEngine...';
+        endingEngine = new EndingPatternEngine();
+        await endingEngine.load();
+
+        // Initialize WordlistEngine (IndexedDB)
+        wordlistEngine = new WordlistEngine();
+        await wordlistEngine.init();
+        const hasWordlist = await wordlistEngine.isPopulated();
+        if (hasWordlist) {
+          wordlistStatusEl.textContent = `Wordlist ready (${wordlistEngine.size()} entries)`;
+        } else {
+          wordlistStatusEl.textContent = 'Wordlist empty. Load macrons.txt to run test.';
+        }
+
+        // Set input and expected
+        inputText = inputEl.value.trim();
+        expectedOutput = document.getElementById('expected-output').textContent.trim();
+        expectedEl.textContent = expectedOutput;
+
+        statusEl.textContent = 'Ready. Load wordlist and click Run Test.';
+        statusEl.className = 'status success';
+        runBtn.disabled = !hasWordlist;
+      } catch (err) {
+        statusEl.textContent = 'Error: ' + err.message;
+        statusEl.className = 'status error';
+        console.error(err);
+      }
+    }
+
+    // Load wordlist from file input
+    loadWordlistBtn.addEventListener('click', async () => {
+      const fileInput = document.getElementById('wordlistFile');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        wordlistStatusEl.textContent = 'Please select a file first';
+        return;
+      }
+      const file = fileInput.files[0];
+      wordlistStatusEl.textContent = 'Reading file...';
+      try {
+        const text = await file.text();
+        wordlistStatusEl.textContent = 'Loading into IndexedDB (this may take a while)...';
+        await wordlistEngine.loadFromText(text, (count) => {
+          wordlistStatusEl.textContent = `Loaded ${count} entries...`;
+        });
+        wordlistStatusEl.textContent = `Complete! Loaded ${wordlistEngine.size()} entries.`;
+        runBtn.disabled = false;
+      } catch (err) {
+        wordlistStatusEl.textContent = 'Error: ' + err.message;
+      }
+    });
+
+    // Auto-load wordlist from URL (if accessible)
+    autoLoadBtn.addEventListener('click', async () => {
+      try {
+        wordlistStatusEl.textContent = 'Fetching latin_macronizer/macrons.txt...';
+        const response = await fetch('latin_macronizer/macrons.txt');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const text = await response.text();
+        console.log('Fetched wordlist size:', text.length, 'chars, lines:', text.split('\n').length);
+        wordlistStatusEl.textContent = 'Loading into IndexedDB...';
+        await wordlistEngine.loadFromText(text, (count) => {
+          wordlistStatusEl.textContent = `Loaded ${count} entries...`;
+        });
+        console.log('WordlistEngine size after load:', wordlistEngine.size());
+        wordlistStatusEl.textContent = `Auto-loaded ${wordlistEngine.size()} entries.`;
+        runBtn.disabled = false;
+      } catch (err) {
+        wordlistStatusEl.textContent = 'Auto-load failed: ' + err.message + '. Use file upload.';
+        console.error(err);
+      }
+    });
+
+    // Normalize whitespace for comparison
+    function normalizeWhitespace(s) {
+      return s.replace(/\s+/g, ' ').trim();
+    }
+
+    // Run the test
+    async function runTest() {
+      if (!wordlistEngine || !(await wordlistEngine.isPopulated())) {
+        alert('Please load the wordlist first!');
+        return;
+      }
+      resultsEl.innerHTML = '<p>Processing...</p>';
+      try {
+        // Create Tokenization with whitespace preservation
+        const tokenization = new Tokenization(inputText, { preserveWhitespace: true });
+
+        // Tag tokens using WASM
+        await tokenization.tagWithWasm(wasmTagger);
+
+        // Add lemmas
+        tokenization.addLemmas(lemmaEngine);
+
+        // Get accents (candidate generation)
+        await tokenization.getAccents(wordlistEngine, endingEngine);
+
+        // Apply macronization (DP alignment)
+        tokenization.macronize(true, true, false, false, endingEngine);
+
+        // Detokenize to get final string
+        const result = tokenization.detokenize();
+
+        // Normalize for comparison
+        const normResult = normalizeWhitespace(result);
+        const normExpected = normalizeWhitespace(expectedOutput);
+
+        const match = normResult === normExpected;
+
+        // Build output
+        let out = '<h3>Test Result:</h3>';
+        out += `<p><strong>${match ? '✅ OUTPUT MATCHES REFERENCE' : '❌ OUTPUT DOES NOT MATCH REFERENCE'}</strong></p>`;
+        if (!match) {
+          out += `<h4>Normalized strings:</h4>`;
+          out += `<pre>Expected: ${normExpected}</pre>`;
+          out += `<pre>Got:      ${normResult}</pre>`;
+          // Find first mismatch
+          const minLen = Math.min(normResult.length, normExpected.length);
+          let i = 0;
+          while (i < minLen && normResult[i] === normExpected[i]) i++;
+          out += `<p>First difference at character ${i}.</p>`;
+        }
+
+        // Token details
+        out += '<h4>Token Details</h4>';
+        out += '<table><tr><th>#</th><th>Original</th><th>Tag</th><th>Lemma</th><th>Accented Candidates</th><th>Macronized</th><th>Flags</th></tr>';
+        let tokenIdx = 0;
+        for (const token of tokenization.tokens) {
+          if (token.isWord) {
+            const flags = [];
+            if (token.isAmbiguous) flags.push('ambiguous');
+            if (token.isUnknown) flags.push('unknown');
+            out += `<tr>`;
+            out += `<td>${tokenIdx}</td>`;
+            out += `<td>${token.text}</td>`;
+            out += `<td>${token.tag || '—'}</td>`;
+            out += `<td>${token.lemma || '—'}</td>`;
+            out += `<td>${(token.accented || []).join(', ')}</td>`;
+            out += `<td>${token.text}</td>`;  // after macronize, token.text is final
+            out += `<td>${flags.join(', ') || '—'}</td>`;
+            out += `</tr>`;
+            tokenIdx++;
+          }
+        }
+        out += '</table>';
+
+        resultsEl.innerHTML = out;
+      } catch (err) {
+        resultsEl.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+        console.error(err);
+      }
+    }
+
+    runBtn.addEventListener('click', runTest);
+
+    // Initialize on page load
+    init();
+  </script>
+</body>
+</html>

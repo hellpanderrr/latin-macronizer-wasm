@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Set these paths appropriately
+
+BIN=./bin
+CMD=./cmd
+LIB=./lib
+
+TAGGER=${BIN}/rft-annotate
+TOKENIZER=${CMD}/tokenize.perl
+ABBR_LIST=${LIB}/german-abbreviations
+PARFILE=${LIB}/german.par
+
+$TOKENIZER -a $ABBR_LIST $* |
+perl -e 'while(<>){print; print "\n" if /^[.?\!]$/}' |
+$TAGGER $PARFILE |
+$CMD/filter-german-rft-tags.perl |
+$CMD/lemmatize-german-rftagger-output.perl $LIB/german-rft-tagger-lemma-lexicon.txt

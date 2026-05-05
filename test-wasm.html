@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>RFTagger WASM Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        h1 { color: #333; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.loading { background: #fff3cd; color: #856404; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        textarea { width: 100%; height: 100px; font-family: monospace; }
+        pre { background: #f5f5f5; padding: 15px; overflow-x: auto; }
+    </style>
+    <script src="public/wasm/rftagger.js"></script>
+    <!-- WASM is now embedded in the JS file above as base64 -->
+</head>
+<body>
+    <h1>RFTagger WebAssembly Test</h1>
+    
+    <div id="status" class="status loading">Loading WASM module...</div>
+    
+    <div>
+        <h3>Test POS Tagging:</h3>
+        <textarea id="input" placeholder="Enter Latin words, one per line">Gallia
+est
+omnis</textarea>
+        <br><br>
+        <button id="tagBtn" disabled>Tag Words</button>
+        <button id="batchTagBtn" disabled>Batch Tag</button>
+        <button id="loadModelBtn" disabled>Load Model</button>
+    </div>
+    
+    <div>
+        <h3>Output:</h3>
+        <pre id="output"></pre>
+    </div>
+
+    <script>
+        let module = null;
+        let tagger = null;
+        
+        const statusEl = document.getElementById('status');
+        const tagBtn = document.getElementById('tagBtn');
+        const loadModelBtn = document.getElementById('loadModelBtn');
+        const outputEl = document.getElementById('output');
+        const inputEl = document.getElementById('input');
+        
+        // Wait for RFTaggerModule to be available
+        async function waitForModule(maxWait = 10000) {
+            const start = Date.now();
+            while (typeof RFTaggerModule === 'undefined' && Date.now() - start < maxWait) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            if (typeof RFTaggerModule === 'undefined') {
+                throw new Error('RFTaggerModule not found after ' + maxWait + 'ms');
+            }
+        }
+        
+        // Load WASM module
+        async function init() {
+            try {
+                statusEl.textContent = 'Waiting for WASM module...';
+                await waitForModule();
+                
+                module = await RFTaggerModule();
+                statusEl.textContent = 'WASM module loaded. Ready to load model.';
+                statusEl.className = 'status success';
+                loadModelBtn.disabled = false;
+                
+                // Setup file system for model loading
+                if (module.FS) {
+                    outputEl.textContent = 'FileSystem available. Click "Load Model" to load the Latin model.';
+                }
+            } catch (err) {
+                statusEl.textContent = 'Error loading WASM: ' + err.message;
+                statusEl.className = 'status error';
+                console.error(err);
+            }
+        }
+        
+        // Load model into virtual filesystem
+        loadModelBtn.onclick = async () => {
+            try {
+                statusEl.textContent = 'Loading model...';
+                statusEl.className = 'status loading';
+                
+                // Fetch the model file (Latin model)
+                const response = await fetch('public/wasm/rftagger-ldt.model');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch model: ' + response.status);
+                }
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                
+                // Create directory in virtual FS
+                try {
+                    module.FS.mkdir('/models');
+                } catch (e) {
+                    // Directory might already exist
+                }
+                
+                // Write model to virtual filesystem in binary mode
+                module.FS.writeFile('/models/rftagger-ldt.model', uint8Array, { encoding: 'binary' });
+                
+                outputEl.textContent = 'Model file written to FS (' + uint8Array.length + ' bytes)';
+                
+                // Create tagger instance
+                tagger = new module.RFTagger();
+                outputEl.textContent += '\nTagger instance created';
+                
+                // Load the model (beamThreshold=0.001 limits search space, prevents exponential growth)
+                const loaded = tagger.loadModel('/models/rftagger-ldt.model', false, 0.001, false);
+                
+                if (loaded) {
+                    statusEl.textContent = 'Model loaded successfully! Ready to tag.';
+                    statusEl.className = 'status success';
+                    tagBtn.disabled = false;
+                    document.getElementById('batchTagBtn').disabled = false;
+                    loadModelBtn.disabled = true;
+                    outputEl.textContent = 'Latin model loaded. Tag count: ' + tagger.getTagCount();
+                } else {
+                    outputEl.textContent += '\nModel.loadModel returned false';
+                    throw new Error('Model failed to load (returned false)');
+                }
+            } catch (err) {
+                statusEl.textContent = 'Error loading model: ' + err.message;
+                statusEl.className = 'status error';
+                console.error(err);
+            }
+        };
+        
+        // Tag input words with timing
+        tagBtn.onclick = () => {
+            if (!tagger) {
+                outputEl.textContent = 'Model not loaded!';
+                return;
+            }
+            
+            const words = inputEl.value.trim().split(/\s+/);
+            const startTotal = performance.now();
+            
+            outputEl.textContent = `Processing ${words.length} words...`;
+            
+            // Build vector
+            const startVec = performance.now();
+            const vec = new module.StringVector();
+            words.forEach(w => vec.push_back(w));
+            const vecTime = (performance.now() - startVec).toFixed(1);
+            
+            // Tag (this is the critical part)
+            outputEl.textContent += `\nVector built (${vecTime}ms), tagging...`;
+            const startTag = performance.now();
+            
+            try {
+                const tags = tagger.tagTokens(vec);
+                const tagTime = (performance.now() - startTag).toFixed(1);
+                
+                let result = '';
+                for (let i = 0; i < tags.size(); i++) {
+                    result += words[i] + ' -> ' + tags.get(i) + '\n';
+                }
+                
+                const totalTime = (performance.now() - startTotal).toFixed(1);
+                const wasmMemory = module.HEAPU8.length;
+                
+                result += `\n---\nTiming: vector=${vecTime}ms, tag=${tagTime}ms, total=${totalTime}ms`;
+                result += `\nWASM Memory: ${(wasmMemory / 1024 / 1024).toFixed(1)} MB`;
+                
+                outputEl.textContent = result;
+                vec.delete();
+            } catch (e) {
+                outputEl.textContent = 'Error during tagging: ' + e.message;
+                console.error(e);
+            }
+        };
+        
+        // Batch tag sentences (macronizer-style)
+        document.getElementById('batchTagBtn').onclick = () => {
+            if (!tagger) {
+                outputEl.textContent = 'Model not loaded!';
+                return;
+            }
+            
+            // Parse sentences (separated by empty lines)
+            const sentences = inputEl.value.trim().split(/\n\s*\n/).map(s => 
+                s.trim().split(/\s+/).filter(w => w.length > 0)
+            ).filter(s => s.length > 0);
+            
+            const totalWords = sentences.reduce((sum, s) => sum + s.length, 0);
+            outputEl.textContent = `Batch processing: ${sentences.length} sentences, ${totalWords} words...`;
+            
+            const startTotal = performance.now();
+            
+            try {
+                // Build sentences vector
+                const sentencesVec = new module.StringVectorVector();
+                sentences.forEach(sentWords => {
+                    const wordVec = new module.StringVector();
+                    sentWords.forEach(w => wordVec.push_back(w));
+                    sentencesVec.push_back(wordVec);
+                });
+                
+                const buildTime = (performance.now() - startTotal).toFixed(1);
+                outputEl.textContent += `\nVectors built (${buildTime}ms), batch tagging...`;
+                
+                const startTag = performance.now();
+                const results = tagger.tagSentences(sentencesVec);
+                const tagTime = (performance.now() - startTag).toFixed(1);
+                
+                // Build output
+                let result = '';
+                for (let s = 0; s < results.size(); s++) {
+                    const sentTags = results.get(s);
+                    const sentWords = sentences[s];
+                    for (let i = 0; i < sentTags.size(); i++) {
+                        result += sentWords[i] + ' -> ' + sentTags.get(i) + '\n';
+                    }
+                    result += '\n';
+                }
+                
+                const totalTime = (performance.now() - startTotal).toFixed(1);
+                const wasmMemory = module.HEAPU8.length;
+                
+                result += `---\nTiming: build=${buildTime}ms, tag=${tagTime}ms, total=${totalTime}ms`;
+                result += `\nWASM Memory: ${(wasmMemory / 1024 / 1024).toFixed(1)} MB`;
+                
+                outputEl.textContent = result;
+                
+                // Cleanup
+                for (let s = 0; s < sentencesVec.size(); s++) {
+                    sentencesVec.get(s).delete();
+                }
+                sentencesVec.delete();
+                results.delete();
+                
+            } catch (e) {
+                outputEl.textContent = 'Error during batch tagging: ' + e.message;
+                console.error(e);
+            }
+        };
+        
+        // Initialize when DOM and WASM are ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

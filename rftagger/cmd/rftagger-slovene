@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Set these paths appropriately
+
+BIN=./bin
+CMD=./cmd
+LIB=./lib
+
+TAGGER=${BIN}/rft-annotate
+TOKENIZER=${CMD}/tokenize.perl
+ABBR_LIST=${LIB}/slovene-abbreviations
+PARFILE=${LIB}/slovene.par
+
+$TOKENIZER -a $ABBR_LIST $* |
+perl -e 'while(<>){print; print "\n" if /^[.?\!]$/}' |
+$TAGGER $PARFILE |
+$CMD/lemma-lookup.perl lib/slovene-lemmas

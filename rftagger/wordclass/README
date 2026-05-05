@@ -1,0 +1,45 @@
+Building a Word Class Automaton
+===============================
+
+The data in this directory will be useful if you intend to create your
+own wordclass automaton. The automaton is basically defined by a set
+of regular expressions, one for each word class.
+
+As a first step, you should download and install the SFST transducer
+tools. They are available at
+http://www.ims.uni-stuttgart.de/projekte/gramotron/SOFTWARE/SFST.html
+Have a look at the documentation to get familiar with the syntax of
+the SFST programming language for finite state transducers.
+
+Now you are ready to define your own word classes by modifying the
+file wordclass.fst. You can add/remove characters from the different
+character sets defined at the beginning of the file and/or add
+definitions of new character sets. You can also modify the regular
+expressions defining the word classes which follow the line
+$T1$ = (\
+
+Each word class definition is of the form
+
+REGEX <> |\
+
+where REGEX is a regular expression according to the SFST syntax. The
+last word class definition is of the following form:
+
+REGEX <>)
+
+Each word class definition consists of a single line. If a word is
+matched by more than one definition, it is assigned to the word class
+whose definition comes first.
+
+The script "make-wordclass.sh" modifies wordclass.fst by inserting a
+number between "<" and ">" which is the index assigned to the
+respective word class. "wordclass.fst" is then compiled into a finite
+state automaton which is stored in wordclass.a in binary form.  In the
+last step, the word class automaton is converted to the format
+required by rft-train.
+
+The result file "wordclass.txt" is a valid word-class automaton for
+rft-train.
+
+
+

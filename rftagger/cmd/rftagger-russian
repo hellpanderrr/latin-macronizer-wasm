@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Set these paths appropriately
+
+BIN=./bin
+CMD=./cmd
+LIB=./lib
+
+TAGGER=${BIN}/rft-annotate
+TOKENIZER=${CMD}/tokenize.perl
+PARFILE=${LIB}/russian.par
+
+$TOKENIZER $* |
+perl -e 'while(<>){print; print "\n" if /^[.?\!]$/}' |
+$TAGGER $PARFILE | $CMD/filter-russian-tags.perl |
+$CMD/lemma-lookup.perl lib/russian-lemmas

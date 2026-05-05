@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latin Macronizer - Full WASM Pipeline</title>
+    <script type="importmap">
+    {
+        "imports": {
+            "/dist/core/index.js": "/dist/core/index.js",
+            "/dist/analysis/index.js": "/dist/analysis/index.js",
+            "/dist/api/index.js": "/dist/api/index.js",
+            "/dist/utils/index.js": "/dist/utils/index.js",
+            "/dist/types/index.js": "/dist/types/index.js",
+            "/dist/data/endings.json": "/dist/data/endings.json",
+            "/dist/data/lemmas.json": "/dist/data/lemmas.json"
+        }
+    }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        h1 {
+            color: #8b4513;
+            text-align: center;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #8b4513;
+            padding-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        
+        .status {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            font-family: monospace;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .status.loading {
+            background: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+            resize: vertical;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #8b4513;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary {
+            background: #8b4513;
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #a0522d;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover:not(:disabled) {
+            background: #218838;
+        }
+        
+        .output-section {
+            margin-top: 20px;
+        }
+        
+        .output-section h3 {
+            color: #8b4513;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 5px;
+        }
+        
+        .output-text {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Georgia', serif;
+            font-size: 18px;
+            line-height: 1.8;
+            min-height: 100px;
+            white-space: pre-wrap;
+        }
+        
+        .debug-output {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .wordlist-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        
+        .wordlist-section h4 {
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        
+        .wordlist-status {
+            font-family: monospace;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #8b4513;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .pipeline-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .step-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .step-card h4 {
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .step-card .status-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .step-card.ready .status-icon::before { content: "✓"; color: #28a745; }
+        .step-card.loading .status-icon::before { content: "◌"; color: #ffc107; }
+        .step-card.error .status-icon::before { content: "✗"; color: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>🏛️ Latin Macronizer</h1>
+    <p class="subtitle">Full WASM Pipeline: RFTagger + Morpheus + Wordlist</p>
+    
+    <div id="status" class="status loading">
+        Initializing WASM modules...
+        <span class="loading"></span>
+    </div>
+    
+    <div class="container">
+        <h3>Pipeline Status</h3>
+        <div class="pipeline-steps">
+            <div id="step-rftagger" class="step-card loading">
+                <div class="status-icon"></div>
+                <h4>RFTagger</h4>
+                <small>POS Tagging</small>
+            </div>
+            <div id="step-morpheus" class="step-card loading">
+                <div class="status-icon"></div>
+                <h4>Morpheus</h4>
+                <small>Morphological Analysis</small>
+            </div>
+            <div id="step-wordlist" class="step-card loading">
+                <div class="status-icon"></div>
+                <h4>Wordlist</h4>
+                <small>IndexedDB Storage</small>
+            </div>
+            <div id="step-lemma" class="step-card loading">
+                <div class="status-icon"></div>
+                <h4>Lemma Engine</h4>
+                <small>Lemmatization</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <label for="input-text">Latin Text</label>
+        <textarea id="input-text" placeholder="Enter Latin text to macronize...
+
+Example: Gallia est omnis divisa in partes tres"></textarea>
+        
+        <div class="button-group">
+            <button id="btn-macronize" class="btn-primary" disabled>Macronize</button>
+            <button id="btn-clear" class="btn-secondary">Clear</button>
+            <button id="btn-test" class="btn-success" disabled>Test: Gallia est...</button>
+        </div>
+    </div>
+    
+    <div class="container output-section">
+        <h3>Macronized Output</h3>
+        <div id="output" class="output-text">Results will appear here...</div>
+    </div>
+    
+    <div class="container output-section">
+        <h3>Pipeline Debug</h3>
+        <div id="debug" class="debug-output">Waiting for initialization...</div>
+    </div>
+    
+    <div class="wordlist-section">
+        <h4>Wordlist Status</h4>
+        <div id="wordlist-status" class="wordlist-status">Not loaded</div>
+    </div>
+
+    <!-- Load compiled JavaScript modules -->
+    <script type="module">
+        // DOM elements
+        const statusEl = document.getElementById('status');
+        const inputEl = document.getElementById('input-text');
+        const outputEl = document.getElementById('output');
+        const debugEl = document.getElementById('debug');
+        const wordlistStatusEl = document.getElementById('wordlist-status');
+        const btnMacronize = document.getElementById('btn-macronize');
+        const btnClear = document.getElementById('btn-clear');
+        const btnTest = document.getElementById('btn-test');
+        
+        let macronizer = null;
+        let Macronizer = null;
+        
+        // Dynamic import with error handling
+        async function loadModules() {
+            try {
+                log('Loading modules from ./dist/index.js...');
+                console.log('Attempting to load from:', new URL('./dist/index.js', window.location.href).href);
+                const module = await import('./dist/index.js');
+                Macronizer = module.Macronizer;
+                log(`✓ Macronizer loaded: ${typeof Macronizer}`);
+                return true;
+            } catch (error) {
+                log(`✗ Failed to load modules: ${error.message}`);
+                console.error('Module load error:', error);
+                statusEl.className = 'status error';
+                statusEl.textContent = `Error loading modules: ${error.message}`;
+                return false;
+            }
+        }
+        
+        // Step indicators
+        const stepRFTagger = document.getElementById('step-rftagger');
+        const stepMorpheus = document.getElementById('step-morpheus');
+        const stepWordlist = document.getElementById('step-wordlist');
+        const stepLemma = document.getElementById('step-lemma');
+        
+        
+        function updateStep(element, state, message = '') {
+            element.className = `step-card ${state}`;
+            if (message) {
+                element.querySelector('small').textContent = message;
+            }
+        }
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugEl.textContent += `[${timestamp}] ${message}\n`;
+            debugEl.scrollTop = debugEl.scrollHeight;
+            console.log(`[Macronizer] ${message}`);
+        }
+        
+        async function init() {
+            // First load modules
+            const modulesLoaded = await loadModules();
+            if (!modulesLoaded) return;
+            
+            try {
+                log('Initializing Macronizer...');
+                
+                // Configure macronizer (WASM disabled for testing)
+                const options = {
+                    useWasm: false,  // Use FallbackTagger instead of WasmTagger
+                    enableCache: true,
+                };
+                
+                macronizer = new Macronizer(options);
+                
+                log('Loading WASM modules...');
+                try {
+                    await macronizer.initialize();
+                    log('✓ WASM modules initialized');
+                } catch (initError) {
+                    log(`✗ WASM initialization failed: ${initError.message}`);
+                    throw initError;
+                }
+                
+                // Update step indicators
+                updateStep(stepRFTagger, 'ready', 'Ready');
+                updateStep(stepMorpheus, 'ready', 'Ready');
+                updateStep(stepLemma, 'ready', 'Ready');
+                
+                // Check wordlist status
+                const wordlistSize = macronizer.getWordlistSize?.() || 0;
+                if (wordlistSize > 0) {
+                    updateStep(stepWordlist, 'ready', `${wordlistSize} entries`);
+                    wordlistStatusEl.textContent = `${wordlistSize} entries loaded`;
+                } else {
+                    updateStep(stepWordlist, 'ready', 'Ready (empty)');
+                    wordlistStatusEl.textContent = 'Ready (empty - upload macrons.txt)';
+                }
+                
+                // Enable buttons
+                btnMacronize.disabled = false;
+                btnTest.disabled = false;
+                
+                statusEl.className = 'status success';
+                statusEl.innerHTML = '✓ Ready! WASM modules loaded successfully.';
+                
+                log('Initialization complete!');
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                statusEl.className = 'status error';
+                statusEl.textContent = `✗ Error: ${error.message}`;
+                log(`ERROR: ${error.message}`);
+                
+                // Mark failed steps
+                updateStep(stepRFTagger, 'error', 'Failed');
+                updateStep(stepMorpheus, 'error', 'Failed');
+            }
+        }
+        
+        async function macronizeText() {
+            const text = inputEl.value.trim();
+            if (!text) {
+                alert('Please enter some Latin text');
+                return;
+            }
+            
+            try {
+                btnMacronize.disabled = true;
+                btnMacronize.textContent = 'Processing...';
+                log(`Macronizing: "${text.substring(0, 50)}..."`);
+                
+                const startTime = performance.now();
+                const result = await macronizer.macronize(text);
+                const endTime = performance.now();
+                
+                outputEl.textContent = result.text;
+                log(`✓ Macronized in ${(endTime - startTime).toFixed(2)}ms`);
+                log(`  Tokens: ${result.tokens?.length || 'N/A'}`);
+                log(`  Confidence: ${(result.confidence * 100).toFixed(1)}%`);
+                
+            } catch (error) {
+                console.error('Macronization error:', error);
+                outputEl.textContent = `Error: ${error.message}`;
+                log(`✗ ERROR: ${error.message}`);
+            } finally {
+                btnMacronize.disabled = false;
+                btnMacronize.textContent = 'Macronize';
+            }
+        }
+        
+        function clearAll() {
+            inputEl.value = '';
+            outputEl.textContent = 'Results will appear here...';
+            debugEl.textContent = '';
+            log('Cleared');
+        }
+        
+        function runTest() {
+            inputEl.value = 'Gallia est omnis divisa in partes tres';
+            macronizeText();
+        }
+        
+        // Event listeners
+        btnMacronize.addEventListener('click', macronizeText);
+        btnClear.addEventListener('click', clearAll);
+        btnTest.addEventListener('click', runTest);
+        
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>

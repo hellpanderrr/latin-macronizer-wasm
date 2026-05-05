@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latin Macronizer Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            border-radius: 5px;
+        }
+        .result h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .macronized-text {
+            font-size: 18px;
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .stats {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .error {
+            border-left-color: #f44336;
+        }
+        .error .macronized-text {
+            color: #f44336;
+        }
+        .config {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        .config label {
+            margin-right: 15px;
+            cursor: pointer;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.ready {
+            background: #4CAF50;
+            color: white;
+        }
+        .status.loading {
+            background: #FF9800;
+            color: white;
+        }
+        .status.error {
+            background: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Latin Macronizer Demo</h1>
+        <p>Enter Latin text below to add macrons (long vowel marks) using statistical POS tagging.</p>
+        
+        <div class="config">
+            <label>
+                <input type="checkbox" id="useWasm" checked>
+                Use WASM RFTagger (more accurate, slower)
+            </label>
+            <span id="status" class="status">Not initialized</span>
+        </div>
+        
+        <button onclick="initializeMacronizer()" id="initBtn">Initialize Macronizer</button>
+        <button onclick="processText()" id="processBtn" disabled>Process Text</button>
+        <button onclick="loadExamples()">Load Example</button>
+        
+        <h3>Input Text:</h3>
+        <textarea id="inputText" placeholder="Enter Latin text here...">Gallia est omnis divisa in partes tres</textarea>
+        
+        <div id="result" class="result" style="display: none;">
+            <h3>Result:</h3>
+            <div class="macronized-text" id="outputText"></div>
+            <div class="stats" id="stats"></div>
+        </div>
+    </div>
+
+    <script>
+        let macronizer = null;
+        let isReady = false;
+
+        async function initializeMacronizer() {
+            const useWasm = document.getElementById('useWasm').checked;
+            const statusEl = document.getElementById('status');
+            const initBtn = document.getElementById('initBtn');
+            
+            statusEl.textContent = 'Loading...';
+            statusEl.className = 'status loading';
+            initBtn.disabled = true;
+            
+            try {
+                // In production, this would import from the built module
+                // For demo, we'll simulate the API
+                
+                if (typeof LatinMacronizer !== 'undefined') {
+                    macronizer = LatinMacronizer.MacronizerAPI.getInstance({
+                        useWasm: useWasm,
+                        confidenceThreshold: 0.80
+                    });
+                    
+                    await macronizer.initialize();
+                    isReady = true;
+                    
+                    statusEl.textContent = 'Ready';
+                    statusEl.className = 'status ready';
+                    document.getElementById('processBtn').disabled = false;
+                    
+                    console.log('Macronizer initialized successfully');
+                } else {
+                    // Demo mode - simulate initialization
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    isReady = true;
+                    statusEl.textContent = 'Ready (Demo Mode)';
+                    statusEl.className = 'status ready';
+                    document.getElementById('processBtn').disabled = false;
+                    
+                    console.log('Macronizer initialized in demo mode');
+                }
+            } catch (error) {
+                console.error('Initialization failed:', error);
+                statusEl.textContent = 'Error';
+                statusEl.className = 'status error';
+                initBtn.disabled = false;
+                
+                alert('Failed to initialize: ' + error.message);
+            }
+        }
+
+        async function processText() {
+            if (!isReady) {
+                alert('Please initialize the macronizer first');
+                return;
+            }
+            
+            const inputText = document.getElementById('inputText').value.trim();
+            if (!inputText) {
+                alert('Please enter some text');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('result');
+            const outputEl = document.getElementById('outputText');
+            const statsEl = document.getElementById('stats');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            outputEl.textContent = 'Processing...';
+            
+            try {
+                let result;
+                
+                if (macronizer) {
+                    // Use real macronizer
+                    result = await macronizer.process(inputText);
+                } else {
+                    // Demo mode - simulate processing
+                    result = await simulateProcessing(inputText);
+                }
+                
+                if (result.success) {
+                    outputEl.textContent = result.macronizedText;
+                    statsEl.innerHTML = `
+                        <strong>Confidence:</strong> ${(result.confidence * 100).toFixed(1)}%<br>
+                        <strong>Processing time:</strong> ${result.processingTime?.toFixed(1)}ms<br>
+                        <strong>Tokens:</strong> ${result.tokens?.length || 0}
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    outputEl.textContent = 'Error: ' + result.error;
+                    statsEl.innerHTML = '';
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                outputEl.textContent = 'Error: ' + error.message;
+                statsEl.innerHTML = '';
+                console.error('Processing failed:', error);
+            }
+        }
+
+        async function simulateProcessing(text) {
+            // Simple demo simulation
+            await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+            
+            // Very basic macronization for demo
+            let result = text;
+            
+            // Common patterns
+            const patterns = [
+                { from: /\bGallia\b/g, to: 'Gallia' },
+                { from: /\best\b/g, to: 'est' },
+                { from: /\bomnis\b/g, to: 'omnis' },
+                { from: /\bdivisa\b/g, to: 'dīvīsa' },
+                { from: /\bin\b/g, to: 'in' },
+                { from: /\bpartes\b/g, to: 'partēs' },
+                { from: /\btres\b/g, to: 'trēs' },
+                { from: /\bquarum\b/g, to: 'quārum' },
+                { from: /\buna\b/g, to: 'ūna' },
+                { from: /\bincolunt\b/g, to: 'incolunt' },
+            ];
+            
+            patterns.forEach(p => {
+                result = result.replace(p.from, p.to);
+            });
+            
+            return {
+                success: true,
+                macronizedText: result,
+                originalText: text,
+                tokens: text.split(/\s+/).map(t => ({ text: t })),
+                confidence: 0.85 + Math.random() * 0.1,
+                processingTime: 50 + Math.random() * 100
+            };
+        }
+
+        function loadExamples() {
+            const examples = [
+                'Gallia est omnis divisa in partes tres',
+                'Alea iacta est',
+                'Veni, vidi, vici',
+                'Carpe diem',
+                'Tempus fugit',
+                'Et tu, Brute?',
+                'Cogito ergo sum',
+                'In vino veritas'
+            ];
+            
+            const randomExample = examples[Math.floor(Math.random() * examples.length)];
+            document.getElementById('inputText').value = randomExample;
+        }
+
+        // Allow Enter key to process (with Shift for new line)
+        document.getElementById('inputText').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                processText();
+            }
+        });
+    </script>
+</body>
+</html>

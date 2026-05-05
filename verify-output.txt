@@ -1,0 +1,27 @@
+Gallia	n.-.s.-.-.-.f.b.-
+est	v.3.s.p.i.a.-.-.-
+omnis	a.-.p.-.-.-.f.a.-
+divisa	v.-.s.r.p.p.f.n.-
+nin	r.-.-.-.-.-.-.-.-
+partes	n.-.p.-.-.-.f.a.-
+tres	m.-.-.-.-.-.-.-.-
+,	u.-.-.-.-.-.-.-.-
+quarum	p.-.p.-.-.-.f.g.-
+unam	a.-.s.-.-.-.f.a.-
+incolunt	v.3.p.p.i.a.-.-.-
+Belgae	n.-.p.-.-.-.m.n.-
+,	u.-.-.-.-.-.-.-.-
+aliam	n.-.s.-.-.-.f.a.-
+Aquitani	n.-.p.-.-.-.m.n.-
+,	u.-.-.-.-.-.-.-.-
+tertiam	a.-.s.-.-.-.f.a.-
+qui	p.-.s.-.-.-.m.n.-
+ipsorum	p.-.p.-.-.-.m.g.-
+lingua	n.-.s.-.-.-.f.b.-
+Celtae	n.-.p.-.-.-.f.n.-
+,	u.-.-.-.-.-.-.-.-
+nostra	a.-.p.-.-.-.n.n.-
+Galli	n.-.p.-.-.-.m.n.-
+appellantur	v.3.p.p.i.p.-.-.-
+.	u.-.-.-.-.-.-.-.-
+

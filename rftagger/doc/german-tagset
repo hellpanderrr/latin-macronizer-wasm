@@ -1,0 +1,90 @@
+ADJA	  attributive adjective
+  Degree  Comp Pos Sup
+  Case    Nom Gen Dat Acc * (unspecified)
+  Number  Sg Pl *
+  Gender  Fem Masc Neut *
+
+ADJD	  adjective with predicative or adverbial usage
+  Degree  Comp Pos Sup
+
+ADV       adverb
+
+APPO	  postposition
+  Case    Gen Dat Acc *
+
+APPR	  preposition
+  Case    Gen Dat Acc *
+
+APPRART   preposition with incorporated article
+  Case    Nom Gen Dat Acc *
+  Number  Sg Pl *
+  Gender  Fem Masc Neut *
+
+APZR	  circumposition (right part)
+
+ART	  article
+  Type 	  Def (definite) Indef (indefinite)
+  Case    Nom Gen Dat Acc *
+  Number  Sg Pl *
+  Gender  Fem Masc Neut *
+
+CARD	  cardinal number
+
+CONJ	  conjunction
+  Type	  Comp (comparative) Coord (coordinating) 
+  	  SubFin (subordinating with finite clause)
+  	  SubInf (subordinating with infinitive)
+
+FM	  foreign word
+
+ITJ	  interjection
+
+N	  noun
+  Type 	  Name (proper name) Reg (regular noun)
+  Case    Nom Gen Dat Acc *
+  Number  Sg Pl *
+  Gender  Fem Masc Neut *
+
+PART	  particle
+  Type	  Ans (answer) Deg (degree) Neg (negation) Zu ("zu" particle)
+  	  Verb (separated verb particle)
+
+PRO	  pronoun
+  Type	  Dem (demonstrative) Indef (indefinite) Inter (interrogative)
+  	  Pers (personal) Refl (reflexive) Rel (relative) Poss (possessive)
+  Usage   Attr (attributive) Subst (substituting)
+  Person  1 2 3 * - (not applicable)
+  Case    Nom Gen Dat Acc *
+  Number  Sg Pl *
+  Gender  Fem Masc Neut *
+
+PROADV	  pronomial adverb
+  Type	  Dem (regular: dabei damit) Inter (interrogative or relative: wie wozu)
+
+SYM	  symbol
+  Type	  Pun (punctuation) Quot (quotation) Paren (parenthesis) Other 
+  Subtype Left Right Colon Comma Sent (sentential punctuation) Hyph (hyphen) 
+  	  Slash Aster (asterisk) Cont (continuation periods) Auth (author) XY 
+
+TRUNC	  truncated word form
+  POS	  Adj Noun Verb -
+
+VFIN	  finite verb
+  Type	  Aux (auxiliary) Mod (modal) Full (full verb)
+  Person  1 2 3
+  Number  Pl Sg
+  Tense	  Past Pres 
+  Mood	  Ind (indicative) Subj (subjunctive)
+
+VIMP	  imperative verb
+  Type	  Aux (auxiliary) Full (full verb)
+  Person  1 2 3
+  Number  Pl Sg
+
+VINF	  infinitival verb
+  Type	  Aux (auxiliary) Mod (modal) Full (full verb)
+  Subtype zu (with "zu" infix) - (no infix) 	  
+
+VPP	  participle verb
+  Type	  Aux (auxiliary) Mod (modal) Full (full verb)
+  Subtype Prp (present participle) Psp (past participle)
