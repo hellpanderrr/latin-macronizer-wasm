@@ -21,7 +21,7 @@ const NOSYNEZISPENALTY = 2;
 const SYNEZISPENALTY = 3;
 const HIATUSPENALTY = 3;
 const MUTACUMLIQUIDAPENALTY = 1;
-const REPRIORITIZEPENALTY = 0.1; // Small penalty so meter fitness dominates over accented form ranking
+const REPRIORITIZEPENALTY = 1;
 
 
 /**
