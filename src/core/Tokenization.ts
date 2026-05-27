@@ -365,51 +365,34 @@ export class Tokenization {
    * Gets words from tokens and applies POS tags from RFTagger
    */
   async tagWithWasm(tagger: WasmTagger): Promise<void> {
-    // Split tokens into sentences (by newlines) for RFTagger context.
-    // Python RFTagger receives verse-separated input; we must do the same.
-    const sentences: string[][] = [];
-    const sentenceIndices: number[][] = []; // token indices per sentence
-    let currentSentence: string[] = [];
-    let currentIndices: number[] = [];
-
+    // Extract word forms for tagging (only words, not punctuation/enclitics)
+    const wordsToTag: string[] = [];
+    const tokenIndices: number[] = []; // Keep track of which tokens get tags
+    
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];
       if ((token as any).isWord && !(token as any).isenclitic) {
-        currentSentence.push(toAscii(token.text).toLowerCase());
-        currentIndices.push(i);
-      }
-      // Split on newline tokens (verse boundaries)
-      if (token.text.includes('\n')) {
-        if (currentSentence.length > 0) {
-          sentences.push(currentSentence);
-          sentenceIndices.push(currentIndices);
-          currentSentence = [];
-          currentIndices = [];
-        }
+        wordsToTag.push(toAscii(token.text).toLowerCase());
+        tokenIndices.push(i);
       }
     }
-    if (currentSentence.length > 0) {
-      sentences.push(currentSentence);
-      sentenceIndices.push(currentIndices);
+    
+    if (wordsToTag.length === 0) {
+      return;
     }
-
-    if (sentences.length === 0) return;
-
-    // Tag each sentence separately (matches Python RFTagger behavior)
-    const allResults = tagger.tagSentences(sentences);
-
-    // Apply tags back to tokens
-    for (let s = 0; s < sentences.length; s++) {
-      const sentTags = allResults[s];
-      const indices = sentenceIndices[s];
-      for (let i = 0; i < indices.length && i < sentTags.length; i++) {
-        const tokenIdx = indices[i];
-        const result = sentTags[i];
-        this.tokens[tokenIdx] = this.tokens[tokenIdx].with({
-          tag: result.tag.replace(/\./g, '-'),
-          confidence: result.confidence
-        });
-      }
+    
+    // Tag with RFTagger
+    const tagResults = tagger.tag(wordsToTag);
+    
+    // Apply tags back to tokens (clean RFTagger dots: "n.-.s." → "n-s--")
+    for (let i = 0; i < tokenIndices.length && i < tagResults.length; i++) {
+      const tokenIdx = tokenIndices[i];
+      const result = tagResults[i];
+      this.tokens[tokenIdx] = this.tokens[tokenIdx].with({
+        // Convert RFTagger dot-separated tags to dash-only format to match wordlist
+        tag: result.tag.replace(/\./g, '-'),
+        confidence: result.confidence
+      });
     }
   }
   
