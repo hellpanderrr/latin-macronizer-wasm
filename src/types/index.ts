@@ -20,10 +20,35 @@ export interface Token {
   accented: string[];    // Possible accented/macronized forms
   macronized?: string;   // Final macronized form
   isUnknown: boolean;    // Unknown word flag
-  isEnclitic: boolean;   // Is enclitic (e.g., -que, -ve, -ne)
-  hasEnclitic: boolean;  // Has enclitic attached
+  isenclitic: boolean;   // Is enclitic (e.g., -que, -ve, -ne) [lowercase to match Python & Token class]
+  hasenclitic: boolean;  // Has enclitic attached [lowercase to match Python & Token class]
   startIndex: number;    // Start position in original text
   endIndex: number;      // End position in original text
+  // Morpheus analysis results (for unknown words)
+  morpheusAnalyzed?: boolean;
+  morpheusResults?: {
+    word: string;
+    analyses: Array<{
+      lemma: string;
+      stem: string;
+      ending: string;
+      accented: string;
+      formInfo: {
+        partOfSpeech?: string;
+        case?: string;
+        number?: string;
+        gender?: string;
+        tense?: string;
+        mood?: string;
+        voice?: string;
+        person?: string;
+        degree?: string;
+      };
+      raw: string;
+    }>;
+    success: boolean;
+    raw: string;
+  } | null;  // Full Morpheus analysis (matches Token class)
 }
 
 // Word entry from database

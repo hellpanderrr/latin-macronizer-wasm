@@ -4,16 +4,21 @@
  * Immutable token with POS tagging and macronization capabilities
  */
 
+import { MorpheusAnalysis } from '../analysis/MorpheusAnalyzer';
+
 export interface TokenOptions {
   text?: string;
   tag?: string;
   lemma?: string;
   macronized?: boolean;
+  macronizedText?: string;  // Macronized form of the text
   originalText?: string;
   confidence?: number;
   accented?: string[];   // List of candidate accented forms (with _ markers)
   isAmbiguous?: boolean;
   isUnknown?: boolean;
+  morpheusAnalyzed?: boolean;
+  morpheusResults?: MorpheusAnalysis | null;  // Full Morpheus analysis if available
   startssentence?: boolean;
   endssentence?: boolean;
   hasenclitic?: boolean;
@@ -32,11 +37,14 @@ export class Token {
   public readonly tag: string;
   public readonly lemma: string;
   public readonly macronized: boolean;
+  public readonly macronizedText?: string;  // Macronized form
   public readonly originalText: string;
   public readonly confidence?: number;
   public readonly accented?: string[];   // Candidate accented forms (with _ markers)
   public readonly isAmbiguous?: boolean;
   public readonly isUnknown?: boolean;
+  public readonly morpheusAnalyzed?: boolean;
+  public readonly morpheusResults?: MorpheusAnalysis | null;  // Full Morpheus analysis
   public readonly startssentence?: boolean;
   public readonly endssentence?: boolean;
   public readonly hasenclitic?: boolean;
@@ -51,11 +59,14 @@ export class Token {
     this.tag = options.tag || '---------';
     this.lemma = options.lemma || text.toLowerCase();
     this.macronized = options.macronized || false;
+    this.macronizedText = options.macronizedText;
     this.originalText = options.originalText || text;
     this.confidence = options.confidence;
     this.accented = options.accented;
     this.isAmbiguous = options.isAmbiguous || false;
     this.isUnknown = options.isUnknown || false;
+    this.morpheusAnalyzed = options.morpheusAnalyzed;
+    this.morpheusResults = options.morpheusResults ?? null;
     this.startssentence = options.startssentence;
     this.endssentence = options.endssentence;
     this.hasenclitic = options.hasenclitic;
@@ -76,11 +87,14 @@ export class Token {
       tag: options.tag ?? this.tag,
       lemma: options.lemma ?? this.lemma,
       macronized: options.macronized ?? this.macronized,
+      macronizedText: options.macronizedText ?? this.macronizedText,
       originalText: options.originalText ?? this.originalText,
       confidence: options.confidence ?? this.confidence,
       accented: options.accented ?? this.accented,
       isAmbiguous: options.isAmbiguous ?? this.isAmbiguous,
       isUnknown: options.isUnknown ?? this.isUnknown,
+      morpheusAnalyzed: options.morpheusAnalyzed ?? this.morpheusAnalyzed,
+      morpheusResults: options.morpheusResults ?? this.morpheusResults,
       startssentence: options.startssentence ?? this.startssentence,
       endssentence: options.endssentence ?? this.endssentence,
       hasenclitic: options.hasenclitic ?? this.hasenclitic,

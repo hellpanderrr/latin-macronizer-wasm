@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Latin Macronizer</title>
+    <script>
+        // RFTagger uses window.Module for locateFile
+        window.Module = window.Module || {};
+        window.Module.locateFile = function(path) {
+            if (path.endsWith('.wasm') || path.endsWith('.data')) {
+                return '/wasm/' + path;
+            }
+            if (path.endsWith('.model')) {
+                // RFTagger C++ tries to load model by replacing .js with .model
+                // Our model file is rftagger-ldt.model, not rftagger.model
+                if (path.includes('rftagger') && path.endsWith('.model')) {
+                    return '/wasm/rftagger-ldt.model';
+                }
+                return '/wasm/' + path;
+            }
+            return path;
+        };
+        // Morpheus is now loaded dynamically by MorpheusAnalyzer.ts with proper locateFile
+    </script>
+    <script src="/wasm/rftagger.js?v=7"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -108,6 +128,56 @@
             background: #f8d7da;
             cursor: help;
         }
+        .word-popup {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 400px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .word-popup h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .word-popup table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .word-popup td {
+            padding: 3px 6px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .word-popup td:first-child {
+            color: #666;
+            font-weight: 500;
+        }
+        .word-popup .candidates {
+            margin-top: 8px;
+            padding-top: 5px;
+            border-top: 1px solid #eee;
+        }
+        .word-popup .candidate {
+            display: inline-block;
+            margin: 2px 4px 2px 0;
+            padding: 2px 6px;
+            background: #e3f2fd;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        .word {
+            cursor: pointer;
+            border-bottom: 1px dotted #999;
+        }
         .stats {
             margin-top: 15px;
             padding: 10px;
@@ -122,6 +192,25 @@
         }
         .loading.show {
             display: block;
+        }
+        .progress-container {
+            background: #e0e0e0;
+            border-radius: 4px;
+            height: 8px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #4CAF50;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .progress-details {
+            color: #666;
+            font-size: 13px;
+            margin-top: 5px;
         }
         .error {
             color: #d32f2f;
@@ -183,7 +272,11 @@
         <button id="processBtn">Process Text</button>
         
         <div class="loading" id="loading">
-            Processing... Please wait.
+            <div class="loading-text" id="loadingText">Initializing...</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="progress-details" id="progressDetails"></div>
         </div>
         
         <div id="result" class="result" style="display: none;">
@@ -211,17 +304,32 @@
     </footer>
     
     <script type="module">
-        import { MacronizerAPI } from './src/api/MacronizerAPI.js';
+        import { MacronizerAPI } from './dist/index.js';
         
         const api = new MacronizerAPI();
         let initialized = false;
         
+        // Update progress bar
+        function updateProgress(percent, message) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressDetails').textContent = message;
+            document.getElementById('loadingText').textContent = message;
+        }
+
         // Initialize on page load
         async function init() {
             try {
-                await api.initialize();
+                document.getElementById('loading').classList.add('show');
+                updateProgress(0, 'Initializing...');
+                await api.initialize((progress, message) => {
+                    updateProgress(progress, message);
+                });
                 initialized = true;
                 document.getElementById('processBtn').disabled = false;
+                updateProgress(100, 'Ready!');
+                setTimeout(() => {
+                    document.getElementById('loading').classList.remove('show');
+                }, 500);
             } catch (err) {
                 showError('Failed to initialize: ' + err.message);
             }
@@ -262,16 +370,218 @@
             }
         }
         
-        // Display result
+        // Store current result for popup access
+        let currentResult = null;
+        
+        // Display result with interactive words
         function displayResult(result) {
-            document.getElementById('resultText').innerHTML = result.text;
-            document.getElementById('stats').innerHTML = `
-                Words: ${result.statistics.totalWords} | 
-                Known: ${result.statistics.knownWords} | 
-                Unknown: ${result.statistics.unknownWords} | 
-                Ambiguous: ${result.statistics.ambiguousForms}
+            console.log('displayResult called with:', result);
+            console.log('macronizedText preview:', (result.macronizedText || '').substring(0, 80));
+            currentResult = result;
+            const taggedTokens = result.tokens || [];
+            console.log('taggedTokens count:', taggedTokens.length);
+            
+            // Build interactive HTML
+            let html = '';
+            let wordIndex = 0;
+            
+            for (let i = 0; i < taggedTokens.length; i++) {
+                const token = taggedTokens[i];
+                const isWord = token.text && /^[a-zA-Z\u00C0-\u024F]/.test(token.text);
+                
+                if (isWord) {
+                    const classes = [];
+                    if (token.isAmbiguous || (token.accented && token.accented.length > 1)) classes.push('ambig');
+                    if (token.isUnknown) classes.push('unknown');
+                    classes.push('word');
+                    
+                    const classAttr = classes.length > 0 ? ` class="${classes.join(' ')}"` : '';
+                    // Strip any remaining underscore notation from display
+                    let displayText = (token.macronizedText || token.text).replace(/_/g, '');
+                    if (!displayText) displayText = token.text.replace(/_/g, '');
+                    
+                    // Use data-word-index instead of onclick (module scope issue)
+                    html += `<span${classAttr} data-word-index="${wordIndex}">${escapeHtml(displayText)}</span>`;
+                    wordIndex++;
+                } else {
+                    // Non-word token (punctuation, whitespace)
+                    html += escapeHtml(token.text);
+                }
+            }
+            
+            document.getElementById('resultText').innerHTML = html;
+            let statsHtml = `
+                Words: ${result.statistics.totalWords} |
+                Known: ${result.statistics.knownWords} |
+                Unknown: ${result.statistics.unknownWords} |
+                Ambiguous: ${result.statistics.ambiguousForms} |
+                Confidence: ${(result.confidence * 100).toFixed(0)}% |
+                Time: ${result.processingTime.toFixed(0)}ms
             `;
+            if (result.scannedFeet && result.scannedFeet.length > 0) {
+                statsHtml += `<br><strong>Scansion:</strong> ${result.scannedFeet.map(f => f || '(empty)').join(' | ')}`;
+            }
+            document.getElementById('stats').innerHTML = statsHtml;
             document.getElementById('result').style.display = 'block';
+        }
+        
+        // Escape HTML special characters
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Show popup with word details — full diagnostic like test-algorithms-compare.html
+        function showWordPopup(event, wordIndex) {
+            if (!currentResult || !currentResult.tokens) return;
+            
+            // Find the word token
+            let tokenIndex = 0;
+            let targetToken = null;
+            for (const token of currentResult.tokens) {
+                const isWord = token.text && /^[a-zA-Z\u00C0-\u024F]/.test(token.text);
+                if (isWord) {
+                    if (tokenIndex === wordIndex) {
+                        targetToken = token;
+                        break;
+                    }
+                    tokenIndex++;
+                }
+            }
+            
+            if (!targetToken) return;
+            
+            // Build popup content — full diagnostic
+            const popup = document.createElement('div');
+            popup.className = 'word-popup';
+            
+            const candidates = targetToken.accented || [];
+            const flags = [];
+            if (targetToken.isAmbiguous) flags.push('⚠️ Ambiguous');
+            if (targetToken.isUnknown) flags.push('❓ Unknown');
+            if (targetToken.startssentence) flags.push('Starts Sentence');
+            if (targetToken.hasenclitic) flags.push('Has Enclitic');
+            if (targetToken.isenclitic) flags.push('Is Enclitic');
+            
+            // Build candidates table
+            let candidatesHtml = '';
+            if (candidates.length > 0) {
+                candidatesHtml = '<div class="candidates"><strong>Candidates (from wordlist/Morpheus):</strong><br>';
+                candidates.forEach((c, idx) => {
+                    const isSelected = (c === (targetToken.macronizedText || '').replace(/[āēīōūȳ]/g, m => '_'));
+                    candidatesHtml += `<span class="candidate${isSelected ? ' selected' : ''}">${idx+1}. ${escapeHtml(c)}</span>`;
+                });
+                candidatesHtml += '</div>';
+            }
+            
+            // Determine wordlist status more precisely
+            let wordlistStatus = '—';
+            let morpheusStatus = '—';
+            if (targetToken.isUnknown) {
+                wordlistStatus = '❌ Not found';
+            } else {
+                wordlistStatus = '✅ Found';
+            }
+            // Show Morpheus status for ALL words (not just unknown)
+            if (targetToken.morpheusResults && targetToken.morpheusResults.analyses && targetToken.morpheusResults.analyses.length > 0) {
+                morpheusStatus = '✅ Analyzed';
+            } else if (targetToken.morpheusAnalyzed) {
+                morpheusStatus = '✅ Analyzed';
+            } else if (targetToken.isUnknown) {
+                morpheusStatus = '⏳ Not analyzed';
+            }
+            
+            // Build Morpheus detailed analysis section if available
+            let morpheusDetailsHtml = '';
+            if (targetToken.morpheusResults && targetToken.morpheusResults.analyses && targetToken.morpheusResults.analyses.length > 0) {
+                morpheusDetailsHtml = '<div class="morpheus-details"><strong>Morpheus Analyses:</strong><br>';
+                targetToken.morpheusResults.analyses.forEach((analysis, idx) => {
+                    morpheusDetailsHtml += `<div class="morpheus-analysis" style="margin-top:8px; padding:6px; background:#f5f5f5; border-radius:4px; border-left:3px solid #4CAF50;">`;
+                    morpheusDetailsHtml += `<strong>Analysis ${idx + 1}:</strong> ${escapeHtml(analysis.lemma || '—')}<br>`;
+                    morpheusDetailsHtml += `<em>Form:</em> ${escapeHtml(analysis.accented || '—')}`;
+                    if (analysis.stem && analysis.stem !== analysis.accented) {
+                        morpheusDetailsHtml += ` | <em>Stem:</em> ${escapeHtml(analysis.stem)}`;
+                    }
+                    if (analysis.ending) {
+                        morpheusDetailsHtml += ` | <em>Ending:</em> ${escapeHtml(analysis.ending)}`;
+                    }
+                    morpheusDetailsHtml += '<br>';
+                    
+                    const fi = analysis.formInfo;
+                    const pos = fi.partOfSpeech || '—';
+                    const case_ = fi.case || '—';
+                    const number = fi.number || '—';
+                    const gender = fi.gender || '—';
+                    const tense = fi.tense || '—';
+                    const mood = fi.mood || '—';
+                    const voice = fi.voice || '—';
+                    const person = fi.person || '—';
+                    const degree = fi.degree || '—';
+                    
+                    morpheusDetailsHtml += `<em>POS:</em> ${escapeHtml(pos)}`;
+                    if (case_ !== '—') morpheusDetailsHtml += ` | <em>Case:</em> ${escapeHtml(case_)}`;
+                    if (number !== '—') morpheusDetailsHtml += ` | <em>Number:</em> ${escapeHtml(number)}`;
+                    if (gender !== '—') morpheusDetailsHtml += ` | <em>Gender:</em> ${escapeHtml(gender)}`;
+                    morpheusDetailsHtml += '<br>';
+                    morpheusDetailsHtml += `<em>Tense:</em> ${escapeHtml(tense)}`;
+                    if (mood !== '—') morpheusDetailsHtml += ` | <em>Mood:</em> ${escapeHtml(mood)}`;
+                    if (voice !== '—') morpheusDetailsHtml += ` | <em>Voice:</em> ${escapeHtml(voice)}`;
+                    if (person !== '—') morpheusDetailsHtml += ` | <em>Person:</em> ${escapeHtml(person)}`;
+                    if (degree !== '—') morpheusDetailsHtml += ` | <em>Degree:</em> ${escapeHtml(degree)}`;
+                    morpheusDetailsHtml += '</div>';
+                });
+                morpheusDetailsHtml += '</div>';
+            }
+            
+            popup.innerHTML = `
+                <h4>${escapeHtml(targetToken.text)} → ${escapeHtml(targetToken.macronizedText || targetToken.text)}</h4>
+                <table>
+                    <tr><td>RFTagger Tag:</td><td><code>${escapeHtml(targetToken.tag || '—')}</code></td></tr>
+                    <tr><td>Lemma:</td><td>${escapeHtml(targetToken.lemma || '—')}</td></tr>
+                    <tr><td>Confidence:</td><td>${targetToken.confidence != null ? (targetToken.confidence * 100).toFixed(0) + '%' : '—'}</td></tr>
+                    <tr><td>Wordlist:</td><td>${wordlistStatus}</td></tr>
+                    <tr><td>Morpheus:</td><td>${morpheusStatus}</td></tr>
+                    <tr><td>Flags:</td><td>${flags.length > 0 ? flags.join(', ') : '—'}</td></tr>
+                    <tr><td>Original index:</td><td>${targetToken.startIndex != null ? targetToken.startIndex + '–' + targetToken.endIndex : '—'}</td></tr>
+                </table>
+                ${candidatesHtml}
+                ${morpheusDetailsHtml}
+            `;
+            
+            // Add selected candidate style
+            const style = document.createElement('style');
+            style.textContent = '.word-popup .candidate.selected { background: #c8e6c9; font-weight: bold; border: 1px solid #4CAF50; }';
+            popup.appendChild(style);
+            
+            // Position popup
+            const rect = event.target.getBoundingClientRect();
+            let left = rect.left + window.scrollX;
+            let top = rect.bottom + window.scrollY + 5;
+            
+            // Keep popup within viewport
+            if (left + 420 > window.innerWidth) left = Math.max(5, window.innerWidth - 420);
+            if (top + 300 > window.innerHeight) top = rect.top + window.scrollY - 5 - 300;
+            
+            popup.style.left = left + 'px';
+            popup.style.top = top + 'px';
+            
+            // Remove existing popup
+            const existing = document.querySelector('.word-popup');
+            if (existing) existing.remove();
+            
+            document.body.appendChild(popup);
+            
+            // Close on click outside
+            setTimeout(() => {
+                function closePopup(e) {
+                    if (!popup.contains(e.target)) {
+                        popup.remove();
+                        document.removeEventListener('click', closePopup);
+                    }
+                }
+                document.addEventListener('click', closePopup);
+            }, 10);
         }
         
         // Show error
@@ -285,6 +595,15 @@
         document.getElementById('inputText').addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && e.ctrlKey) {
                 processText();
+            }
+        });
+        
+        // Delegate click on result text for word popups (avoids onclick in module scope)
+        document.getElementById('resultText').addEventListener('click', function(e) {
+            const wordSpan = e.target.closest('[data-word-index]');
+            if (wordSpan) {
+                const wordIndex = parseInt(wordSpan.getAttribute('data-word-index'), 10);
+                showWordPopup(e, wordIndex);
             }
         });
         

@@ -127,9 +127,11 @@ export function isWhitespace(token: string): boolean {
 }
 
 /**
- * Common Latin enclitics
+ * Common Latin enclitics (generic split only)
+ * Python splits: -que (len>3), -ve/-ue/-ne/-st (len>2)
+ * -cum and -met are handled via special list only, not generic
  */
-export const enclitics = ['que', 've', 'ne', 'cum', 'met'];
+export const enclitics = ['que', 've', 'ue', 'ne', 'st'];
 
 /**
  * Check if word ends with enclitic
@@ -141,10 +143,8 @@ export function splitEnclitic(word: string): [string, string] | null {
   for (const enclitic of enclitics) {
     if (lower.endsWith(enclitic) && lower.length > enclitic.length) {
       const stem = word.slice(0, -enclitic.length);
-      // Verify it's a valid split (stem ends with vowel or specific consonants)
-      if (/[aeiouy]|(n|r)$/i.test(stem)) {
-        return [stem, enclitic];
-      }
+      // Python: split unconditionally if word ends with enclitic (no stem validation)
+      return [stem, enclitic];
     }
   }
   return null;
@@ -279,6 +279,32 @@ export function unicodeToUnderscore(text: string): string {
     .replace(/Ō/g, 'O_')
     .replace(/Ū/g, 'U_')
     .replace(/Ȳ/g, 'Y_');
+}
+
+/**
+ * Filter and normalize accent forms from Morpheus output
+ * Ported from latin_macronizer/postags.py filter_accents()
+ *
+ * Morpheus can produce accent forms with markers in non-standard order.
+ * This function normalizes them to the expected underscore notation.
+ *
+ * Transformations:
+ *   "^_" → "_^"  (swap order)
+ *   "_^" + consonant+l/r → "^" + consonant  (e.g., a_^cl → a^cl)
+ *   "u_m" → "um"  (special case)
+ *   vowel + "^?" + n + (s/f/x/ct) → vowel + "_n" + ending  (e.g., an^s → a_ns)
+ */
+export function filterAccents(accented: string): string {
+  let result = accented;
+  // Step 1: swap "^_" to "_^"
+  result = result.replace(/\^_/g, '_^');
+  // Step 2: convert "_^" followed by consonant+l/r to "^" + consonant
+  result = result.replace(/_\^([bcdfgpt][lr])/g, '^$1');
+  // Step 3: "u_m" → "um"
+  result = result.replace(/u_m$/g, 'um');
+  // Step 4: add macron before n in patterns like an^s, in^ct, etc.
+  result = result.replace(/([AEIOUYaeiouy])\^?n([sfx]|ct)/g, '$1_n$2');
+  return result;
 }
 
 

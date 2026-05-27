@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc && node fix-imports.js",
-    "build:prod": "tsc --project tsconfig.prod.json",
+    "build": "tsc && node fix-imports.js && npm run copy-assets",
+    "build:prod": "tsc --project tsconfig.prod.json && npm run copy-assets",
     "dev": "tsc --watch",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -19,7 +19,8 @@
     "build:wasm:docker": "docker-compose up wasm-builder",
     "start": "node dist/server.js",
     "start:dev": "nodemon dist/server.js",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "copy-assets": "node copy-assets.js"
   },
   "keywords": [
     "latin",

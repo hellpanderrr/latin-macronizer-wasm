@@ -24,7 +24,7 @@ export default defineConfig({
   },
   server: {
     port: 8080,
-    open: '/public/index.html'
+    open: true
   },
   resolve: {
     alias: {

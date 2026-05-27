@@ -34,10 +34,28 @@ export class LemmaEngine {
     // Load from JSON if no data provided
     if (!data) {
       try {
-        const response = await fetch('/src/data/lemmas.json');
-        if (response.ok) {
-          const lemmaData: Array<{lemma: string, frequency: number}> = await response.json();
-          for (const item of lemmaData.slice(0, 5000)) { // Load top 5000 lemmas
+        // Try multiple paths: relative to module (dist/data/), then absolute /data/, then /src/data/
+        const paths = [
+          new URL('../data/lemmas.json', import.meta.url).href,
+          '/data/lemmas.json',
+          '/src/data/lemmas.json'
+        ];
+        let lemmaData: Array<{lemma: string, frequency: number}> | null = null;
+        for (const path of paths) {
+          try {
+            const response = await fetch(path);
+            if (response.ok) {
+              lemmaData = await response.json();
+              console.log(`[LemmaEngine] Loaded lemmas from ${path}`);
+              break;
+            }
+          } catch (e) {
+            // Try next path
+          }
+        }
+        if (lemmaData) {
+          // Load all lemmas (no artificial limit)
+          for (const item of lemmaData) {
             this.lemmaMap.set(item.lemma, {
               lemma: item.lemma,
               macronized: item.lemma,
@@ -45,7 +63,9 @@ export class LemmaEngine {
               tags: []
             });
           }
-          console.log(`[LemmaEngine] Loaded ${this.lemmaMap.size} lemmas`);
+          console.log(`[LemmaEngine] Loaded ${this.lemmaMap.size} lemmas from JSON`);
+        } else {
+          console.warn('[LemmaEngine] Could not load lemmas JSON from any path, using hardcoded only');
         }
       } catch (err) {
         console.warn('[LemmaEngine] Failed to load JSON, using hardcoded:', err);

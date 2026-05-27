@@ -12,9 +12,11 @@ function fixImports(dir) {
     } else if (file.name.endsWith('.js')) {
       let content = fs.readFileSync(fullPath, 'utf-8');
       
-      // Add .js to relative imports without extension
-      content = content.replace(/from\s+['"](\.\/[^'"]+)(?<!\.js)['"]/g, "from '$1.js'");
-      content = content.replace(/from\s+['"](\.\.\/[^'"]+)(?<!\.js)['"]/g, "from '$1.js'");
+      // Add .js to relative imports without extension (skip .json, .js, .css, etc.)
+      content = content.replace(/from\s+['"]((\.\/|\.\.\/)[^'"]+)['"]/g, (match, p1) => {
+        if (/\.\w+$/.test(p1)) return match; // already has extension
+        return `from '${p1}.js'`;
+      });
       
       fs.writeFileSync(fullPath, content);
       console.log(`Fixed: ${fullPath}`);

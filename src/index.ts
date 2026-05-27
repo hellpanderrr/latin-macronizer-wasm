@@ -31,12 +31,8 @@ export {
 } from './analysis/index.js';
 
 // Public API
-export {
-  MacronizerAPI,
-  MacronizerConfig,
-  ProcessResult,
-  macronize
-} from './api/MacronizerAPI.js';
+import { MacronizerAPI } from './api/MacronizerAPI.js';
+export { MacronizerAPI };
 
 // Types
 export type {
