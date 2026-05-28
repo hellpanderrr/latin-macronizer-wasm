@@ -389,8 +389,8 @@ export class Tokenization {
       const tokenIdx = tokenIndices[i];
       const result = tagResults[i];
       this.tokens[tokenIdx] = this.tokens[tokenIdx].with({
-        // Convert RFTagger dot-separated tags to dash-only format to match wordlist
-        tag: result.tag.replace(/\./g, '-'),
+        // Remove dots from RFTagger tags to match Python behavior (tag.replace(".", ""))
+        tag: result.tag.replace(/\./g, ''),
         confidence: result.confidence
       });
     }
