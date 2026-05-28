@@ -8,6 +8,7 @@ import { Token } from './Token';
 import { WasmTagger, TagResult } from '../analysis/WasmTagger';
 import { LemmaEngine } from '../analysis/LemmaEngine';
 import { EndingPatternEngine } from '../analysis/EndingPatternEngine';
+import { normalizeTag } from '../utils/latin';
 import { WordlistEngine, WordlistEntry } from '../analysis/WordlistEngine';
 import { scanVerses as doScanVerses, MeterAutomaton } from './Scansion';
 import { alignMacronized, AlignOptions } from './alignMacronized';
@@ -389,8 +390,8 @@ export class Tokenization {
       const tokenIdx = tokenIndices[i];
       const result = tagResults[i];
       this.tokens[tokenIdx] = this.tokens[tokenIdx].with({
-        // Remove dots from RFTagger tags to match Python behavior (tag.replace(".", ""))
-        tag: result.tag.replace(/\./g, ''),
+        // Normalize RFTagger 17-char tags to 9-char LDT format (matches Python behavior)
+        tag: normalizeTag(result.tag.replace(/\./g, '')),
         confidence: result.confidence
       });
     }
