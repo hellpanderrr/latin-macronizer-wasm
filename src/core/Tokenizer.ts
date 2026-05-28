@@ -51,6 +51,11 @@ export class Tokenizer {
 
     // Check for punctuation
     if (Tokenizer.PUNCTUATION.test(text)) {
+      // Python: if possiblesentenceend and any(i in token.text for i in '.;:?!')
+      // Set endssentence for sentence-ending punctuation
+      if (/[.;:?!]/.test(text)) {
+        options.endssentence = true;
+      }
       return new Token(text, options);
     }
 
@@ -59,35 +64,10 @@ export class Tokenizer {
       return new Token(text, options);
     }
 
-    // Determine if this is end of sentence
-    const isEndOfSentence = this.isEndOfSentence(text, index, allTokens);
-    
     // Create basic token (tag will be filled by POS tagger)
     return new Token(text, options);
   }
 
-  /**
-   * Check if token represents end of sentence
-   */
-  private isEndOfSentence(text: string, index: number, allTokens: string[]): boolean {
-    // Check if token ends with sentence punctuation
-    if (!Tokenizer.SENTENCE_END.test(text)) {
-      return false;
-    }
-
-    // Check for abbreviations (e.g., "M.", "D.")
-    if (Tokenizer.ABBREVIATION.test(text)) {
-      return false;
-    }
-
-    // Check if next token starts with capital letter (likely new sentence)
-    if (index + 1 < allTokens.length) {
-      const nextToken = allTokens[index + 1];
-      return /^[A-Z]/.test(nextToken);
-    }
-
-    return true;
-  }
 
   /**
    * Detokenize: join tokens back into text
@@ -110,7 +90,7 @@ export class Tokenizer {
       currentSentence += token.text + ' ';
       
       // Check for sentence end
-      if (this.isEndOfSentence(token.text, i, tokens.map(t => t.text))) {
+      if (token.endssentence) {
         sentences.push(currentSentence.trim());
         currentSentence = '';
       }

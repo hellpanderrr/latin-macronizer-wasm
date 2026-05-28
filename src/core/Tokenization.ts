@@ -366,34 +366,82 @@ export class Tokenization {
    * Gets words from tokens and applies POS tags from RFTagger
    */
   async tagWithWasm(tagger: WasmTagger): Promise<void> {
-    // Extract word forms for tagging (only words, not punctuation/enclitics)
-    const wordsToTag: string[] = [];
-    const tokenIndices: number[] = []; // Keep track of which tokens get tags
-    
+    // Build sentences for RFTagger, matching Python addtags() behavior:
+    // 1. Skip whitespace tokens
+    // 2. For enclitic bearers (hasenclitic): save, don't write yet
+    // 3. For enclitics (isenclitic): write enclitic text, then write saved bearer
+    // 4. For regular words: write the word
+    // 5. endssentence → start new sentence (empty line in Python)
+
+    const sentences: string[][] = [[]];
+    // Track which token each word in the sentence came from
+    const sentenceTokenIndices: number[][] = [[]];
+    let savedBearer: string | null = null;
+    let savedBearerIdx: number = -1;
+
     for (let i = 0; i < this.tokens.length; i++) {
-      const token = this.tokens[i];
-      if ((token as any).isWord && !(token as any).isenclitic) {
-        wordsToTag.push(toAscii(token.text).toLowerCase());
-        tokenIndices.push(i);
+      const token = this.tokens[i] as any;
+
+      if (token.isspace) {
+        // Python: if not token.isspace → skip
+      } else {
+        let tokentext = token.text;
+        // Python: if tokentext == tokentext.upper(): tokentext = tokentext.lower()
+        if (tokentext === tokentext.toUpperCase() && tokentext.length > 1) {
+          tokentext = tokentext.toLowerCase();
+        }
+
+        if (token.hasenclitic) {
+          // Save bearer, don't write yet
+          savedBearer = toAscii(tokentext);
+          savedBearerIdx = i;
+        } else {
+          sentences[sentences.length - 1].push(toAscii(tokentext));
+          sentenceTokenIndices[sentenceTokenIndices.length - 1].push(i);
+
+          if (token.isenclitic) {
+            // Write saved bearer after enclitic
+            if (savedBearer !== null) {
+              sentences[sentences.length - 1].push(savedBearer);
+              sentenceTokenIndices[sentenceTokenIndices.length - 1].push(savedBearerIdx);
+              savedBearer = null;
+            }
+          }
+        }
+      }
+
+      // Python: if token.endssentence: write "\n" (sentence boundary)
+      if (token.endssentence) {
+        sentences.push([]);
+        sentenceTokenIndices.push([]);
       }
     }
-    
-    if (wordsToTag.length === 0) {
+
+    // Remove trailing empty sentence if any
+    if (sentences.length > 0 && sentences[sentences.length - 1].length === 0) {
+      sentences.pop();
+      sentenceTokenIndices.pop();
+    }
+
+    if (sentences.length === 0 || sentences.every(s => s.length === 0)) {
       return;
     }
-    
-    // Tag with RFTagger
-    const tagResults = tagger.tag(wordsToTag);
-    
-    // Apply tags back to tokens (clean RFTagger dots: "n.-.s." → "n-s--")
-    for (let i = 0; i < tokenIndices.length && i < tagResults.length; i++) {
-      const tokenIdx = tokenIndices[i];
-      const result = tagResults[i];
-      this.tokens[tokenIdx] = this.tokens[tokenIdx].with({
-        // Normalize RFTagger 17-char tags to 9-char LDT format (matches Python behavior)
-        tag: normalizeTag(result.tag.replace(/\./g, '')),
-        confidence: result.confidence
-      });
+
+    // Tag all sentences at once
+    const allResults = tagger.tagSentences(sentences);
+
+    // Apply tags back to tokens
+    for (let s = 0; s < sentences.length; s++) {
+      const sentTags = allResults[s];
+      const indices = sentenceTokenIndices[s];
+      for (let w = 0; w < indices.length && w < sentTags.length; w++) {
+        const tokenIdx = indices[w];
+        const result = sentTags[w];
+        this.tokens[tokenIdx] = this.tokens[tokenIdx].with({
+          tag: normalizeTag(result.tag.replace(/\./g, '')),
+          confidence: result.confidence
+        });
+      }
     }
   }
   
