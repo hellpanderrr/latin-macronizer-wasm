@@ -216,31 +216,36 @@ export class WasmTagger {
 
   /**
    * Tag multiple sentences (batch processing)
+   * Uses tagTokens (file-based Sentence constructor) per sentence to match Python rft-annotate behavior
    */
   tagSentences(sentences: string[][]): TagResult[][] {
     if (!this.modelLoaded) {
       throw new Error('Model not loaded. Call initialize() first.');
     }
 
-    // Call C++ class method: tagSentences(sentences)
-    const results = this.tagger.tagSentences(sentences);
-    
-    // Parse results (VectorVectorString from embind)
     const allResults: TagResult[][] = [];
-    
+
     for (let s = 0; s < sentences.length; s++) {
-      const sentTags = results.get(s);
+      const words = sentences[s];
+      if (words.length === 0) {
+        allResults.push([]);
+        continue;
+      }
+
+      // Use tagTokens which uses file-based Sentence(FILE*) constructor
+      // This matches Python rft-annotate behavior exactly
       const sentenceResults: TagResult[] = [];
-      
-      for (let i = 0; i < sentences[s].length; i++) {
-        const tag = sentTags.get(i);
+      const tokens = this.tagger.tagTokens(words);
+
+      for (let i = 0; i < words.length; i++) {
+        const tag = tokens.get(i);
         sentenceResults.push({
-          token: sentences[s][i],
+          token: words[i],
           tag: tag,
-          confidence: this.getConfidence(sentences[s][i], tag)
+          confidence: this.getConfidence(words[i], tag)
         });
       }
-      
+
       allResults.push(sentenceResults);
     }
 
