@@ -52,9 +52,9 @@ export class WasmTagger {
     console.log('[RFTagger] modelUrl:', this.modelUrl);
     this.cache = new Map();
     // Default parameters matching test-full-pipeline.html
-    this.useSentences = true;
-    this.beamSize = 0.001;
-    this.debugMode = false;
+    this.useSentences = true;  // normalize (default true in rft-annotate)
+    this.beamSize = 0.001;    // beamThreshold
+    this.debugMode = true;    // sentStartHeuristic — matches Python -s flag
   }
 
     /**
