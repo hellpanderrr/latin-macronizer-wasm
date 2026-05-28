@@ -51,6 +51,10 @@ export class Tokenizer {
 
     // Check for punctuation
     if (Tokenizer.PUNCTUATION.test(text)) {
+      // Python: possiblesentenceend and any(i in token.text for i in '.;:?!')
+      if (/[.;:?!]/.test(text)) {
+        options.endssentence = true;
+      }
       return new Token(text, options);
     }
 

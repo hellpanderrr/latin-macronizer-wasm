@@ -366,34 +366,65 @@ export class Tokenization {
    * Gets words from tokens and applies POS tags from RFTagger
    */
   async tagWithWasm(tagger: WasmTagger): Promise<void> {
-    // Extract word forms for tagging (only words, not punctuation/enclitics)
-    const wordsToTag: string[] = [];
-    const tokenIndices: number[] = []; // Keep track of which tokens get tags
-    
+    // Match Python addtags() exactly:
+    // - Skip whitespace
+    // - ALL-CAPS → lowercase
+    // - hasenclitic: save bearer, skip
+    // - isenclitic: write enclitic text, then write saved bearer
+    // - endssentence: sentence boundary
+    const sentences: string[][] = [[]];
+    const sentenceTokenIndices: number[][] = [[]];
+    let savedBearer: string | null = null;
+    let savedBearerIdx: number = -1;
+
     for (let i = 0; i < this.tokens.length; i++) {
-      const token = this.tokens[i];
-      if ((token as any).isWord && !(token as any).isenclitic) {
-        wordsToTag.push(toAscii(token.text).toLowerCase());
-        tokenIndices.push(i);
+      const token = this.tokens[i] as any;
+      if (!token.isspace) {
+        let tokentext: string = token.text;
+        if (tokentext === tokentext.toUpperCase() && tokentext.length > 1) {
+          tokentext = tokentext.toLowerCase();
+        }
+        if (token.hasenclitic) {
+          savedBearer = toAscii(tokentext);
+          savedBearerIdx = i;
+        } else {
+          sentences[sentences.length - 1].push(toAscii(tokentext));
+          sentenceTokenIndices[sentenceTokenIndices.length - 1].push(i);
+          if (token.isenclitic && savedBearer !== null) {
+            sentences[sentences.length - 1].push(savedBearer);
+            sentenceTokenIndices[sentenceTokenIndices.length - 1].push(savedBearerIdx);
+            savedBearer = null;
+          }
+        }
+      }
+      if (token.endssentence) {
+        sentences.push([]);
+        sentenceTokenIndices.push([]);
       }
     }
-    
-    if (wordsToTag.length === 0) {
-      return;
+
+    // Remove trailing empty sentence
+    while (sentences.length > 0 && sentences[sentences.length - 1].length === 0) {
+      sentences.pop();
+      sentenceTokenIndices.pop();
     }
-    
-    // Tag with RFTagger
-    const tagResults = tagger.tag(wordsToTag);
-    
-    // Apply tags back to tokens (clean RFTagger dots: "n.-.s." → "n-s--")
-    for (let i = 0; i < tokenIndices.length && i < tagResults.length; i++) {
-      const tokenIdx = tokenIndices[i];
-      const result = tagResults[i];
-      this.tokens[tokenIdx] = this.tokens[tokenIdx].with({
-        // Normalize RFTagger 17-char tags to 9-char LDT format (matches Python behavior)
-        tag: normalizeTag(result.tag.replace(/\./g, '')),
-        confidence: result.confidence
-      });
+    if (sentences.length === 0) return;
+
+    // Tag all sentences
+    const allResults = tagger.tagSentences(sentences);
+
+    // Apply tags back to tokens
+    for (let s = 0; s < sentences.length; s++) {
+      const sentTags = allResults[s];
+      const indices = sentenceTokenIndices[s];
+      for (let w = 0; w < indices.length && w < sentTags.length; w++) {
+        const tokenIdx = indices[w];
+        const result = sentTags[w];
+        this.tokens[tokenIdx] = this.tokens[tokenIdx].with({
+          tag: normalizeTag(result.tag.replace(/\./g, '')),
+          confidence: result.confidence
+        });
+      }
     }
   }
   
