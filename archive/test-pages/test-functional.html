@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Functional Tests - Latin Macronizer Edge Cases</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 1200px; margin: 20px auto; padding: 20px; }
+    h1 { color: #333; }
+    h2 { color: #555; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 30px; }
+    .test-case { margin: 10px 0; padding: 10px; border-left: 3px solid #ddd; background: #f9f9f9; }
+    .test-case.pass { border-left-color: #28a745; background: #d4edda; }
+    .test-case.fail { border-left-color: #dc3545; background: #f8d7da; }
+    .input { font-family: 'Times New Roman', serif; font-size: 16px; color: #333; }
+    .expected { font-family: 'Times New Roman', serif; font-size: 16px; color: #28a745; }
+    .got { font-family: 'Times New Roman', serif; font-size: 16px; color: #dc3545; }
+    .status { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; }
+    .status.pass { background: #28a745; color: white; }
+    .status.fail { background: #dc3545; color: white; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #eee; }
+    .summary { padding: 15px; background: #e9ecef; border-radius: 5px; margin: 20px 0; }
+  </style>
+  <script src="/wasm/rftagger.js?v=7"></script>
+  <script src="/wasm/cruncher.js"></script>
+</head>
+<body>
+  <h1>Functional Tests - Edge Cases</h1>
+  
+  <div class="summary">
+    <strong>Test Categories:</strong> Unknown words | Enclitics | Uppercase | Orthographic options | Punctuation
+  </div>
+  
+  <div id="results"></div>
+
+  <script type="module">
+    import { Macronizer } from './dist/core/Macronizer.js';
+
+    const testCases = [
+      // Unknown words (not in wordlist)
+      { category: 'Unknown Words', input: 'xyzlatin', description: 'Completely unknown word' },
+      { category: 'Unknown Words', input: 'nonsensical', description: 'Unknown with ending pattern' },
+      
+      // Enclitics
+      { category: 'Enclitics', input: 'amicusque', description: '-que enclitic' },
+      { category: 'Enclitics', input: 'venitne', description: '-ne enclitic' },
+      { category: 'Enclitics', input: 'vidistine', description: '-ne after -sti' },
+      { category: 'Enclitics', input: 'amavet', description: '-ve enclitic' },
+      { category: 'Enclitics', input: 'est', description: '-st variant (esse + st)' },
+      
+      // Uppercase / All Caps
+      { category: 'Uppercase', input: 'ROMANUS', description: 'All caps' },
+      { category: 'Uppercase', input: 'CAESAR', description: 'All caps name' },
+      { category: 'Uppercase', input: 'HIBERNIA', description: 'All caps with I' },
+      { category: 'Uppercase', input: 'Hi', description: 'Capital H, lowercase i' },
+      
+      // Orthographic options
+      { category: 'Orthography', input: 'uulgus', options: { performutov: true }, description: 'u→v conversion' },
+      { category: 'Orthography', input: 'iam', options: { performitoj: true }, description: 'i→j conversion' },
+      { category: 'Orthography', input: 'uolunt', options: { performutov: true, performitoj: true }, description: 'u→v and i→j' },
+      
+      // Punctuation & Whitespace
+      { category: 'Punctuation', input: 'Roma, Italia.', description: 'Comma and period' },
+      { category: 'Punctuation', input: 'est - nam', description: 'Dash between words' },
+      { category: 'Punctuation', input: 'sic!!!', description: 'Multiple exclamation' },
+      
+      // Mixed Case
+      { category: 'Mixed Case', input: 'RomA', description: 'Inconsistent case' },
+      { category: 'Mixed Case', input: 'cAEsar', description: 'Weird capitalization' },
+      
+      // Numbers and special
+      { category: 'Special', input: 'I II III', description: 'Roman numerals' },
+      { category: 'Special', input: 'anno 44 a.C.', description: 'Numbers with BC' },
+    ];
+
+    async function runTests() {
+      const macronizer = new Macronizer({
+        wordlistUrl: './macrons.txt',
+        useWasm: true
+      });
+      
+      document.getElementById('results').innerHTML = '<p>Initializing...</p>';
+      
+      try {
+        await macronizer.initialize();
+        document.getElementById('results').innerHTML = '<p>Running tests...</p>';
+        
+        const results = [];
+        for (const test of testCases) {
+          try {
+            const result = await macronizer.macronize(test.input, test.options || {});
+            results.push({
+              ...test,
+              output: result.macronized,
+              tokens: result.tokens,
+              confidence: result.confidence
+            });
+          } catch (e) {
+            results.push({
+              ...test,
+              error: e.message
+            });
+          }
+        }
+        
+        displayResults(results);
+      } catch (e) {
+        document.getElementById('results').innerHTML = `<p class="fail">Initialization failed: ${e.message}</p>`;
+      }
+    }
+
+    function displayResults(results) {
+      const categories = [...new Set(results.map(r => r.category))];
+      let html = '';
+      
+      categories.forEach(cat => {
+        html += `<h2>${cat}</h2>`;
+        html += '<table>';
+        html += '<tr><th>Input</th><th>Output</th><th>Description</th><th>Confidence</th><th>Status</th></tr>';
+        
+        results.filter(r => r.category === cat).forEach(r => {
+          const status = r.error ? 'FAIL' : 'PASS';
+          const statusClass = r.error ? 'fail' : 'pass';
+          html += `<tr>
+            <td class="input">${r.input}</td>
+            <td class="${statusClass}">${r.error ? r.error : r.output}</td>
+            <td>${r.description}</td>
+            <td>${r.confidence ? r.confidence.toFixed(2) : '-'}</td>
+            <td><span class="status ${statusClass}">${status}</span></td>
+          </tr>`;
+        });
+        
+        html += '</table>';
+      });
+      
+      const passed = results.filter(r => !r.error).length;
+      const failed = results.filter(r => r.error).length;
+      
+      html += `<div class="summary">
+        <strong>Results:</strong> ${passed} passed, ${failed} failed, ${results.length} total
+      </div>`;
+      
+      document.getElementById('results').innerHTML = html;
+    }
+
+    runTests();
+  </script>
+</body>
+</html>

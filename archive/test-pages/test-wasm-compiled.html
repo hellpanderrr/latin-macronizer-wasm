@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WASM RFTagger Test</title>
+</head>
+<body>
+    <h1>WASM RFTagger Test (Compiled)</h1>
+    <div id="status">Loading WASM...</div>
+    <div id="output"></div>
+    
+    <script src="public/wasm/rftagger.js"></script>
+    <script>
+        async function testWASM() {
+            const status = document.getElementById('status');
+            const output = document.getElementById('output');
+            
+            try {
+                const module = await RFTaggerModule();
+                status.innerHTML = '<p style="color: green;">WASM loaded successfully!</p>';
+                
+                // Create test input file
+                const testInput = "Gallia\nest\nomnis\ndivisa\npartes\ntres\n";
+                module.FS.writeFile('/test.txt', testInput);
+                
+                // Load model
+                const modelResponse = await fetch('public/wasm/rftagger-ldt.model');
+                const modelData = await modelResponse.arrayBuffer();
+                module.FS.writeFile('/model.bin', new Uint8Array(modelData));
+                
+                // Try to load and tag
+                output.innerHTML += '<p>Loading model...</p>';
+                const result = module.tagFile('/model.bin', '/test.txt');
+                
+                output.innerHTML += '<h3>Results:</h3><pre>' + result + '</pre>';
+                
+                // Compare with native output
+                output.innerHTML += '<h3>Expected (native):</h3><pre>' + 
+                    'Gallia n.-.s.-.-.-.f.b.-\n' +
+                    'est v.3.s.p.i.a.-.-.-\n' +
+                    'omnis a.-.s.-.-.-.f.n.-\n' +
+                    'divisa v.-.s.r.p.p.f.n.-\n' +
+                    'partes n.-.p.-.-.-.f.a.-\n' +
+                    'tres m.-.-.-.-.-.-.-.-\n' +
+                    '</pre>';
+                
+            } catch (err) {
+                status.innerHTML = '<p style="color: red;">Error: ' + err.message + '</p>';
+                console.error(err);
+            }
+        }
+        
+        testWASM();
+    </script>
+</body>
+</html>
