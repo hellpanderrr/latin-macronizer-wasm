@@ -3,3 +3,26 @@ latin_macronizer/RFTagger
 latin_macronizer/treebank_data
 latin_macronizer/__pycache__
 node_modules
+
+# Temp / cache
+%TEMP%/
+.puppeteer_data/
+__pycache__/
+python/__pycache__/
+*.pyc
+
+# Debug output
+archive/debug-outputs/
+
+# Temp CLI output
+caesar_cli.txt
+caesar_ref.txt
+
+# Accidental compiled JS in src/
+src/api/MacronizerAPI.js
+
+# Local config
+CLAUDE.local.md
+
+# Build logs
+build.log
