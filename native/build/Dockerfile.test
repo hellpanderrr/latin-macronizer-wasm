@@ -1,0 +1,23 @@
+# Dockerfile for testing original RFTagger
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    g++ \
+    make \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy RFTagger source files directly (Makefile expects them in current dir)
+COPY native/rftagger/src/*.C /app/rftagger/
+COPY native/rftagger/src/*.h /app/rftagger/
+COPY native/rftagger/src/Makefile /app/rftagger/Makefile
+
+# Build RFTagger (with C++11 for compatibility)
+RUN cd /app/rftagger && make CC="g++ -std=c++11"
+
+# Copy model and test files
+COPY public/wasm/rftagger-ldt.model /app/
+
+WORKDIR /app
+ENTRYPOINT ["./rftagger/rft-annotate"]

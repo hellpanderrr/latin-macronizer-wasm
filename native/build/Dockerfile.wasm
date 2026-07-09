@@ -1,0 +1,74 @@
+# Dockerfile.wasm
+# Multi-stage build for compiling RFTagger to WebAssembly using Emscripten
+# Optimized for Windows (WSL2) and Linux environments
+
+# Stage 1: Emscripten SDK build environment
+FROM emscripten/emsdk:3.1.6 AS builder
+
+WORKDIR /build
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    bison \
+    flex \
+    python3 \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy RFTagger source (if available)
+COPY native/rftagger/ /build/native/rftagger/
+
+# Copy Latin macronizer model
+COPY public/wasm/rftagger-ldt.model /build/model/rftagger-ldt.model
+
+# Copy source files
+# (no separate src/ at root)
+# (no separate scripts/ at root)
+
+# Copy build script
+COPY native/build/build-rftagger-wasm.sh /build/build-rftagger-wasm.sh
+RUN chmod +x /build/build-rftagger-wasm.sh
+
+# Run the build
+RUN /build/build-rftagger-wasm.sh
+
+# Stage 2: Production image
+FROM node:18-alpine AS production
+
+WORKDIR /app
+
+# Copy WASM output from builder
+COPY --from=builder /build/output/ /app/public/wasm/
+
+# Copy application files
+COPY package*.json ./
+RUN npm install --only=production
+
+COPY . .
+
+# Copy startup script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+
+# Stage 3: Development image
+FROM node:18-alpine AS development
+
+WORKDIR /app
+
+# Copy WASM output
+COPY --from=builder /build/output/ /app/public/wasm/
+
+# Install dev dependencies
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000 9229
+
+CMD ["npm", "run", "dev"]

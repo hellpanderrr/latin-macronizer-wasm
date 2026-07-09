@@ -1,7 +1,7 @@
 latin_macronizer.egg-info
-latin_macronizer/RFTagger
-latin_macronizer/treebank_data
-latin_macronizer/__pycache__
+python/RFTagger
+python/treebank_data
+python/__pycache__
 node_modules
 
 # Temp / cache
@@ -11,7 +11,7 @@ __pycache__/
 python/__pycache__/
 *.pyc
 
-# Debug output
+# Debug output (stale dirs cleaned from git)
 archive/debug-outputs/
 
 # Temp CLI output

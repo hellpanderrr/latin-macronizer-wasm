@@ -103,17 +103,17 @@ src/
 
 ## WASM build (developers only)
 
-The C/C++ sources are in `rftagger/` and `morpheus-master/`. WASM builds use Docker:
+The C/C++ sources are in `native/rftagger/` and `native/morpheus/c/`. WASM builds use Docker:
 
 ```bash
 # RFTagger
-docker compose -f archive/build-scripts/docker-compose.yml up wasm-builder
+docker compose -f native/build/docker-compose.yml up wasm-builder
 
 # Morpheus
-# See morpheus_js/docker-compose.morpheus.yml
+# See native/morpheus/js/docker-compose.morpheus.yml
 ```
 
-Build scripts and docs in `archive/build-scripts/`.
+Build scripts in `native/build/`.
 
 ## License
 

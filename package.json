@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc && node fix-imports.js && npm run copy-assets",
+    "build": "tsc && node fix-imports.cjs && npm run copy-assets",
     "build:prod": "tsc --project tsconfig.prod.json && npm run copy-assets",
     "dev": "tsc --watch",
     "test": "jest",
@@ -15,12 +15,12 @@
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
     "format:check": "prettier --check src/**/*.ts",
-    "build:wasm": "bash emscripten-build.sh",
-    "build:wasm:docker": "docker-compose up wasm-builder",
+    "build:wasm": "bash native/build/emscripten-build.sh",
+    "build:wasm:docker": "docker-compose -f native/build/docker-compose.yml up wasm-builder",
     "start": "node dist/server.js",
     "start:dev": "nodemon dist/server.js",
     "prepare": "npm run build",
-    "copy-assets": "node copy-assets.js"
+    "copy-assets": "node copy-assets.cjs"
   },
   "keywords": [
     "latin",

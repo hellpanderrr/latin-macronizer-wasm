@@ -1,0 +1,31 @@
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libfl-dev \
+    git \
+    flex \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /morpheus
+
+# Copy local morpheus source
+COPY native/morpheus/c/ .
+
+# Fix duplicate symbol error (same fix as WASM build)
+RUN rm -f src/gkends/indexendtables.c src/greeklib/sprntGkflags.c
+# Fix makefiles to remove duplicate object files
+RUN sed -i '/^sprntGkflags\.o/d' src/greeklib/makefile
+RUN sed -i 's/indexendtables\.o //' src/gkends/makefile
+
+# Build only libraries and cruncher (skip utilities that need indexendtables)
+RUN cd src && make -C greeklib && make -C morphlib && make -C gkends gkends.a && \
+    make -C gkdict && make -C gener && make -C anal cruncher
+
+# Manual install - copy only cruncher
+RUN mkdir -p bin && cp src/anal/cruncher bin/
+
+# Set up stemlib
+ENV MORPHLIB=/morpheus/stemlib
+
+ENTRYPOINT ["/morpheus/bin/cruncher"]

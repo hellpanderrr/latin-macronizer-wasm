@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Dev Commands
 
 ```bash
-# Build TS → dist/ (includes fix-imports.js + copy-assets)
+# Build TS → dist/ (includes fix-imports.cjs + copy-assets.cjs)
 npm run build
 
 # Production build (uses tsconfig.prod.json)
@@ -20,19 +20,19 @@ npx vite
 # Tests
 npm test                   # all tests (Jest)
 npm run test:watch         # watch mode
-npx jest tests/latin.test.ts  # single file
+npx jest test/unit/latin.test.ts  # single file
 
 # Lint / Format
 npm run lint
 npm run format
 
 # WASM builds (Docker recommended)
-docker-compose up wasm-builder   # RFTagger WASM
-# Morpheus WASM: see morpheus_js/docker-compose.morpheus.yml
+docker-compose -f native/build/docker-compose.yml up wasm-builder  # RFTagger WASM
+# Morpheus WASM: see native/morpheus/js/docker-compose.morpheus.yml
 
 # Serve for browser testing
 npx vite
-# Then open http://localhost:8080/demo.html
+# Then open http://localhost:8080
 ```
 
 ## Project Purpose
@@ -41,7 +41,7 @@ Browser port of [Johan Winge's Python Latin macronizer](https://github.com/johan
 
 ## Architecture Overview
 
-Three layers: **analysis engines** (POS tagging, morphology, dictionaries) → **core orchestration** (Macronizer, Tokenization) → **API wrapper** (used by demo.html).
+Three layers: **analysis engines** (POS tagging, morphology, dictionaries) → **core orchestration** (Macronizer, Tokenization) → **API wrapper** (used by index.html).
 
 ### src/ directory map
 
@@ -94,11 +94,13 @@ Latin text
 
 ### WASM Build Process
 
-- RFTagger: Emscripten compilation via Docker (`docker-compose up wasm-builder`). Source in `rftagger/`. Build scripts: `build-rftagger-wasm.sh`, `emscripten-build.sh`.
-- Morpheus: Separate build in `morpheus_js/` directory. Source in `morpheus-master/` (git submodule). Build: `morpheus_js/build-morpheus-wasm.sh` via Docker (`morpheus_js/docker-compose.morpheus.yml`).
+- RFTagger: Emscripten compilation via Docker (`docker-compose -f native/build/docker-compose.yml up wasm-builder`). Source in `native/rftagger/`. Build scripts: `native/build/build-rftagger-wasm.sh`, `native/build/emscripten-build.sh`.
+- Morpheus: Separate build in `native/morpheus/js/` directory. Source in `native/morpheus/c/`. Build: `native/morpheus/js/build-morpheus-wasm.sh` via Docker (`native/morpheus/js/docker-compose.morpheus.yml`).
 
 ### Testing
 
-- Unit tests (`tests/`): `alignMacronized.test.ts` (DP alignment), `latin.test.ts` (utilities).
-- HTML test pages (manual browser testing): `demo.html` (main demo), `test-full-pipeline.html`, `test-functional.html`, `test-morpheus-wasm.html`, etc.
-- Python comparison: `scripts/compare_rftagger_output.py` compares TS vs Python output.
+- Unit tests (`test/unit/`): `alignMacronized.test.ts` (DP alignment), `latin.test.ts` (utilities).
+- HTML test pages (manual browser testing): `test/pages/test-pages/` directory — full pipeline, functional WASM, Morpheus tests, etc.
+- E2E browser tests (puppeteer): `test/e2e/` — `test-e2e.js`, `test-e2e-real.js`, `test-e2e-large.js`.
+- Node.js test (no browser, uses FallbackTagger): `test/test-node.mjs`.
+- Python comparison: `python/macronize.py` compares TS vs Python output.

@@ -64,7 +64,7 @@ export interface MorpheusOptions {
  * MorpheusAnalyzer class
  * WebAssembly wrapper for Morpheus morphological analyzer
  * 
- * Uses the same pattern as the working morpheus_js/MorpheusTagger.js
+ * Uses the same pattern as the working native/morpheus/js/MorpheusTagger.js
  */
 export class MorpheusAnalyzer {
   private wasmModule: any;
@@ -78,7 +78,7 @@ export class MorpheusAnalyzer {
 
   /**
    * Initialize the WASM module
-   * Uses the same pattern as morpheus_js/MorpheusTagger.js that works
+   * Uses the same pattern as native/morpheus/js/MorpheusTagger.js that works
    */
   async initialize(): Promise<void> {
     if (this.initialized) return;

@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # WASM Build Service
+  wasm-builder:
+    build:
+      context: ../..
+      dockerfile: native/build/Dockerfile.wasm
+      target: builder
+    container_name: rftagger-wasm-builder
+    volumes:
+      - ../../public/wasm:/build/output:cached
+    environment:
+      - EMSDK_ENV=/emsdk/emsdk_env.sh
+    command: /bin/sh -c "cd /build && ./build-rftagger-wasm.sh"
+    networks:
+      - macronizer-network
+
+  # Development server with hot reload
+  app-dev:
+    build:
+      context: ../..
+      dockerfile: native/build/Dockerfile.wasm
+      target: development
+    container_name: latin-macronizer-dev
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Node.js debugger
+    volumes:
+      - ../..:/app
+      - /app/node_modules
+      - ../../public/wasm:/app/public/wasm:ro
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    command: npm run dev
+    depends_on:
+      - wasm-builder
+    networks:
+      - macronizer-network
+
+  # Production server
+  app-prod:
+    build:
+      context: ../..
+      dockerfile: native/build/Dockerfile.wasm
+      target: production
+    container_name: latin-macronizer-prod
+    ports:
+      - "8080:3000"
+    volumes:
+      - ../../public/wasm:/app/public/wasm:ro
+    depends_on:
+      - wasm-builder
+    networks:
+      - macronizer-network
+
+networks:
+  macronizer-network:
+    driver: bridge
+
+volumes:
+  build-output:
+  node_modules:
