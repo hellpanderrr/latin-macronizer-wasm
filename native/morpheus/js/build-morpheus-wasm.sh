@@ -34,6 +34,11 @@ if [ ! -d "${MORPHEUS_STEMLIB_DIR}/Latin" ]; then
     echo ""
 fi
 
+echo "Stripping Greek stemlib (Latin-only build for macronizer)..."
+rm -rf "${MORPHEUS_STEMLIB_DIR}/Greek"
+echo "Stemlib size after stripping Greek:"
+du -sh "${MORPHEUS_STEMLIB_DIR}" || true
+
 echo "Defining source files from makefiles..."
 
 # Directories
