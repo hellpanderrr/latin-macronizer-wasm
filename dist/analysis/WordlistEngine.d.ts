@@ -4,7 +4,7 @@
  * Stores exact wordform + tag → macronized form mappings from macrons.txt
  * Integrates with Morpheus for unknown words
  */
-import { MorpheusAnalyzer } from './MorpheusAnalyzer';
+import { MorpheusAnalyzer, MorpheusAnalysis } from './MorpheusAnalyzer';
 export interface WordlistEntry {
     wordform: string;
     tag: string;
@@ -21,6 +21,8 @@ export declare class WordlistEngine {
     private readonly DB_NAME;
     private readonly DB_VERSION;
     private readonly STORE_NAME;
+    /** Cache of Morpheus analyses by normalized wordform (for UI display) */
+    private morpheusCache;
     /**
      * Initialize IndexedDB database
      */
@@ -65,6 +67,11 @@ export declare class WordlistEngine {
      */
     private convertMacronMarks;
     /**
+     * Clean lemma string: remove #, 1, spaces→+, -, ^, _
+     * Matches Python wordlist.clean_lemma()
+     */
+    private cleanLemma;
+    /**
      * Load from parsed macrons.txt data
      * Expected format: whitespace-separated (tab or space) columns:
      *   wordform  tag  lemma  accented
@@ -88,13 +95,29 @@ export declare class WordlistEngine {
      */
     setMorpheusAnalyzer(analyzer: MorpheusAnalyzer): void;
     /**
+     * Get cached Morpheus analysis for a wordform (if available)
+     */
+    getMorpheusAnalysis(wordform: string): MorpheusAnalysis | undefined;
+    /**
+     * Check if a word has Morpheus analysis cached
+     */
+    hasMorpheusAnalysis(wordform: string): boolean;
+    /**
      * Lookup word in wordlist, fallback to Morpheus analysis if not found
      */
     lookupOrAnalyze(wordform: string, tag: string): Promise<string | null>;
     /**
      * Analyze unknown words using Morpheus and cache results
+     * Ported from latin_macronizer/wordlist.py::crunchwords()
+     * Produces multiple entries per word (different lemma+tag combinations)
      */
     analyzeUnknownWords(words: string[]): Promise<WordlistEntry[]>;
+    /**
+     * Ensure all given wordforms have entries in the wordlist.
+     * For missing words, analyzes with Morpheus and caches results.
+     * Matches Python Wordlist.loadwords() behavior.
+     */
+    ensureAnalyzed(wordForms: string[]): Promise<void>;
     /**
      * Check if word exists in wordlist
      */
@@ -103,5 +126,10 @@ export declare class WordlistEngine {
      * Find analysis matching the given tag
      */
     private findMatchingAnalysis;
+    /**
+     * Convert a Morpheus analysis to an LDT 9-char tag
+     * Ported from latin_macronizer/postags.py (parse_to_ldt)
+     */
+    private analysisToLdtTag;
 }
 //# sourceMappingURL=WordlistEngine.d.ts.map

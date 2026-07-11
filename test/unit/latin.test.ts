@@ -4,7 +4,7 @@ import {
   underscoreToUnicode, 
   unicodeToUnderscore,
   toAscii 
-} from '../src/utils/latin';
+} from '../../src/utils/latin';
 
 /**
  * Helper to build LDT 9-character tags.

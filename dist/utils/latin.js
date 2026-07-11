@@ -113,9 +113,11 @@ export function isWhitespace(token) {
     return /^\s*$/.test(token);
 }
 /**
- * Common Latin enclitics
+ * Common Latin enclitics (generic split only)
+ * Python splits: -que (len>3), -ve/-ue/-ne/-st (len>2)
+ * -cum and -met are handled via special list only, not generic
  */
-export const enclitics = ['que', 've', 'ne', 'cum', 'met'];
+export const enclitics = ['que', 've', 'ue', 'ne', 'st'];
 /**
  * Check if word ends with enclitic
  * Returns [stem, enclitic] or null
@@ -125,10 +127,8 @@ export function splitEnclitic(word) {
     for (const enclitic of enclitics) {
         if (lower.endsWith(enclitic) && lower.length > enclitic.length) {
             const stem = word.slice(0, -enclitic.length);
-            // Verify it's a valid split (stem ends with vowel or specific consonants)
-            if (/[aeiouy]|(n|r)$/i.test(stem)) {
-                return [stem, enclitic];
-            }
+            // Python: split unconditionally if word ends with enclitic (no stem validation)
+            return [stem, enclitic];
         }
     }
     return null;
@@ -256,43 +256,49 @@ export function unicodeToUnderscore(text) {
         .replace(/Ȳ/g, 'Y_');
 }
 /**
- * Normalize RFTagger 17-char tag format to LDT 9-char format
- * RFTagger: n---s-------f-n-- (17 chars: pos+person+number+tense/mood/voice+gender+case+degree+dialect?)
- * LDT:      n-s---fn- (9 chars: pos+person+number+tense+mood+voice+gender+case+degree)
+ * Filter and normalize accent forms from Morpheus output
+ * Ported from latin_macronizer/postags.py filter_accents()
+ *
+ * Morpheus can produce accent forms with markers in non-standard order.
+ * This function normalizes them to the expected underscore notation.
+ *
+ * Transformations:
+ *   "^_" → "_^"  (swap order)
+ *   "_^" + consonant+l/r → "^" + consonant  (e.g., a_^cl → a^cl)
+ *   "u_m" → "um"  (special case)
+ *   vowel + "^?" + n + (s/f/x/ct) → vowel + "_n" + ending  (e.g., an^s → a_ns)
+ */
+export function filterAccents(accented) {
+    let result = accented;
+    // Step 1: swap "^_" to "_^"
+    result = result.replace(/\^_/g, '_^');
+    // Step 2: convert "_^" followed by consonant+l/r to "^" + consonant
+    result = result.replace(/_\^([bcdfgpt][lr])/g, '^$1');
+    // Step 3: "u_m" → "um"
+    result = result.replace(/u_m$/g, 'um');
+    // Step 4: add macron before n in patterns like an^s, in^ct, etc.
+    result = result.replace(/([AEIOUYaeiouy])\^?n([sfx]|ct)/g, '$1_n$2');
+    return result;
+}
+/**
+ * Normalize RFTagger 17-char tag format to LDT 9-char format.
+ * RFTagger: n---s-------f-n-- (17 chars, undotted) or n.-.s.-.-.-.f.b.- (dotted)
+ * LDT:      n-s---fb- (9 chars: pos+person+number+tense+mood+voice+gender+case+degree)
+ *
+ * Works with both dotted and undotted 17-char formats by extracting
+ * the even-indexed positions (0, 2, 4, 6, 8, 10, 12, 14, 16) which hold
+ * the significant tag data in both formats.
  */
 export function normalizeTag(tag) {
-    const debugTags = ['n---s-------f-n--', 'n---p-------m-n--', 'p---p-------m-n--'];
-    const shouldLog = debugTags.includes(tag);
-    if (shouldLog)
-        console.log(`[normalizeTag] Input: "${tag}" len=${tag.length}`);
     if (tag.length === 9 || tag.length === 12) {
-        // Already LDT format
-        if (shouldLog)
-            console.log(`[normalizeTag] Already LDT format, returning as-is`);
         return tag;
     }
     if (tag.length !== 17) {
-        // Unknown format, return as-is
-        if (shouldLog)
-            console.log(`[normalizeTag] Unknown length ${tag.length}, returning as-is`);
+        console.warn(`normalizeTag: unexpected tag length ${tag.length}: "${tag}"`);
         return tag;
     }
-    // RFTagger 17-char format: n---s-------f-n--
-    // Positions: 0=pos, 1-3=person, 4=number, 5-11=tense/mood/voice, 12=gender, 13=?, 14=case, 15-16=?
-    // Map to LDT 9-char: pos(0), person(1), number(2), tense(3), mood(4), voice(5), gender(6), case(7), degree(8)
-    const pos = tag[0];
-    const number = tag[4]; // s/p
-    const gender = tag[12]; // m/f/n
-    const case_ = tag[14]; // n/g/d/a/b/v (position 14, not 13!)
-    if (shouldLog) {
-        console.log(`[normalizeTag] Extracted: pos=${pos}, number=${number}, gender=${gender}, case=${case_}`);
-    }
-    // For nouns/adjectives, tense/mood/voice positions (3-5 in LDT) are '-'
-    // Person (position 1) is also '-' for nouns
-    const result = `${pos}-${number}---${gender}${case_}-`;
-    if (shouldLog)
-        console.log(`[normalizeTag] Result: "${result}" len=${result.length}`);
-    return result;
+    // Extract positions: 0=pos, 2=person, 4=number, 6=tense, 8=mood, 10=voice, 12=gender, 14=case, 16=degree
+    return `${tag[0]}${tag[2]}${tag[4]}${tag[6]}${tag[8]}${tag[10]}${tag[12]}${tag[14]}${tag[16]}`;
 }
 /**
  * Compute distance between two LDT tags

@@ -4,7 +4,7 @@
  * Stores exact wordform + tag → macronized form mappings from macrons.txt
  * Integrates with Morpheus for unknown words
  */
-import { unicodeToUnderscore } from '../utils/latin.js';
+import { unicodeToUnderscore, tagDistance, toAscii } from '../utils/latin.js';
 export class WordlistEngine {
     constructor() {
         Object.defineProperty(this, "db", {
@@ -41,19 +41,26 @@ export class WordlistEngine {
             enumerable: true,
             configurable: true,
             writable: true,
-            value: 'MacronizerDB'
+            value: 'MacronizerDB_v2'
         });
         Object.defineProperty(this, "DB_VERSION", {
             enumerable: true,
             configurable: true,
             writable: true,
-            value: 2
+            value: 1
         });
         Object.defineProperty(this, "STORE_NAME", {
             enumerable: true,
             configurable: true,
             writable: true,
             value: 'wordlist'
+        });
+        /** Cache of Morpheus analyses by normalized wordform (for UI display) */
+        Object.defineProperty(this, "morpheusCache", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: new Map()
         });
     }
     /**
@@ -69,18 +76,17 @@ export class WordlistEngine {
             };
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
-                // Migrate: delete existing store if present (to change key schema)
-                if (db.objectStoreNames.contains(this.STORE_NAME)) {
-                    db.deleteObjectStore(this.STORE_NAME);
+                // Non-blocking migration: create new store with a different name.
+                // Old store (wordlist) is left intact but ignored. Fresh data required.
+                if (!db.objectStoreNames.contains(this.STORE_NAME)) {
+                    const store = db.createObjectStore(this.STORE_NAME, {
+                        keyPath: ['wordform', 'tag', 'lemma']
+                    });
+                    // Create indexes for efficient lookup
+                    store.createIndex('wordform', 'wordform', { unique: false });
+                    store.createIndex('tag', 'tag', { unique: false });
+                    store.createIndex('lemma', 'lemma', { unique: false });
                 }
-                // Create object store with composite key [wordform, tag, lemma]
-                const store = db.createObjectStore(this.STORE_NAME, {
-                    keyPath: ['wordform', 'tag', 'lemma']
-                });
-                // Create indexes for efficient lookup
-                store.createIndex('wordform', 'wordform', { unique: false });
-                store.createIndex('tag', 'tag', { unique: false });
-                store.createIndex('lemma', 'lemma', { unique: false });
             };
         });
     }
@@ -271,6 +277,19 @@ export class WordlistEngine {
             .replace(/U_/g, 'Ū');
     }
     /**
+     * Clean lemma string: remove #, 1, spaces→+, -, ^, _
+     * Matches Python wordlist.clean_lemma()
+     */
+    cleanLemma(lemma) {
+        return lemma
+            .replace(/#/g, '')
+            .replace(/1/g, '')
+            .replace(/ /g, '+')
+            .replace(/-/g, '')
+            .replace(/\^/g, '')
+            .replace(/_/g, '');
+    }
+    /**
      * Load from parsed macrons.txt data
      * Expected format: whitespace-separated (tab or space) columns:
      *   wordform  tag  lemma  accented
@@ -349,6 +368,18 @@ export class WordlistEngine {
         this.morpheusAnalyzer = analyzer;
     }
     /**
+     * Get cached Morpheus analysis for a wordform (if available)
+     */
+    getMorpheusAnalysis(wordform) {
+        return this.morpheusCache.get(wordform.toLowerCase().trim());
+    }
+    /**
+     * Check if a word has Morpheus analysis cached
+     */
+    hasMorpheusAnalysis(wordform) {
+        return this.morpheusCache.has(wordform.toLowerCase().trim());
+    }
+    /**
      * Lookup word in wordlist, fallback to Morpheus analysis if not found
      */
     async lookupOrAnalyze(wordform, tag) {
@@ -382,6 +413,8 @@ export class WordlistEngine {
     }
     /**
      * Analyze unknown words using Morpheus and cache results
+     * Ported from latin_macronizer/wordlist.py::crunchwords()
+     * Produces multiple entries per word (different lemma+tag combinations)
      */
     async analyzeUnknownWords(words) {
         if (!this.morpheusAnalyzer || !this.morpheusAnalyzer.isInitialized()) {
@@ -389,38 +422,89 @@ export class WordlistEngine {
         }
         const results = [];
         const unknownWords = [];
-        // Filter words not in wordlist
+        // Filter words not in wordlist (no entries with accentedUnderscore)
         for (const word of words) {
             const normalized = word.toLowerCase().trim();
-            const exists = await this.wordExists(normalized);
-            if (!exists) {
+            const entries = await this.getAllEntries(normalized);
+            if (entries.length === 0) {
                 unknownWords.push(word);
             }
         }
         if (unknownWords.length === 0) {
+            console.log('[WordlistEngine] No unknown words, skipping Morpheus analysis');
             return results;
         }
-        // Analyze with Morpheus
+        console.log('[WordlistEngine] Analyzing unknown words with Morpheus:', unknownWords);
+        // Analyze with Morpheus (batch)
         const analyses = this.morpheusAnalyzer.analyzeBatch(unknownWords);
-        // Convert analyses to wordlist entries
         for (const analysis of analyses) {
-            if (analysis.success && analysis.analyses.length > 0) {
-                // Use first analysis as primary
-                const primary = analysis.analyses[0];
-                const macronized = this.convertMacronMarks(primary.raw);
+            console.log(`[WordlistEngine] Morpheus result for "${analysis.word}": success=${analysis.success}, analysesCount=${analysis.analyses.length}`);
+            if (!analysis.success || analysis.analyses.length === 0) {
+                console.warn(`[WordlistEngine] WARNING: Morpheus analysis failed for "${analysis.word}"`);
+                continue;
+            }
+            // Cache the full Morpheus analysis for UI popup display
+            this.morpheusCache.set(analysis.word.toLowerCase().trim(), analysis);
+            // Group by (lemma, tag) to collect all accented forms for that parse
+            const lemmaTagToAccented = new Map();
+            for (const parse of analysis.analyses) {
+                const lemma = this.cleanLemma(parse.lemma);
+                const ldtTag = this.analysisToLdtTag(parse);
+                const accentedRaw = parse.accented; // Use extracted accented field (underscore notation)
+                // Special case: trans verbs need _ after prefix (Python wordlist.py line 147-148)
+                let accentedAdjusted = accentedRaw;
+                if (lemma.startsWith('trans') && accentedRaw.length > 3 && accentedRaw[3] !== '_') {
+                    accentedAdjusted = accentedRaw.slice(0, 3) + '_' + accentedRaw.slice(3);
+                }
+                const key = `${lemma}|${ldtTag}`;
+                const existing = lemmaTagToAccented.get(key) || [];
+                existing.push(accentedAdjusted);
+                lemmaTagToAccented.set(key, existing);
+            }
+            // For each (lemma, tag) group, select best accented form
+            for (const [key, accenteds] of lemmaTagToAccented.entries()) {
+                const [lemma, ldtTag] = key.split('|');
+                // Python preference: forms with more 'v', 'j', 'J' (prefers volvit over voluit, Julius over Iulius)
+                const bestAccented = accenteds.sort((a, b) => {
+                    const scoreA = (a.match(/[vjJ]/g) || []).length;
+                    const scoreB = (b.match(/[vjJ]/g) || []).length;
+                    return scoreA - scoreB; // ascending, so highest score comes last
+                }).pop(); // take highest
+                const accentedUnderscore = unicodeToUnderscore(bestAccented);
                 const entry = {
                     wordform: analysis.word.toLowerCase(),
-                    tag: '---------', // Morpheus doesn't provide RFTagger format tags
-                    lemma: primary.lemma,
-                    macronized,
-                    accentedUnderscore: unicodeToUnderscore(macronized) // approximate
+                    tag: ldtTag,
+                    lemma,
+                    macronized: this.convertMacronMarks(bestAccented),
+                    accentedUnderscore
                 };
                 results.push(entry);
-                // Cache in wordlist
-                await this.addEntry(entry);
+                await this.addEntry(entry); // Cache in DB
             }
         }
         return results;
+    }
+    /**
+     * Ensure all given wordforms have entries in the wordlist.
+     * For missing words, analyzes with Morpheus and caches results.
+     * Matches Python Wordlist.loadwords() behavior.
+     */
+    async ensureAnalyzed(wordForms) {
+        // Deduplicate and normalize
+        const uniqueForms = Array.from(new Set(wordForms.map(w => toAscii(w).toLowerCase().trim())));
+        // Check which are missing (no entries with accentedUnderscore)
+        const missing = [];
+        for (const word of uniqueForms) {
+            const entries = await this.getAllEntries(word);
+            if (entries.length === 0) {
+                missing.push(word);
+            }
+        }
+        if (missing.length === 0) {
+            return;
+        }
+        // Analyze missing words with Morpheus (batch)
+        await this.analyzeUnknownWords(missing);
     }
     /**
      * Check if word exists in wordlist
@@ -443,7 +527,7 @@ export class WordlistEngine {
     /**
      * Find analysis matching the given tag
      */
-    findMatchingAnalysis(analysis, tag) {
+    findMatchingAnalysis(analysis, targetTag) {
         if (analysis.analyses.length === 0) {
             return null;
         }
@@ -451,9 +535,154 @@ export class WordlistEngine {
         if (analysis.analyses.length === 1) {
             return analysis.analyses[0];
         }
-        // TODO: Implement proper tag matching logic
-        // For now, return first analysis
-        return analysis.analyses[0];
+        // Convert target LDT tag to comparable form (normalize)
+        const normalizedTarget = this.normalizeTag(targetTag.trim());
+        // Score each analysis by tag distance to target
+        let bestAnalysis = analysis.analyses[0];
+        let bestDistance = tagDistance(normalizedTarget, this.analysisToLdtTag(bestAnalysis));
+        for (let i = 1; i < analysis.analyses.length; i++) {
+            const cand = analysis.analyses[i];
+            const dist = tagDistance(normalizedTarget, this.analysisToLdtTag(cand));
+            if (dist < bestDistance) {
+                bestDistance = dist;
+                bestAnalysis = cand;
+            }
+        }
+        return bestAnalysis;
+    }
+    /**
+     * Convert a Morpheus analysis to an LDT 9-char tag
+     * Ported from latin_macronizer/postags.py (parse_to_ldt)
+     */
+    analysisToLdtTag(analysis) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        const f = analysis.formInfo;
+        let tag = '';
+        // POS (position 0)
+        const pos = ((_a = f.partOfSpeech) === null || _a === void 0 ? void 0 : _a.toLowerCase()) || '';
+        if (pos.includes('noun'))
+            tag += 'n';
+        else if (pos.includes('verb'))
+            tag += 'v';
+        else if (pos.includes('adj'))
+            tag += 'a';
+        else if (pos.includes('adv') || pos.includes('adverbial'))
+            tag += 'd';
+        else if (pos.includes('conj'))
+            tag += 'c';
+        else if (pos.includes('prep'))
+            tag += 'r';
+        else if (pos.includes('pron'))
+            tag += 'p';
+        else if (pos.includes('num'))
+            tag += 'm';
+        else if (pos.includes('interj'))
+            tag += 'i';
+        else if (pos.includes('excl'))
+            tag += 'e';
+        else if (pos.includes('punc'))
+            tag += 'u';
+        else
+            tag += '-';
+        // Person (position 1)
+        const person = ((_b = f.person) === null || _b === void 0 ? void 0 : _b.toLowerCase()) || '';
+        if (person.includes('1'))
+            tag += '1';
+        else if (person.includes('2'))
+            tag += '2';
+        else if (person.includes('3'))
+            tag += '3';
+        else
+            tag += '-';
+        // Number (position 2)
+        const number = ((_c = f.number) === null || _c === void 0 ? void 0 : _c.toLowerCase()) || '';
+        if (number.includes('sing'))
+            tag += 's';
+        else if (number.includes('plur'))
+            tag += 'p';
+        else
+            tag += '-';
+        // Tense (position 3)
+        const tense = ((_d = f.tense) === null || _d === void 0 ? void 0 : _d.toLowerCase()) || '';
+        if (tense.includes('pres'))
+            tag += 'p';
+        else if (tense.includes('impf'))
+            tag += 'i';
+        else if (tense.includes('perf'))
+            tag += 'r';
+        else if (tense.includes('plup'))
+            tag += 'l';
+        else if (tense.includes('futperf'))
+            tag += 't';
+        else if (tense.includes('fut'))
+            tag += 'f';
+        else
+            tag += '-';
+        // Mood (position 4)
+        const mood = ((_e = f.mood) === null || _e === void 0 ? void 0 : _e.toLowerCase()) || '';
+        if (mood.includes('ind'))
+            tag += 'i';
+        else if (mood.includes('subj'))
+            tag += 's';
+        else if (mood.includes('inf'))
+            tag += 'n';
+        else if (mood.includes('imperat'))
+            tag += 'm';
+        else if (mood.includes('part'))
+            tag += 'p';
+        else if (mood.includes('gerund'))
+            tag += 'd';
+        else if (mood.includes('gerundive'))
+            tag += 'g';
+        else if (mood.includes('supine'))
+            tag += 'u';
+        else
+            tag += '-';
+        // Voice (position 5)
+        const voice = ((_f = f.voice) === null || _f === void 0 ? void 0 : _f.toLowerCase()) || '';
+        if (voice.includes('act'))
+            tag += 'a';
+        else if (voice.includes('pass'))
+            tag += 'p';
+        else
+            tag += '-';
+        // Gender (position 6)
+        const gender = ((_g = f.gender) === null || _g === void 0 ? void 0 : _g.toLowerCase()) || '';
+        if (gender.includes('masc'))
+            tag += 'm';
+        else if (gender.includes('fem'))
+            tag += 'f';
+        else if (gender.includes('neut'))
+            tag += 'n';
+        else
+            tag += '-';
+        // Case (position 7)
+        const case_ = ((_h = f.case) === null || _h === void 0 ? void 0 : _h.toLowerCase()) || '';
+        if (case_.includes('nom'))
+            tag += 'n';
+        else if (case_.includes('gen'))
+            tag += 'g';
+        else if (case_.includes('dat'))
+            tag += 'd';
+        else if (case_.includes('acc'))
+            tag += 'a';
+        else if (case_.includes('abl'))
+            tag += 'b';
+        else if (case_.includes('voc'))
+            tag += 'v';
+        else if (case_.includes('loc'))
+            tag += 'l';
+        else
+            tag += '-';
+        // Degree (position 8)
+        const degree = ((_j = f.degree) === null || _j === void 0 ? void 0 : _j.toLowerCase()) || '';
+        if (degree.includes('comp'))
+            tag += 'c';
+        else if (degree.includes('superl'))
+            tag += 's';
+        else
+            tag += '-';
+        return tag;
     }
 }
 //# sourceMappingURL=WordlistEngine.js.map

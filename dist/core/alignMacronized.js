@@ -74,12 +74,13 @@ export function alignMacronized(plain, accented, options = {}) {
     // Python: accented = accented.replace("_^", "").replace("^", "")
     let accentedNorm = accented.split('_^').join('').split('^').join('');
     // Apply alsomaius transformation if needed (only on accented)
-    if (domacronize && alsomaius && accentedNorm.includes('j')) {
+    // Match both 'i' and 'j' since wordlist uses 'i' but Morpheus uses 'j' orthography
+    if (domacronize && alsomaius && /[ij]/.test(accentedNorm)) {
         const lowerAcc = accentedNorm.toLowerCase();
         const startsWithShortJPrefix = prefixesWithShortJ.some(prefix => lowerAcc.startsWith(prefix));
         if (!startsWithShortJPrefix) {
-            // Insert underscore after vowel before j+vowel: ([aeiouy])(j[aeiouy]) → \1_\2
-            accentedNorm = accentedNorm.replace(/([aeiouy])(j[aeiouy])/gi, (_, v, jv) => `${v}_${jv}`);
+            // Insert underscore after vowel before i/j+vowel: ([aeiouy])([ij][aeiouy]) → \1_\2
+            accentedNorm = accentedNorm.replace(/([aeiouy])([ij][aeiouy])/gi, (_, v, ijv) => `${v}_${ijv}`);
         }
     }
     // Early exact match: if plain equals accented without underscores, return accented (with underscores)
@@ -88,11 +89,17 @@ export function alignMacronized(plain, accented, options = {}) {
         ? plain.toLowerCase() === accentedWithoutUnderscores.toLowerCase()
         : plain === accentedWithoutUnderscores;
     if (isExactMatch) {
-        // Preserve original case when alsomaius is enabled
+        // APPLY u→v and i→j conversions even on exact match path (bug fix)
         let result = accentedNorm;
         if (options.alsomaius && plain[0] !== accentedNorm[0]) {
             // Match the case of the first character
             result = plain[0] + accentedNorm.slice(1);
+        }
+        if (performutov) {
+            result = result.replace(/u/g, 'v').replace(/U/g, 'V');
+        }
+        if (performitoj) {
+            result = result.replace(/i/g, 'j').replace(/I/g, 'J');
         }
         if (shouldLog)
             console.log(`    Early exact match: "${plain}" === "${accentedWithoutUnderscores}" (alsomaius=${options.alsomaius}), returning "${result}"`);
@@ -158,12 +165,21 @@ export function alignMacronized(plain, accented, options = {}) {
             const pLower = pChar.toLowerCase();
             const aLower = aChar.toLowerCase();
             // Determine output character
+            // u→v and i→j conversion: ONLY when accented has 'v'/'j' AND plain has 'u'/'i'.
+            // This matches Python token.py lines 100-107 exactly — converts only consonantal
+            // positions (where wordlist accented form uses 'v'/'j'), preserves macronized vowels.
             let outChar;
-            if (performutov && aLower === 'v' && pLower === 'u') {
-                outChar = pChar === 'u' ? 'v' : 'V';
+            if (performutov && aLower === 'v' && pChar === 'u') {
+                outChar = 'v';
             }
-            else if (performitoj && aLower === 'j' && pLower === 'i') {
-                outChar = pChar === 'i' ? 'j' : 'J';
+            else if (performutov && aLower === 'v' && pChar === 'U') {
+                outChar = 'V';
+            }
+            else if (performitoj && aLower === 'j' && pChar === 'i') {
+                outChar = 'j';
+            }
+            else if (performitoj && aLower === 'j' && pChar === 'I') {
+                outChar = 'J';
             }
             else {
                 outChar = pChar;

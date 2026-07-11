@@ -7,10 +7,31 @@ import { Token } from './Token';
 export interface MacronizerOptions {
     useWasm?: boolean;
     wasmModelPath?: string;
+    wasmPath?: string;
     enableCache?: boolean;
     confidenceThreshold?: number;
     wordlistUrl?: string;
     morpheusWasmPath?: string;
+}
+export interface MacronizeOptions {
+    macronize?: boolean;
+    alsomaius?: boolean;
+    performutov?: boolean;
+    performitoj?: boolean;
+    scan?: string;
+}
+export interface Statistics {
+    totalWords: number;
+    knownWords: number;
+    unknownWords: number;
+    ambiguousForms: number;
+}
+export interface MacronizeOptions {
+    macronize?: boolean;
+    alsomaius?: boolean;
+    performutov?: boolean;
+    performitoj?: boolean;
+    scan?: string;
 }
 export interface MacronizeResult {
     original: string;
@@ -19,6 +40,8 @@ export interface MacronizeResult {
     taggedTokens: Token[];
     confidence: number;
     processingTime: number;
+    statistics: Statistics;
+    scannedFeet?: string[];
 }
 /**
  * Main macronization engine
@@ -42,13 +65,13 @@ export declare class Macronizer {
     /**
      * Initialize the macronizer (load WASM module if enabled)
      */
-    initialize(): Promise<void>;
+    initialize(onProgress?: (percent: number, message: string) => void): Promise<void>;
     /**
      * Macronize Latin text
      * Main entry point for text processing
      * Uses Tokenization pipeline with DP alignment
      */
-    macronize(text: string): Promise<MacronizeResult>;
+    macronize(text: string, options?: MacronizeOptions): Promise<MacronizeResult>;
     /**
      * Tag tokens with POS tags
      */
@@ -62,26 +85,13 @@ export declare class Macronizer {
      */
     private fallbackTagging;
     /**
-     * Apply macronization to tagged tokens
-     */
-    private applyMacronization;
-    /**
-     * Macronize a single token
-     * Priority: Wordlist → Lemma lookup → Pattern matching → Edit distance → Heuristics
-     */
-    private macronizeToken;
-    /**
-     * Apply heuristic rules for vowel length
-     */
-    private applyHeuristics;
-    /**
-     * Ensure vowel at position is long (add macron)
-     */
-    private ensureLongVowel;
-    /**
      * Calculate overall confidence score
      */
     private calculateConfidence;
+    /**
+     * Calculate statistics about the macronization
+     */
+    private calculateStatistics;
     /**
      * Batch process multiple texts
      */
@@ -102,5 +112,12 @@ export declare class Macronizer {
      * Destroy resources
      */
     destroy(): void;
+    /**
+     * Load wordlist (exposed for API — used when wordlist not loaded during initialize).
+     */
+    loadWordlist(onProgress?: (progress: any) => void): Promise<void>;
+    isWordlistLoaded(): boolean;
+    getWordlistMode(): string;
+    clearWordlistCache(): Promise<void>;
 }
 //# sourceMappingURL=Macronizer.d.ts.map

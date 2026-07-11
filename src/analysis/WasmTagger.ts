@@ -37,47 +37,27 @@ export class WasmTagger {
   private debugMode: boolean;
 
   constructor(options: WasmTaggerOptions = {}) {
-    console.log('[RFTagger] Constructor called with options:', options);
     this.modelPath = options.modelPath || '/wasm/rftagger-ldt.model';
-    // Default wasmPath relative to this module's location (dist/analysis/WasmTagger.js -> dist/wasm/)
     const effectiveWasmPath = options.wasmPath || '../wasm/rftagger.js';
     this.wasmPath = effectiveWasmPath;
-    console.log('[RFTagger] Effective wasmPath:', this.wasmPath);
-    // Compute wasmDir for locateFile (trailing slash)
     this.wasmDir = effectiveWasmPath.substring(0, effectiveWasmPath.lastIndexOf('/') + 1);
-    console.log('[RFTagger] wasmDir (for locateFile):', this.wasmDir);
-    // Use absolute path from root for model URL
-    const defaultModelUrl = '/wasm/rftagger-ldt.model';
-    this.modelUrl = options.modelUrl || defaultModelUrl;
-    console.log('[RFTagger] modelUrl:', this.modelUrl);
+    this.modelUrl = options.modelUrl || '/wasm/rftagger-ldt.model';
     this.cache = new Map();
-    // Default parameters matching test-full-pipeline.html
-    this.useSentences = true;  // normalize (default true in rft-annotate)
-    this.beamSize = 0.001;    // beamThreshold
-    this.debugMode = true;    // sentStartHeuristic — matches Python -s flag
+    this.useSentences = true;
+    this.beamSize = 0.0;    // exact Viterbi — match native floating-point more closely
+    this.debugMode = true;
   }
 
     /**
      * Initialize WASM module and load model
      */
     async initialize(): Promise<void> {
-      console.log('[RFTagger] Initializing...');
       try {
-        // Load (or get) already-instantiated Emscripten module
         this.wasmModule = await this.loadWasmModule();
-        
-        // Wait for module to be ready (already resolved if pre-instantiated)
         await this.wasmModule.ready;
-        
-        // Create RFTagger instance (C++ class)
         this.tagger = new this.wasmModule.RFTagger();
-        console.log('[RFTagger] RFTagger instance created');
-        
-        // Load the statistical model (uses locateFile to find .model file)
         await this.loadModel();
-        
         this.modelLoaded = true;
-        console.log('[RFTagger] Model loaded successfully');
       } catch (error) {
         console.error('[RFTagger] Initialization failed:', error);
         throw new Error(`Failed to initialize WASM RFTagger: ${error}`);
@@ -95,29 +75,23 @@ export class WasmTagger {
 
     const globalRFTagger = (window as any).RFTaggerModule;
 
-    // Use global RFTaggerModule (loaded via script tag, matching test-full-pipeline.html)
-     if (globalRFTagger && typeof globalRFTagger === 'function') {
-       console.log('[RFTagger] Instantiating from global factory RFTaggerModule');
-       return await globalRFTagger({
-         locateFile: (path: string) => {
-           // Handle .wasm and .data files (matching test-full-pipeline.html)
-           if (path.endsWith('.wasm') || path.endsWith('.data')) {
-             return '/wasm/' + path;
-           }
-           // Don't handle .model files here - we'll write them to virtual filesystem
-           return path;
-         }
-       });
-     }
+    if (globalRFTagger && typeof globalRFTagger === 'function') {
+      return await globalRFTagger({
+        locateFile: (path: string) => {
+          if (path.endsWith('.wasm') || path.endsWith('.data')) {
+            return '/wasm/' + path;
+          }
+          return path;
+        }
+      });
+    }
 
     // Fallback: try dynamic import
     try {
-      console.log('[RFTagger] Dynamically importing from:', this.wasmPath);
       const module = await import(this.wasmPath);
       const exported = (module as any).default || module;
 
       if (typeof exported === 'function') {
-        console.log('[RFTagger] Instantiating from dynamic import factory');
         return await exported({
           locateFile: (path: string) => {
             if (path.endsWith('.wasm') || path.endsWith('.data')) {
@@ -147,26 +121,15 @@ export class WasmTagger {
       }
 
       try {
-        // Fetch model data and write to virtual filesystem (like test-full-pipeline.html)
-        console.log('[RFTagger] Fetching model from:', this.modelUrl);
         const response = await fetch(this.modelUrl);
         if (!response.ok) {
           throw new Error(`Failed to fetch model: ${response.status} ${response.statusText}`);
         }
         const modelData = await response.arrayBuffer();
-        
-        // Write model to virtual filesystem
-        // Ensure the directory exists
         try { this.wasmModule.FS.mkdir('/models'); } catch (e) {}
-        // Write the model file
         this.wasmModule.FS.writeFile('/models/rftagger-ldt.model', new Uint8Array(modelData));
-        console.log('[RFTagger] Model written to virtual filesystem at /models/rftagger-ldt.model');
-        
-        // Call C++ class method: loadModel(path, useSentences, beamSize, debugMode)
-        // Parameters matching test-full-pipeline.html
         this.tagger.loadModel('/models/rftagger-ldt.model', this.useSentences, this.beamSize, this.debugMode);
         this.modelLoaded = true;
-        console.log('[RFTagger] Model loaded successfully');
       } catch (error) {
         console.error('[RFTagger] Failed to load model:', error);
         throw new Error(`Failed to load model: ${error}`);

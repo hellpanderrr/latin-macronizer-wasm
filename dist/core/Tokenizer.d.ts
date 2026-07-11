@@ -16,14 +16,6 @@ export declare class Tokenizer {
      */
     tokenize(text: string): Token[];
     /**
-     * Create a token with appropriate metadata
-     */
-    private createToken;
-    /**
-     * Check if token represents end of sentence
-     */
-    private isEndOfSentence;
-    /**
      * Detokenize: join tokens back into text
      */
     detokenize(tokens: Token[]): string;

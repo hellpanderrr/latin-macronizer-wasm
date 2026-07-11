@@ -16,10 +16,34 @@ export interface Token {
     accented: string[];
     macronized?: string;
     isUnknown: boolean;
-    isEnclitic: boolean;
-    hasEnclitic: boolean;
+    isenclitic: boolean;
+    hasenclitic: boolean;
     startIndex: number;
     endIndex: number;
+    morpheusAnalyzed?: boolean;
+    morpheusResults?: {
+        word: string;
+        analyses: Array<{
+            lemma: string;
+            stem: string;
+            ending: string;
+            accented: string;
+            formInfo: {
+                partOfSpeech?: string;
+                case?: string;
+                number?: string;
+                gender?: string;
+                tense?: string;
+                mood?: string;
+                voice?: string;
+                person?: string;
+                degree?: string;
+            };
+            raw: string;
+        }>;
+        success: boolean;
+        raw: string;
+    } | null;
 }
 export interface WordEntry {
     form: string;

@@ -112,6 +112,30 @@ export class MacronizerAPI {
   isReady(): boolean {
     return this.initialized && this.macronizer !== null && this.macronizer.isReady();
   }
+
+  /**
+   * Load wordlist (called from UI). If already loaded during initialize(), this is a no-op.
+   * Otherwise, loads from the configured wordlistUrl.
+   */
+  async loadWordlist(_mode: 'indexeddb' | 'memory', onProgress?: (progress: any) => void): Promise<void> {
+    if (!this.macronizer) {
+      throw new Error('Macronizer not created. Call initialize() first.');
+    }
+    console.log(`[MacronizerAPI] loadWordlist(mode=${_mode}) called`);
+    await this.macronizer.loadWordlist(onProgress);
+  }
+
+  isWordlistLoaded(): boolean {
+    return this.macronizer?.isWordlistLoaded() ?? false;
+  }
+
+  getWordlistMode(): string {
+    return this.macronizer?.getWordlistMode() ?? 'indexeddb';
+  }
+
+  async clearWordlistCache(): Promise<void> {
+    await this.macronizer?.clearWordlistCache();
+  }
 }
 
 export default MacronizerAPI;

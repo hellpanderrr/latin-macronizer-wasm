@@ -1,5 +1,5 @@
-import { alignMacronized, AlignOptions } from '../src/core/alignMacronized';
-import { underscoreToUnicode } from '../src/utils/latin';
+import { alignMacronized, AlignOptions } from '../../src/core/alignMacronized';
+import { underscoreToUnicode } from '../../src/utils/latin';
 
 describe('alignMacronized', () => {
   const defaultOptions: AlignOptions = {

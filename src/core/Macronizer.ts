@@ -220,8 +220,11 @@ export class Macronizer {
       tokenization.addTags(fallbackResults.map(r => ({ word: r.token, tag: r.tag })));
     }
 
-    // Step 3: Add lemmas
-    tokenization.addLemmas(this.lemmaEngine);
+    // Step 2.5: Correct case for 1st declension nouns following ablative prepositions
+    tokenization.correctAblativeCase();
+
+    // Step 3: Add lemmas (two-tier: corpus lookup + wordlist frequency fallback)
+    await tokenization.addLemmas(this.lemmaEngine, this.wordlistEngine);
 
     // Step 4: Get accents (wordlist lookup + candidate ranking)
     await tokenization.getAccents(this.wordlistEngine, this.endingEngine);
@@ -471,5 +474,38 @@ export class Macronizer {
     }
     this.wordlistEngine.close();
     this.cache.clear();
+  }
+
+  /**
+   * Load wordlist (exposed for API — used when wordlist not loaded during initialize).
+   */
+  async loadWordlist(onProgress?: (progress: any) => void): Promise<void> {
+    if (!this.wordlistUrl) {
+      throw new Error('No wordlistUrl configured');
+    }
+    const isPopulated = await this.wordlistEngine.isPopulated();
+    if (isPopulated) {
+      console.log('[Macronizer] Wordlist already loaded, skipping');
+      return;
+    }
+    await this.wordlistEngine.loadFromUrl(this.wordlistUrl, (count) => {
+      if (onProgress) {
+        onProgress({ phase: 'parse', current: count, total: 812588 });
+      }
+    });
+  }
+
+  isWordlistLoaded(): boolean {
+    return this.wordlistEngine.size() > 0;
+  }
+
+  getWordlistMode(): string {
+    // Always 'indexeddb' — the wordlist engine always uses IndexedDB when available
+    return 'indexeddb';
+  }
+
+  async clearWordlistCache(): Promise<void> {
+    this.wordlistEngine.close();
+    // Reload needed after clear
   }
 }

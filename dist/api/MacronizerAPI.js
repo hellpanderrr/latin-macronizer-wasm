@@ -1,205 +1,131 @@
 /**
  * MacronizerAPI.ts
- * Public API for the Latin Macronizer
- * Provides a clean interface for browser-based Latin text processing
+ * Simple API wrapper for the Latin Macronizer (used by index.html)
+ * Imports compiled TypeScript modules from dist/ and exposes a clean interface
  */
 import { Macronizer } from '../core/Macronizer.js';
-import { Tokenizer } from '../core/Tokenizer.js';
-/**
- * Public API for the Latin Macronizer
- * Singleton pattern for easy browser integration
- */
 export class MacronizerAPI {
-    constructor(config = {}) {
-        var _a, _b, _c;
+    constructor() {
         Object.defineProperty(this, "macronizer", {
             enumerable: true,
             configurable: true,
             writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "config", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
+            value: null
         });
         Object.defineProperty(this, "initialized", {
             enumerable: true,
             configurable: true,
             writable: true,
-            value: void 0
+            value: false
         });
-        this.config = {
-            useWasm: (_a = config.useWasm) !== null && _a !== void 0 ? _a : true,
-            wasmModelPath: config.wasmModelPath,
-            confidenceThreshold: (_b = config.confidenceThreshold) !== null && _b !== void 0 ? _b : 0.80,
-            enableCache: (_c = config.enableCache) !== null && _c !== void 0 ? _c : true,
-        };
         this.macronizer = null;
         this.initialized = false;
     }
-    /**
-     * Get singleton instance
-     */
-    static getInstance(config) {
-        if (!MacronizerAPI.instance) {
-            MacronizerAPI.instance = new MacronizerAPI(config);
-        }
-        return MacronizerAPI.instance;
+    async initialize(onProgress) {
+        if (this.initialized)
+            return;
+        console.log('[MacronizerAPI] initialize() called');
+        // Create macronizer with default options
+        this.macronizer = new Macronizer({
+            useWasm: true,
+            enableCache: true,
+            confidenceThreshold: 0.80,
+            // Paths relative to Vite server root (public/ serves as /)
+            wasmModelPath: '/wasm/rftagger-ldt.model', // Path to the model file
+            wasmPath: '/wasm/rftagger.js', // Path to the JS wrapper
+            morpheusWasmPath: '/wasm/cruncher.js',
+            wordlistUrl: '/macrons.txt' // ← ADDED: Load wordlist from public/
+        });
+        console.log('[MacronizerAPI] Macronizer created, wordlistUrl:', '/macrons.txt');
+        console.log('[MacronizerAPI] Calling macronizer.initialize()...');
+        await this.macronizer.initialize((percent, message) => {
+            onProgress === null || onProgress === void 0 ? void 0 : onProgress(percent, message);
+        });
+        console.log('[MacronizerAPI] macronizer.initialize() completed');
+        onProgress === null || onProgress === void 0 ? void 0 : onProgress(100, 'Ready!');
+        this.initialized = true;
+        console.log('MacronizerAPI: initialized');
     }
-    /**
-     * Initialize the macronizer
-     */
-    async initialize() {
-        try {
-            if (this.initialized && this.macronizer) {
-                return true;
-            }
-            this.macronizer = new Macronizer({
-                useWasm: this.config.useWasm,
-                wasmModelPath: this.config.wasmModelPath,
-                confidenceThreshold: this.config.confidenceThreshold,
-                enableCache: this.config.enableCache,
-            });
-            await this.macronizer.initialize();
-            this.initialized = true;
-            console.log('Latin Macronizer initialized successfully');
-            return true;
+    async process(text, options = {}) {
+        if (!this.initialized || !this.macronizer) {
+            throw new Error('Macronizer not initialized. Call initialize() first.');
         }
-        catch (error) {
-            console.error('Failed to initialize Latin Macronizer:', error);
+        const result = await this.macronizer.macronize(text, {
+            macronize: options.macronize !== false,
+            alsomaius: options.alsomaius || false,
+            performutov: options.performutov || false,
+            performitoj: options.performitoj || false,
+            scan: options.scan || 'prose'
+        });
+        // Convert Token objects to plain JSON for serialization
+        const tokens = result.taggedTokens.map((t) => ({
+            text: t.text,
+            tag: t.tag,
+            lemma: t.lemma,
+            macronizedText: t.macronizedText,
+            isAmbiguous: t.isAmbiguous,
+            isUnknown: t.isUnknown,
+            morpheusAnalyzed: t.morpheusAnalyzed,
+            morpheusResults: t.morpheusResults ? {
+                word: t.morpheusResults.word,
+                analyses: t.morpheusResults.analyses.map((a) => ({
+                    lemma: a.lemma,
+                    stem: a.stem,
+                    ending: a.ending,
+                    accented: a.accented,
+                    formInfo: a.formInfo,
+                    raw: a.raw
+                })),
+                success: t.morpheusResults.success,
+                raw: t.morpheusResults.raw
+            } : null,
+            startIndex: t.startIndex,
+            endIndex: t.endIndex,
+            accented: t.accented
+        }));
+        return {
+            original: result.original,
+            macronized: result.macronized,
+            tokens,
+            statistics: result.statistics,
+            confidence: result.confidence,
+            processingTime: result.processingTime,
+            scannedFeet: result.scannedFeet
+        };
+    }
+    destroy() {
+        if (this.macronizer) {
+            this.macronizer.destroy();
+            this.macronizer = null;
             this.initialized = false;
-            return false;
         }
     }
-    /**
-     * Process Latin text and add macrons
-     */
-    async process(text) {
-        if (!this.initialized || !this.macronizer) {
-            return {
-                success: false,
-                error: 'Macronizer not initialized. Call initialize() first.',
-            };
-        }
-        try {
-            const result = await this.macronizer.macronize(text);
-            // Check confidence threshold
-            if (result.confidence < this.config.confidenceThreshold) {
-                console.warn(`Low confidence (${result.confidence.toFixed(2)}) for text: ${text}`);
-            }
-            return {
-                success: true,
-                macronizedText: result.macronized,
-                originalText: result.original,
-                tokens: result.taggedTokens,
-                confidence: result.confidence,
-                processingTime: result.processingTime,
-            };
-        }
-        catch (error) {
-            console.error('Error processing text:', error);
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : 'Unknown error',
-            };
-        }
-    }
-    /**
-     * Batch process multiple texts
-     */
-    async processBatch(texts) {
-        if (!this.initialized || !this.macronizer) {
-            return texts.map(() => ({
-                success: false,
-                error: 'Macronizer not initialized',
-            }));
-        }
-        const results = [];
-        for (const text of texts) {
-            const result = await this.process(text);
-            results.push(result);
-        }
-        return results;
-    }
-    /**
-     * Tokenize text without macronization
-     */
-    tokenize(text) {
-        const tokenizer = new Tokenizer();
-        return tokenizer.tokenize(text);
-    }
-    /**
-     * Check if macronizer is ready
-     */
     isReady() {
         return this.initialized && this.macronizer !== null && this.macronizer.isReady();
     }
     /**
-     * Get current configuration
+     * Load wordlist (called from UI). If already loaded during initialize(), this is a no-op.
+     * Otherwise, loads from the configured wordlistUrl.
      */
-    getConfig() {
-        return { ...this.config };
-    }
-    /**
-     * Update configuration
-     */
-    updateConfig(config) {
-        this.config = { ...this.config, ...config };
-    }
-    /**
-     * Clear cache
-     */
-    clearCache() {
-        if (this.macronizer) {
-            this.macronizer.clearCache();
+    async loadWordlist(_mode, onProgress) {
+        if (!this.macronizer) {
+            throw new Error('Macronizer not created. Call initialize() first.');
         }
+        console.log(`[MacronizerAPI] loadWordlist(mode=${_mode}) called`);
+        await this.macronizer.loadWordlist(onProgress);
     }
-    /**
-     * Get cache size
-     */
-    getCacheSize() {
-        return this.macronizer ? this.macronizer.getCacheSize() : 0;
+    isWordlistLoaded() {
+        var _a, _b;
+        return (_b = (_a = this.macronizer) === null || _a === void 0 ? void 0 : _a.isWordlistLoaded()) !== null && _b !== void 0 ? _b : false;
     }
-    /**
-     * Destroy resources
-     */
-    destroy() {
-        if (this.macronizer) {
-            this.macronizer.destroy();
-        }
-        this.macronizer = null;
-        this.initialized = false;
+    getWordlistMode() {
+        var _a, _b;
+        return (_b = (_a = this.macronizer) === null || _a === void 0 ? void 0 : _a.getWordlistMode()) !== null && _b !== void 0 ? _b : 'indexeddb';
     }
-    /**
-     * Reset to factory defaults
-     */
-    reset() {
-        this.destroy();
-        this.config = {
-            useWasm: true,
-            confidenceThreshold: 0.80,
-            enableCache: true,
-        };
+    async clearWordlistCache() {
+        var _a;
+        await ((_a = this.macronizer) === null || _a === void 0 ? void 0 : _a.clearWordlistCache());
     }
 }
-/**
- * Convenience function for one-off processing
- */
-export async function macronize(text, config) {
-    const api = MacronizerAPI.getInstance(config);
-    if (!api.isReady()) {
-        await api.initialize();
-    }
-    return api.process(text);
-}
-// Expose to global scope in browser
-if (typeof window !== 'undefined') {
-    window.LatinMacronizer = {
-        API: MacronizerAPI,
-        macronize,
-        version: '1.0.0',
-    };
-}
+export default MacronizerAPI;
 //# sourceMappingURL=MacronizerAPI.js.map

@@ -43,6 +43,11 @@ export declare class LemmaEngine {
      */
     getLemmasByMacronized(macronized: string): LemmaEntry[];
     /**
+     * Get frequency for a lemma by direct name lookup (not keyed by tag).
+     * Matches Python's lemma_frequency dict.
+     */
+    getFrequency(lemma: string): number;
+    /**
      * Get dictionary size
      */
     size(): number;

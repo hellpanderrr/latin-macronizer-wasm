@@ -220,6 +220,24 @@ export class LemmaEngine {
   }
 
   /**
+   * Get frequency for a lemma by direct name lookup (not keyed by tag).
+   * Matches Python's lemma_frequency dict.
+   */
+  getFrequency(lemma: string): number {
+    // Try exact match first
+    const key = this.normalizeKey(lemma, '');
+    if (this.lemmaMap.has(key)) {
+      return this.lemmaMap.get(key)!.frequency;
+    }
+    // Try lowercase
+    const keyLower = this.normalizeKey(lemma.toLowerCase(), '');
+    if (this.lemmaMap.has(keyLower)) {
+      return this.lemmaMap.get(keyLower)!.frequency;
+    }
+    return 0;
+  }
+
+  /**
    * Get dictionary size
    */
   size(): number {

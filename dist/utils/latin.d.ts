@@ -54,7 +54,9 @@ export declare function isPunctuation(token: string): boolean;
  */
 export declare function isWhitespace(token: string): boolean;
 /**
- * Common Latin enclitics
+ * Common Latin enclitics (generic split only)
+ * Python splits: -que (len>3), -ve/-ue/-ne/-st (len>2)
+ * -cum and -met are handled via special list only, not generic
  */
 export declare const enclitics: string[];
 /**
@@ -90,9 +92,27 @@ export declare function underscoreToUnicode(text: string): string;
  */
 export declare function unicodeToUnderscore(text: string): string;
 /**
- * Normalize RFTagger 17-char tag format to LDT 9-char format
- * RFTagger: n---s-------f-n-- (17 chars: pos+person+number+tense/mood/voice+gender+case+degree+dialect?)
- * LDT:      n-s---fn- (9 chars: pos+person+number+tense+mood+voice+gender+case+degree)
+ * Filter and normalize accent forms from Morpheus output
+ * Ported from latin_macronizer/postags.py filter_accents()
+ *
+ * Morpheus can produce accent forms with markers in non-standard order.
+ * This function normalizes them to the expected underscore notation.
+ *
+ * Transformations:
+ *   "^_" → "_^"  (swap order)
+ *   "_^" + consonant+l/r → "^" + consonant  (e.g., a_^cl → a^cl)
+ *   "u_m" → "um"  (special case)
+ *   vowel + "^?" + n + (s/f/x/ct) → vowel + "_n" + ending  (e.g., an^s → a_ns)
+ */
+export declare function filterAccents(accented: string): string;
+/**
+ * Normalize RFTagger 17-char tag format to LDT 9-char format.
+ * RFTagger: n---s-------f-n-- (17 chars, undotted) or n.-.s.-.-.-.f.b.- (dotted)
+ * LDT:      n-s---fb- (9 chars: pos+person+number+tense+mood+voice+gender+case+degree)
+ *
+ * Works with both dotted and undotted 17-char formats by extracting
+ * the even-indexed positions (0, 2, 4, 6, 8, 10, 12, 14, 16) which hold
+ * the significant tag data in both formats.
  */
 export declare function normalizeTag(tag: string): string;
 /**

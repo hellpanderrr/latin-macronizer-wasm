@@ -38,10 +38,29 @@ export class LemmaEngine {
         // Load from JSON if no data provided
         if (!data) {
             try {
-                const response = await fetch('/src/data/lemmas.json');
-                if (response.ok) {
-                    const lemmaData = await response.json();
-                    for (const item of lemmaData.slice(0, 5000)) { // Load top 5000 lemmas
+                // Try multiple paths: relative to module (dist/data/), then absolute /data/, then /src/data/
+                const paths = [
+                    new URL('../data/lemmas.json', import.meta.url).href,
+                    '/data/lemmas.json',
+                    '/src/data/lemmas.json'
+                ];
+                let lemmaData = null;
+                for (const path of paths) {
+                    try {
+                        const response = await fetch(path);
+                        if (response.ok) {
+                            lemmaData = await response.json();
+                            console.log(`[LemmaEngine] Loaded lemmas from ${path}`);
+                            break;
+                        }
+                    }
+                    catch (e) {
+                        // Try next path
+                    }
+                }
+                if (lemmaData) {
+                    // Load all lemmas (no artificial limit)
+                    for (const item of lemmaData) {
                         this.lemmaMap.set(item.lemma, {
                             lemma: item.lemma,
                             macronized: item.lemma,
@@ -49,7 +68,10 @@ export class LemmaEngine {
                             tags: []
                         });
                     }
-                    console.log(`[LemmaEngine] Loaded ${this.lemmaMap.size} lemmas`);
+                    console.log(`[LemmaEngine] Loaded ${this.lemmaMap.size} lemmas from JSON`);
+                }
+                else {
+                    console.warn('[LemmaEngine] Could not load lemmas JSON from any path, using hardcoded only');
                 }
             }
             catch (err) {
@@ -183,6 +205,23 @@ export class LemmaEngine {
         const lemmaKeys = this.reverseMap.get(key) || [];
         return lemmaKeys.map(k => this.lemmaMap.get(k))
             .filter((entry) => entry !== undefined);
+    }
+    /**
+     * Get frequency for a lemma by direct name lookup (not keyed by tag).
+     * Matches Python's lemma_frequency dict.
+     */
+    getFrequency(lemma) {
+        // Try exact match first
+        const key = this.normalizeKey(lemma, '');
+        if (this.lemmaMap.has(key)) {
+            return this.lemmaMap.get(key).frequency;
+        }
+        // Try lowercase
+        const keyLower = this.normalizeKey(lemma.toLowerCase(), '');
+        if (this.lemmaMap.has(keyLower)) {
+            return this.lemmaMap.get(keyLower).frequency;
+        }
+        return 0;
     }
     /**
      * Get dictionary size

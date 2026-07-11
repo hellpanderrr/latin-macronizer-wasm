@@ -11,6 +11,7 @@ export interface MorpheusAnalysis {
         lemma: string;
         stem: string;
         ending: string;
+        accented: string;
         formInfo: {
             partOfSpeech?: string;
             case?: string;
@@ -37,6 +38,8 @@ export interface MorpheusOptions {
 /**
  * MorpheusAnalyzer class
  * WebAssembly wrapper for Morpheus morphological analyzer
+ *
+ * Uses the same pattern as the working native/morpheus/js/MorpheusTagger.js
  */
 export declare class MorpheusAnalyzer {
     private wasmModule;
@@ -46,10 +49,12 @@ export declare class MorpheusAnalyzer {
     constructor(wasmPath?: string);
     /**
      * Initialize the WASM module
+     * Uses the same pattern as native/morpheus/js/MorpheusTagger.js that works
      */
     initialize(): Promise<void>;
     /**
      * Analyze a single word
+     * Tries multiple case variations to find the word in Morpheus dictionary
      */
     analyze(word: string, options?: MorpheusOptions): MorpheusAnalysis;
     /**
@@ -65,7 +70,7 @@ export declare class MorpheusAnalyzer {
      */
     destroy(): void;
     isInitialized(): boolean;
-    private loadWasmModule;
+    private loadScript;
     private optionsToFlags;
     private parseOutput;
     private parseAnalysisLine;

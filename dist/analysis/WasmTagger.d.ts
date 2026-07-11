@@ -4,7 +4,9 @@
  * Uses C++ class API from Emscripten (matching test-full-pipeline.html)
  */
 export interface WasmTaggerOptions {
+    wasmPath?: string;
     modelPath?: string;
+    modelUrl?: string;
     memorySize?: number;
     enableCache?: boolean;
 }
@@ -24,6 +26,9 @@ export declare class WasmTagger {
     private modelLoaded;
     private cache;
     private modelPath;
+    private wasmPath;
+    private wasmDir;
+    private modelUrl;
     private useSentences;
     private beamSize;
     private debugMode;
@@ -34,14 +39,12 @@ export declare class WasmTagger {
     initialize(): Promise<void>;
     /**
      * Load Emscripten-compiled WASM module
+     * Handles both pre-instantiated global (from script tag) and dynamic import (factory function)
      */
     private loadWasmModule;
     /**
-     * Load RFTagger model into Emscripten filesystem
-     */
-    private loadModelIntoFS;
-    /**
      * Load the statistical model
+     * Fetches model data and writes it to virtual filesystem before loading
      */
     private loadModel;
     /**

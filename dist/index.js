@@ -12,7 +12,8 @@ export { WasmTagger, LemmaEngine, EndingPatternEngine, EditDistanceEngine, Fallb
 // Note: MorpheusAnalysis and MorpheusOptions are types exported from './analysis.js'
  } from './analysis/index.js';
 // Public API
-export { MacronizerAPI, macronize } from './api/MacronizerAPI.js';
+import { MacronizerAPI } from './api/MacronizerAPI.js';
+export { MacronizerAPI };
 // Utilities
 export { toAscii, toUiOrthography, fromUiOrthography, isVowel, isConsonant, startsWithVowel, startsWithShortJPrefix, normalizeWord, splitSentences, isSentenceEnder, isPunctuation, isWhitespace, splitEnclitic, findVowelClusters, isAmbiguousVowel, escapeHtml, enclitics, prefixesWithShortJ } from './utils/latin.js';
 // Version

@@ -17,6 +17,12 @@ function fixImports(dir) {
         if (/\.\w+$/.test(p1)) return match; // already has extension
         return `from '${p1}.js'`;
       });
+
+      // Add `with { type: 'json' }` to .json imports for Node.js ESM compatibility
+      content = content.replace(
+        /from\s+(['"][^'"]+\.json['"])/g,
+        "from $1 with { type: 'json' }"
+      );
       
       fs.writeFileSync(fullPath, content);
       console.log(`Fixed: ${fullPath}`);

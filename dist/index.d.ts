@@ -7,7 +7,8 @@
  */
 export { Macronizer, Token, Tokenization, Tokenizer } from './core/index.js';
 export { WasmTagger, WasmTaggerOptions, TagResult, LemmaEngine, LemmaEntry, EndingPatternEngine, EndingPattern, EditDistanceEngine, EditResult, FallbackTagger, MorpheusAnalyzer } from './analysis/index.js';
-export { MacronizerAPI, MacronizerConfig, ProcessResult, macronize } from './api/MacronizerAPI.js';
+import { MacronizerAPI } from './api/MacronizerAPI.js';
+export { MacronizerAPI };
 export type { POSTag, WordEntry, LemmaEntry as LemmaEntryType, MacronizerOptions, MacronizerResult, EvaluationResult, WasmTagger as WasmTaggerInterface, ScanOption, MeterState, VowelLength, ScansionResult } from './types/index.js';
 export { toAscii, toUiOrthography, fromUiOrthography, isVowel, isConsonant, startsWithVowel, startsWithShortJPrefix, normalizeWord, splitSentences, isSentenceEnder, isPunctuation, isWhitespace, splitEnclitic, findVowelClusters, isAmbiguousVowel, escapeHtml, enclitics, prefixesWithShortJ } from './utils/latin.js';
 export declare const VERSION = "1.0.0";

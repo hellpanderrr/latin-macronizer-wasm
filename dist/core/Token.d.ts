@@ -3,16 +3,20 @@
  * Core token representation for Latin macronizer
  * Immutable token with POS tagging and macronization capabilities
  */
+import { MorpheusAnalysis } from '../analysis/MorpheusAnalyzer';
 export interface TokenOptions {
     text?: string;
     tag?: string;
     lemma?: string;
     macronized?: boolean;
+    macronizedText?: string;
     originalText?: string;
     confidence?: number;
     accented?: string[];
     isAmbiguous?: boolean;
     isUnknown?: boolean;
+    morpheusAnalyzed?: boolean;
+    morpheusResults?: MorpheusAnalysis | null;
     startssentence?: boolean;
     endssentence?: boolean;
     hasenclitic?: boolean;
@@ -30,11 +34,14 @@ export declare class Token {
     readonly tag: string;
     readonly lemma: string;
     readonly macronized: boolean;
+    readonly macronizedText?: string;
     readonly originalText: string;
     readonly confidence?: number;
     readonly accented?: string[];
     readonly isAmbiguous?: boolean;
     readonly isUnknown?: boolean;
+    readonly morpheusAnalyzed?: boolean;
+    readonly morpheusResults?: MorpheusAnalysis | null;
     readonly startssentence?: boolean;
     readonly endssentence?: boolean;
     readonly hasenclitic?: boolean;

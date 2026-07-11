@@ -1,97 +1,24 @@
 /**
  * MacronizerAPI.ts
- * Public API for the Latin Macronizer
- * Provides a clean interface for browser-based Latin text processing
- */
-import { Token } from '../core/Token.js';
-export interface MacronizerConfig {
-    useWasm?: boolean;
-    wasmModelPath?: string;
-    confidenceThreshold?: number;
-    enableCache?: boolean;
-}
-export interface ProcessResult {
-    success: boolean;
-    macronizedText?: string;
-    originalText?: string;
-    tokens?: Token[];
-    confidence?: number;
-    processingTime?: number;
-    error?: string;
-}
-/**
- * Public API for the Latin Macronizer
- * Singleton pattern for easy browser integration
+ * Simple API wrapper for the Latin Macronizer (used by index.html)
+ * Imports compiled TypeScript modules from dist/ and exposes a clean interface
  */
 export declare class MacronizerAPI {
-    private static instance;
     private macronizer;
-    private config;
     private initialized;
-    private constructor();
-    /**
-     * Get singleton instance
-     */
-    static getInstance(config?: MacronizerConfig): MacronizerAPI;
-    /**
-     * Initialize the macronizer
-     */
-    initialize(): Promise<boolean>;
-    /**
-     * Process Latin text and add macrons
-     */
-    process(text: string): Promise<ProcessResult>;
-    /**
-     * Batch process multiple texts
-     */
-    processBatch(texts: string[]): Promise<ProcessResult[]>;
-    /**
-     * Tokenize text without macronization
-     */
-    tokenize(text: string): Token[];
-    /**
-     * Check if macronizer is ready
-     */
+    constructor();
+    initialize(onProgress?: (percent: number, message: string) => void): Promise<void>;
+    process(text: string, options?: any): Promise<any>;
+    destroy(): void;
     isReady(): boolean;
     /**
-     * Get current configuration
+     * Load wordlist (called from UI). If already loaded during initialize(), this is a no-op.
+     * Otherwise, loads from the configured wordlistUrl.
      */
-    getConfig(): MacronizerConfig;
-    /**
-     * Update configuration
-     */
-    updateConfig(config: Partial<MacronizerConfig>): void;
-    /**
-     * Clear cache
-     */
-    clearCache(): void;
-    /**
-     * Get cache size
-     */
-    getCacheSize(): number;
-    /**
-     * Destroy resources
-     */
-    destroy(): void;
-    /**
-     * Reset to factory defaults
-     */
-    reset(): void;
+    loadWordlist(_mode: 'indexeddb' | 'memory', onProgress?: (progress: any) => void): Promise<void>;
+    isWordlistLoaded(): boolean;
+    getWordlistMode(): string;
+    clearWordlistCache(): Promise<void>;
 }
-/**
- * Convenience function for one-off processing
- */
-export declare function macronize(text: string, config?: MacronizerConfig): Promise<ProcessResult>;
-/**
- * Global interface for browser usage
- */
-declare global {
-    interface Window {
-        LatinMacronizer: {
-            API: typeof MacronizerAPI;
-            macronize: typeof macronize;
-            version: string;
-        };
-    }
-}
+export default MacronizerAPI;
 //# sourceMappingURL=MacronizerAPI.d.ts.map

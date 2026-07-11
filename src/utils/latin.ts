@@ -309,44 +309,25 @@ export function filterAccents(accented: string): string {
 
 
 /**
- * Normalize RFTagger 17-char tag format to LDT 9-char format
- * RFTagger: n---s-------f-n-- (17 chars: pos+person+number+tense/mood/voice+gender+case+degree+dialect?)
- * LDT:      n-s---fn- (9 chars: pos+person+number+tense+mood+voice+gender+case+degree)
+ * Normalize RFTagger 17-char tag format to LDT 9-char format.
+ * RFTagger: n---s-------f-n-- (17 chars, undotted) or n.-.s.-.-.-.f.b.- (dotted)
+ * LDT:      n-s---fb- (9 chars: pos+person+number+tense+mood+voice+gender+case+degree)
+ *
+ * Works with both dotted and undotted 17-char formats by extracting
+ * the even-indexed positions (0, 2, 4, 6, 8, 10, 12, 14, 16) which hold
+ * the significant tag data in both formats.
  */
 export function normalizeTag(tag: string): string {
-  const debugTags = ['n---s-------f-n--', 'n---p-------m-n--', 'p---p-------m-n--'];
-  const shouldLog = debugTags.includes(tag);
-  
-  if (shouldLog) console.log(`[normalizeTag] Input: "${tag}" len=${tag.length}`);
-  
   if (tag.length === 9 || tag.length === 12) {
-    // Already LDT format
-    if (shouldLog) console.log(`[normalizeTag] Already LDT format, returning as-is`);
     return tag;
   }
   if (tag.length !== 17) {
-    // Unknown format, return as-is
-    if (shouldLog) console.log(`[normalizeTag] Unknown length ${tag.length}, returning as-is`);
+    console.warn(`normalizeTag: unexpected tag length ${tag.length}: "${tag}"`);
     return tag;
   }
-  
-  // RFTagger 17-char format: n---s-------f-n--
-  // Positions: 0=pos, 1-3=person, 4=number, 5-11=tense/mood/voice, 12=gender, 13=?, 14=case, 15-16=?
-  // Map to LDT 9-char: pos(0), person(1), number(2), tense(3), mood(4), voice(5), gender(6), case(7), degree(8)
-  const pos = tag[0];
-  const number = tag[4];  // s/p
-  const gender = tag[12]; // m/f/n
-  const case_ = tag[14];  // n/g/d/a/b/v (position 14, not 13!)
-  
-  if (shouldLog) {
-    console.log(`[normalizeTag] Extracted: pos=${pos}, number=${number}, gender=${gender}, case=${case_}`);
-  }
-  
-  // For nouns/adjectives, tense/mood/voice positions (3-5 in LDT) are '-'
-  // Person (position 1) is also '-' for nouns
-  const result = `${pos}-${number}---${gender}${case_}-`;
-  if (shouldLog) console.log(`[normalizeTag] Result: "${result}" len=${result.length}`);
-  return result;
+
+  // Extract positions: 0=pos, 2=person, 4=number, 6=tense, 8=mood, 10=voice, 12=gender, 14=case, 16=degree
+  return `${tag[0]}${tag[2]}${tag[4]}${tag[6]}${tag[8]}${tag[10]}${tag[12]}${tag[14]}${tag[16]}`;
 }
 
 /**

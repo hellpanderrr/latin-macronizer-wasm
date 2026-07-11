@@ -327,11 +327,10 @@ export function scanVerses(tokens, meterAutomatons) {
         }
         // End of verse (newline or last token)
         if (token.text.includes('\n') || index === tokens.length - 1) {
-            const newlineCount = (token.text.match(/\n/g) || []).length;
             if (verse.length > 0) {
                 const { indexAccentPairs, feet } = scanVerse(verse, meterAutomatons[automatonIndex]);
+                const newlineCount = (token.text.match(/\n/g) || []).length;
                 scannedFeet.push(feet);
-                // Push empty entries for any additional newlines in this token
                 for (let nl = 1; nl < newlineCount; nl++) {
                     scannedFeet.push('');
                 }
@@ -350,12 +349,6 @@ export function scanVerses(tokens, meterAutomatons) {
                 automatonIndex++;
                 if (automatonIndex === meterAutomatons.length) {
                     automatonIndex = 0;
-                }
-            }
-            else {
-                // Empty line — push empty string(s) to keep feet indices aligned with text lines
-                for (let nl = 0; nl < newlineCount; nl++) {
-                    scannedFeet.push('');
                 }
             }
         }

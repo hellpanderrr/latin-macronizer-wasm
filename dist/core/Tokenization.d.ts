@@ -8,6 +8,7 @@ import { WasmTagger } from '../analysis/WasmTagger';
 import { LemmaEngine } from '../analysis/LemmaEngine';
 import { EndingPatternEngine } from '../analysis/EndingPatternEngine';
 import { WordlistEngine } from '../analysis/WordlistEngine';
+import { MeterAutomaton } from './Scansion';
 export interface TokenizationOptions {
     preserveCase?: boolean;
     preserveWhitespace?: boolean;
@@ -19,9 +20,21 @@ export interface TokenizationOptions {
 export declare class Tokenization {
     tokens: Token[];
     text: string;
+    originalText: string;
+    private _scannedFeet;
+    private static dividenda;
+    private static specialEncliticWords;
     constructor(text: string, options?: TokenizationOptions);
     /**
      * Main tokenization method
+     */
+    /**
+     * Tokenize text into words, whitespace, and punctuation.
+     * Sentence boundary detection matches Python tokenization.py exactly:
+     * - A punctuation mark (.;:?!) ends a sentence ONLY if the preceding word
+     *   was longer than 1 character. This prevents false boundaries at Latin
+     *   abbreviations like "M." (Marcus), "L." (Lucius), "ā. d." (ante diem).
+     * - Single-char words + period do NOT end the sentence.
      */
     private tokenize;
     /**
@@ -29,9 +42,14 @@ export declare class Tokenization {
      */
     private detectSentenceBoundaries;
     /**
-     * Add a word token, handling enclitics
+     * Add a word token (without splitting enclitics yet)
      */
     private addWordToken;
+    /**
+     * Split enclitics after wordlist is loaded (Python's two-pass strategy)
+     * Returns list of word forms that need to be tagged (excluding enclitics)
+     */
+    splitEnclitics(wordlistEngine: WordlistEngine): Promise<string[]>;
     /**
      * Get all word forms for lookup
      */
@@ -53,9 +71,22 @@ export declare class Tokenization {
      */
     tagWithWasm(tagger: WasmTagger): Promise<void>;
     /**
+     * Correct case for 1st declension feminine nouns/adjectives following
+     * ablative prepositions. WASM RFTagger occasionally assigns nominative
+     * where the preposition context requires ablative. This correction
+     * matches Python native RFTagger behavior by using Latin grammar rules.
+     */
+    correctAblativeCase(): void;
+    /**
      * Add lemmas to tokens using LemmaEngine
      */
-    addLemmas(lemmaEngine: LemmaEngine): void;
+    /**
+     * Add lemmas to tokens.
+     * Ported from Python tokenization.py addlemmas() — two-tier frequency-based selection.
+     * Tier 1: direct wordform+tag lookup in LemmaEngine
+     * Tier 2: wordlist-supplied lemmas ranked by corpus frequency (matches Python's lemma_frequency)
+     */
+    addLemmas(lemmaEngine: LemmaEngine, wordlistEngine?: WordlistEngine): Promise<void>;
     /**
      * Get accents for tokens
      * Ported from latin_macronizer/tokenization.py (getaccents method)
@@ -83,7 +114,7 @@ export declare class Tokenization {
     /**
      * Scan verses using meter automata
      */
-    scanVerses(meters: any): void;
+    scanVerses(meterAutomatons: MeterAutomaton[]): void;
     /**
      * Get scanned feet (if scansion was performed)
      */

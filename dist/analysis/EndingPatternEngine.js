@@ -37,6 +37,45 @@ export class EndingPatternEngine {
         if (data) {
             this.loadFromData(data);
         }
+        else {
+            // Try to load ending patterns from JSON
+            const paths = [
+                new URL('../data/endings.json', import.meta.url).href,
+                '/data/endings.json',
+                '/src/data/endings.json'
+            ];
+            let patternData = null;
+            for (const path of paths) {
+                try {
+                    const response = await fetch(path);
+                    if (response.ok) {
+                        // JSON is an object: { tag: [pattern, ...], ... }
+                        const json = await response.json();
+                        // Convert to array of patterns with tag property
+                        patternData = [];
+                        for (const [tag, patterns] of Object.entries(json)) {
+                            for (const pattern of patterns) {
+                                patternData.push({
+                                    ...pattern,
+                                    posTags: pattern.posTags || [tag] // include tag as posTags if not specified
+                                });
+                            }
+                        }
+                        console.log(`[EndingPatternEngine] Loaded ${patternData.length} patterns from ${path}`);
+                        break;
+                    }
+                }
+                catch (e) {
+                    // Try next path
+                }
+            }
+            if (patternData) {
+                this.loadFromData(patternData);
+            }
+            else {
+                console.warn('[EndingPatternEngine] Could not load endings JSON from any path, using hardcoded patterns only');
+            }
+        }
         this.buildSuffixTree();
         this.loaded = true;
     }

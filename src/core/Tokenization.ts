@@ -75,17 +75,28 @@ export class Tokenization {
   /**
    * Main tokenization method
    */
+  /**
+   * Tokenize text into words, whitespace, and punctuation.
+   * Sentence boundary detection matches Python tokenization.py exactly:
+   * - A punctuation mark (.;:?!) ends a sentence ONLY if the preceding word
+   *   was longer than 1 character. This prevents false boundaries at Latin
+   *   abbreviations like "M." (Marcus), "L." (Lucius), "ā. d." (ante diem).
+   * - Single-char words + period do NOT end the sentence.
+   */
   private tokenize(text: string, options: TokenizationOptions): void {
     const { preserveWhitespace = false } = options;
     this.tokens = [];
-    
+
     let position = 0;
     let currentWord = '';
     let wordStart = 0;
-    
+    // Python: possiblesentenceend tracks whether the previous word token is
+    // long enough to plausibly end a sentence
+    let possibleSentenceEnd = false;
+
     for (let i = 0; i < text.length; i++) {
       const char = text[i];
-      
+
       // Check if character is part of a word
       if (/\w/.test(char) || char === '-' || char === '_') {
         if (currentWord === '') {
@@ -96,9 +107,11 @@ export class Tokenization {
         // End of word - process it
         if (currentWord) {
           this.addWordToken(currentWord, wordStart, position);
+          // Python: possiblesentenceend = (len(token.text) > 1)
+          possibleSentenceEnd = (currentWord.length > 1);
           currentWord = '';
         }
-        
+
         // Handle whitespace and punctuation
         if (isWhitespace(char)) {
           if (preserveWhitespace) {
@@ -111,28 +124,28 @@ export class Tokenization {
           }
         } else {
           // Punctuation
+          // Python: elif possiblesentenceend and any(i in token.text for i in '.;:?!'):
           const isSentEnder = isSentenceEnder(char);
+          const endsSentence = possibleSentenceEnd && isSentEnder;
+
           this.tokens.push(new Token(char, {
             isWord: false,
             isSpace: false,
-            endssentence: isSentEnder,
+            endssentence: endsSentence,
             startIndex: position,
             endIndex: position + 1
           } as any));
-          
-          // Mark previous token as sentence ender if needed
-          if (isSentEnder && this.tokens.length > 1) {
-            const prevIdx = this.tokens.length - 2;
-            this.tokens[prevIdx] = this.tokens[prevIdx].with({ 
-              endssentence: true 
-            } as any);
+
+          // After a sentence-ending punctuation, reset
+          if (endsSentence) {
+            possibleSentenceEnd = false;
           }
         }
       }
-      
+
       position++;
     }
-    
+
     // Handle final word
     if (currentWord) {
       this.addWordToken(currentWord, wordStart, position);
@@ -429,23 +442,93 @@ export class Tokenization {
   }
   
   /**
+   * Correct case for 1st declension feminine nouns/adjectives following
+   * ablative prepositions. WASM RFTagger occasionally assigns nominative
+   * where the preposition context requires ablative. This correction
+   * matches Python native RFTagger behavior by using Latin grammar rules.
+   */
+  correctAblativeCase(): void {
+    const ablativePreps = new Set(['ab', 'a', 'cum', 'de', 'ex', 'e', 'pro', 'sine']);
+
+    for (let i = 0; i < this.tokens.length; i++) {
+      const token = this.tokens[i] as any;
+      if (!token.isWord) continue;
+
+      const tag: string = token.tag;
+      // Check if tag is a feminine noun/adjective (9-char LDT: n-s---fn- or a-s---fn-)
+      if (tag.length < 8) continue;
+      if (tag[0] !== 'n' && tag[0] !== 'a') continue;
+      if (tag[6] !== 'f' || tag[7] !== 'n') continue;
+
+      // Find previous non-space word token
+      let prevWord: string | null = null;
+      for (let j = i - 1; j >= 0; j--) {
+        const prev = this.tokens[j] as any;
+        if (prev.isWord) {
+          prevWord = toAscii(prev.text).toLowerCase();
+          break;
+        }
+      }
+
+      // If preceded by an ablative preposition, override to ablative case
+      if (prevWord && ablativePreps.has(prevWord)) {
+        this.tokens[i] = token.with({
+          tag: tag.slice(0, 7) + 'b' + tag.slice(8)
+        });
+      }
+    }
+  }
+
+  /**
    * Add lemmas to tokens using LemmaEngine
    */
-  addLemmas(lemmaEngine: LemmaEngine): void {
+  /**
+   * Add lemmas to tokens.
+   * Ported from Python tokenization.py addlemmas() — two-tier frequency-based selection.
+   * Tier 1: direct wordform+tag lookup in LemmaEngine
+   * Tier 2: wordlist-supplied lemmas ranked by corpus frequency (matches Python's lemma_frequency)
+   */
+  async addLemmas(lemmaEngine: LemmaEngine, wordlistEngine?: WordlistEngine): Promise<void> {
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];
-      
+
       // Only add lemmas to word tokens
       if ((token as any).isWord && !(token as any).isenclitic) {
-        // Look up lemma by word form and POS tag
+        // Tier 1: Look up lemma by word form and POS tag (hardcoded + corpus lemmas)
         const lemmaEntry = lemmaEngine.lookup(token.text, token.tag);
-        
+
         if (lemmaEntry) {
           this.tokens[i] = token.with({
             lemma: lemmaEntry.lemma
           });
+        } else if (wordlistEngine) {
+          // Tier 2: wordlist lemmas ranked by corpus frequency (matches Python tier 2)
+          // Python: for lex_lemma in wordlist.formtolemmas[wordform.lower()]:
+          //           if lemma_frequency.get(lex_lemma, 0) > max_freq: best_lemma = lex_lemma
+          const wordformLower = toAscii(token.text).toLowerCase();
+          let bestLemma = toAscii(token.text).toLowerCase(); // fallback
+          let maxFreq = -1;
+          try {
+            const entries = await wordlistEngine.getAllEntries(wordformLower);
+            const seenLemmas = new Set<string>();
+            for (const entry of entries) {
+              const lexLemma = entry.lemma;
+              if (seenLemmas.has(lexLemma)) continue;
+              seenLemmas.add(lexLemma);
+              const freq = lemmaEngine.getFrequency(lexLemma);
+              if (freq > maxFreq) {
+                maxFreq = freq;
+                bestLemma = lexLemma;
+              }
+            }
+          } catch (_e) {
+            // Wordlist lookup failed; keep fallback lemma
+          }
+          this.tokens[i] = token.with({
+            lemma: bestLemma
+          });
         } else {
-          // Fallback: use normalized word form as lemma
+          // No wordlist available — fallback to wordform itself
           this.tokens[i] = token.with({
             lemma: toAscii(token.text).toLowerCase()
           });
@@ -495,20 +578,11 @@ export class Tokenization {
             console.warn('getAllEntries error for', wordformLower, error);
             entries = [];
           }
-          // DEBUG logging for problematic words
-          const debugWords = ['matrona', 'longissime', 'minime', 'sequana', 'eos', 'hi'];
-          const shouldLog = debugWords.includes(wordformLower);
-          if (shouldLog) {
-            console.log(`\n=== DEBUG ${wordformLower} ===`);
-            console.log('Token:', token.text, 'Tag:', tag, 'Lemma:', lemma);
-            console.log('Entries count:', entries.length);
-          }
           if (entries.length > 0) {
           const allAccented = entries.map(e => e.accentedUnderscore).filter(a => a !== undefined) as string[];
           const uniqueAccented = Array.from(new Set(allAccented));
           if (uniqueAccented.length === 1) {
             accented = [uniqueAccented[0]];
-            if (shouldLog) console.log('Single candidate:', accented[0]);
           } else {
             // Multiple candidates: rank them
             const candidates: Array<{ casedist: number; tagdist: number; lemdist: number; accented: string }> = [];
@@ -522,10 +596,6 @@ export class Tokenization {
               const tagdist = tagDistance(tag, lexTag);
               const lemdist = levenshteinDistance(lemma, lexLemma);
               candidates.push({ casedist, tagdist, lemdist, accented: entry.accentedUnderscore });
-              if (shouldLog) {
-                console.log(`  Entry: lemma=${lexLemma}, tag=${lexTag}, accented=${entry.accentedUnderscore}`);
-                console.log(`    -> casedist=${casedist}, tagdist=${tagdist}, lemdist=${lemdist}`);
-              }
             }
             // Sort by casedist, then tagdist, then lemdist (exact match to Python)
             candidates.sort((a, b) => {
@@ -534,18 +604,15 @@ export class Tokenization {
               return a.lemdist - b.lemdist;
             });
             if (candidates.length > 0) {
-              // Already sorted by (casedist, tagdist, lemdist)
               // Get all candidates with the best (lowest) casedist
               const bestCasedist = candidates[0].casedist;
-              // Sort by full ranking again to ensure best (tagdist, lemdist) comes first
-              const bestCandidates = candidates
+              const bestAccented = candidates
                 .filter(c => c.casedist === bestCasedist)
                 .sort((a, b) => {
                   if (a.tagdist !== b.tagdist) return a.tagdist - b.tagdist;
                   return a.lemdist - b.lemdist;
-                });
-              // Extract accented forms preserving order
-              const bestAccented = bestCandidates.map(c => c.accented);
+                })
+                .map(c => c.accented);
               // Deduplicate while preserving order
               const seen = new Set<string>();
               const uniq: string[] = [];
@@ -557,10 +624,6 @@ export class Tokenization {
               }
               accented = uniq;
               isAmbiguous = uniq.length > 1;
-              if (shouldLog) {
-                console.log(`Sorted candidates (first 5):`, candidates.slice(0, 5));
-                console.log(`Selected first: ${accented[0]}, ambiguous=${isAmbiguous}`);
-              }
             } else {
               accented = [token.text];
             }
@@ -606,12 +669,8 @@ export class Tokenization {
     performitoj: boolean,
     endingEngine?: EndingPatternEngine
   ): void {
-    console.log(`[macronize] START: tokens=${this.tokens.length}, domacronize=${domacronize}`);
-    const debugWords = ['matrona', 'matrona'];
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];
-      const shouldLog = debugWords.includes(token.text.toLowerCase());
-      if (shouldLog) console.log(`[macronize] Processing token[${i}]: "${token.text}", isWord=${(token as any).isWord}`);
       if ((token as any).isWord) {
         this.tokens[i] = this.macronizeToken(
           token, 
@@ -638,16 +697,9 @@ export class Tokenization {
     performitoj: boolean,
     endingEngine?: EndingPatternEngine
   ): Token {
-    // DEBUG logging for problematic words - EARLY
-    const debugWordsAlign = ['matrona', 'longissime', 'minime', 'sequana', 'eos', 'hi', 'matrona'];
-    const shouldLogAlign = debugWordsAlign.includes(token.text.toLowerCase());
-    if (shouldLogAlign) {
-      console.log(`\n[macronizeToken] START: token="${token.text}", domacronize=${domacronize}`);
-    }
-    
     // Use original text for alignment (alignMacronized will handle u->v, i->j conversions)
     let text = token.text;
-    
+
     if (!domacronize) {
       // Even if not macronizing, still apply orthographic conversions if requested
       if (performutov) {
@@ -656,64 +708,37 @@ export class Tokenization {
       if (performitoj) {
         text = text.replace(/i/g, 'j').replace(/I/g, 'J');
       }
-      if (shouldLogAlign) console.log(`  domacronize=false, returning early with text="${text}"`);
       return token.with({ text, macronized: true } as any);
-    }
-    
-    // Get the accented form (with _ markers) from getAccents
-    const accentedCandidates = token.accented;
-    
-    if (shouldLogAlign) {
-      console.log(`  accentedCandidates:`, accentedCandidates);
-    }
-    
-    if (!accentedCandidates || accentedCandidates.length === 0) {
-      // No accented form available, fallback
-      if (shouldLogAlign) console.log(`  ${token.text}: NO accented candidates, fallback to plain`);
-      return token.with({ text, macronized: true } as any);
-    }
-    
-    // Use the first (best) accented candidate
-    let accentedUnderscore = accentedCandidates[0];
-    if (shouldLogAlign) {
-      console.log(`\n=== ALIGN ${token.text} ===`);
-      console.log('  Input text:', text);
-      console.log('  Accented candidates:', accentedCandidates);
-      console.log('  Selected accented[0]:', accentedUnderscore);
-    }
-    
-    // Clean: remove '^' markers and '_^' sequences (as in Python Token.macronize)
-    // This ensures breve markers are ignored and only macrons (underscore) are used
-    // NOTE: In JS regex, '^' is an anchor unless escaped. Use /\^/ for literal caret.
-    const accentedBeforeClean = accentedUnderscore;
-    accentedUnderscore = accentedUnderscore.replace(/_\^/g, '').replace(/\^/g, '');
-    if (shouldLogAlign && accentedBeforeClean !== accentedUnderscore) {
-      console.log('  After breve cleaning:', accentedUnderscore);
     }
 
+    // Get the accented form (with _ markers) from getAccents
+    const accentedCandidates = token.accented;
+
+    if (!accentedCandidates || accentedCandidates.length === 0) {
+      // No accented form available, fallback
+      return token.with({ text, macronized: true } as any);
+    }
+
+    // Use the first (best) accented candidate
+    let accentedUnderscore = accentedCandidates[0];
+
+    // Clean: remove '^' markers and '_^' sequences (as in Python Token.macronize)
+    accentedUnderscore = accentedUnderscore.replace(/_\^/g, '').replace(/\^/g, '');
+
     // Apply alsomaius: add macron before 'j' (or 'i') after short vowel, unless prefix with short j
-    // Ported from Python Token.macronize: if domacronize and alsomaius and 'j' in accented:
-    // NOTE: Python wordlist uses 'j' orthography, but our macrons.txt uses 'i' orthography.
-    // Match BOTH 'i' and 'j' between vowels to handle both cases (bug fix).
     if (alsomaius && /[ij]/.test(accentedUnderscore)) {
       const lowerAcc = accentedUnderscore.toLowerCase();
       const startsWithShortJ = prefixesWithShortJ.some(prefix => lowerAcc.startsWith(prefix));
       if (!startsWithShortJ) {
-        // Insert underscore between vowel and 'i'/'j' followed by vowel
-        // e.g., "maior" → "ma_ior" (wordlist 'i') or "major" → "ma_jor" (Morpheus 'j')
         accentedUnderscore = accentedUnderscore.replace(/([aeiouy])([ij][aeiouy])/gi, '$1_$2');
-        if (shouldLogAlign) {
-          console.log('  After alsomaius:', accentedUnderscore);
-        }
       }
     }
 
     // If accented form became empty after cleaning, fallback to plain text
     if (!accentedUnderscore) {
-      if (shouldLogAlign) console.log('  Accented became empty after cleaning, fallback to plain');
       return token.with({ text, macronized: true } as any);
     }
-    
+
     // Apply DP alignment to produce macronized output
     const alignOptions: AlignOptions = {
       domacronize: true,
@@ -723,36 +748,22 @@ export class Tokenization {
     };
 
     const macronizedUnderscore = alignMacronized(text, accentedUnderscore, alignOptions);
-    if (shouldLogAlign) {
-      console.log('  DP result (underscore):', macronizedUnderscore);
-      console.log('  DP result (unicode):', macronizedUnderscore ? underscoreToUnicode(macronizedUnderscore) : 'null');
-    }
-    
+
     let macronizedUnicode: string;
     if (macronizedUnderscore === null) {
-      // Alignment failed, fallback: convert accentedUnderscore directly
       macronizedUnicode = underscoreToUnicode(accentedUnderscore);
     } else {
       macronizedUnicode = underscoreToUnicode(macronizedUnderscore);
     }
 
-    // Apply u→v and i→j conversions to non-macronized characters only.
-    // Macronized vowels (ū, ī) are preserved as vowels; plain 'u'/'i' → 'v'/'j'.
-    // The DP already produces 'v'/'j' from wordlist accented forms for consonantal
-    // positions (via subCost=1). This handles remaining cases like "lupus" → "lvpus".
+    // Apply u→v and i→j conversions to non-macronized characters only
     if (performutov) {
-      // Convert only plain 'u'/'U', NOT macronized 'ū'/'Ū'
       macronizedUnicode = macronizedUnicode
         .replace(/u/g, 'v').replace(/U/g, 'V');
     }
     if (performitoj) {
-      // Convert only plain 'i'/'I', NOT macronized 'ī'/'Ī'
       macronizedUnicode = macronizedUnicode
         .replace(/i/g, 'j').replace(/I/g, 'J');
-    }
-
-    if (shouldLogAlign) {
-      console.log(`  Final unicode: "${macronizedUnicode}"`);
     }
 
     return token.with({

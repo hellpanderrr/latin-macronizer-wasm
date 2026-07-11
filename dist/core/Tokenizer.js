@@ -19,51 +19,45 @@ export class Tokenizer {
         const rawTokens = normalized.split(Tokenizer.WORD_BOUNDARY)
             .filter(t => t.length > 0);
         const tokens = [];
+        // Python: possiblesentenceend tracks whether the previous word was long enough
+        // to credibly end a sentence. Single-char words like "M" in "M." don't trigger
+        // sentence boundaries. This is critical for HMM context in Latin texts full of
+        // abbreviations (M., L., P., T., Id., etc.).
+        let possibleSentenceEnd = false;
+        let sentenceHasEnded = true; // Start of text = start of sentence
         for (let i = 0; i < rawTokens.length; i++) {
             const rawToken = rawTokens[i];
-            const token = this.createToken(rawToken, i, rawTokens);
-            tokens.push(token);
+            const isWord = /[^\W\d_]/.test(rawToken); // contains letters
+            if (isWord) {
+                if (sentenceHasEnded) {
+                    // This word starts a new sentence
+                    const token = new Token(rawToken, { originalText: rawToken, startssentence: true });
+                    tokens.push(token);
+                    sentenceHasEnded = false;
+                }
+                else {
+                    tokens.push(new Token(rawToken, { originalText: rawToken }));
+                }
+                // Only words with len > 1 can be plausible sentence-enders
+                // (matches Python: possiblesentenceend = (len(token.text) > 1))
+                possibleSentenceEnd = (rawToken.length > 1);
+            }
+            else if (possibleSentenceEnd && /[.;:?!]/.test(rawToken)) {
+                // Punctuation that ends a sentence — only after a credible word
+                tokens.push(new Token(rawToken, { originalText: rawToken, endssentence: true }));
+                possibleSentenceEnd = false;
+                sentenceHasEnded = true;
+            }
+            else if (/[.;:?!]/.test(rawToken)) {
+                // Punctuation after a single-char word (like "M.") — does NOT end sentence
+                tokens.push(new Token(rawToken, { originalText: rawToken }));
+            }
+            else {
+                // Whitespace or other punctuation
+                tokens.push(new Token(rawToken, { originalText: rawToken }));
+            }
         }
         return tokens;
-    }
-    /**
-     * Create a token with appropriate metadata
-     */
-    createToken(text, index, allTokens) {
-        const options = {
-            originalText: text,
-        };
-        // Check for punctuation
-        if (Tokenizer.PUNCTUATION.test(text)) {
-            return new Token(text, options);
-        }
-        // Check for numbers
-        if (Tokenizer.NUMBER.test(text)) {
-            return new Token(text, options);
-        }
-        // Determine if this is end of sentence
-        const isEndOfSentence = this.isEndOfSentence(text, index, allTokens);
-        // Create basic token (tag will be filled by POS tagger)
-        return new Token(text, options);
-    }
-    /**
-     * Check if token represents end of sentence
-     */
-    isEndOfSentence(text, index, allTokens) {
-        // Check if token ends with sentence punctuation
-        if (!Tokenizer.SENTENCE_END.test(text)) {
-            return false;
-        }
-        // Check for abbreviations (e.g., "M.", "D.")
-        if (Tokenizer.ABBREVIATION.test(text)) {
-            return false;
-        }
-        // Check if next token starts with capital letter (likely new sentence)
-        if (index + 1 < allTokens.length) {
-            const nextToken = allTokens[index + 1];
-            return /^[A-Z]/.test(nextToken);
-        }
-        return true;
     }
     /**
      * Detokenize: join tokens back into text
@@ -80,11 +74,14 @@ export class Tokenizer {
         const tokens = this.tokenize(text);
         for (let i = 0; i < tokens.length; i++) {
             const token = tokens[i];
-            currentSentence += token.text + ' ';
-            // Check for sentence end
-            if (this.isEndOfSentence(token.text, i, tokens.map(t => t.text))) {
+            currentSentence += token.text;
+            // Check for sentence end (set by tokenize() during punctuation handling)
+            if (token.endssentence) {
                 sentences.push(currentSentence.trim());
                 currentSentence = '';
+            }
+            else if (!/[.;:?!]/.test(token.text)) {
+                currentSentence += ' ';
             }
         }
         // Add remaining text
