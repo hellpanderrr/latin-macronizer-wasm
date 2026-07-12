@@ -14,11 +14,14 @@ if [ -d "/build/native/rftagger/src" ]; then
     cd /build/native/rftagger
     
     # Compile RFTagger with Emscripten
-    emcc src/embind-wrapper.C src/rft-annotate.C src/io.C src/DataMapping.C src/SuffixLexicon.C src/POSTagger.C src/Lexicon.C src/Entry.C \
+    # --bind is REQUIRED for embind (EMSCRIPTEN_BINDINGS in embind-wrapper.C),
+    # without it the .wasm silently lacks _embind_register_* symbols.
+    # EXPORT_NAME must match the global checked by WasmTagger.ts (RFTaggerModule).
+    emcc --bind src/embind-wrapper.C src/rft-annotate.C src/io.C src/DataMapping.C src/SuffixLexicon.C src/POSTagger.C src/Lexicon.C src/Entry.C \
         -O3 \
         -s WASM=1 \
         -s MODULARIZE=1 \
-        -s EXPORT_NAME="RFTagger" \
+        -s EXPORT_NAME="RFTaggerModule" \
         -s ALLOW_MEMORY_GROWTH=1 \
         -s TOTAL_MEMORY=67108864 \
         -s FILESYSTEM=1 \

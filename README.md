@@ -14,7 +14,7 @@ Morpheus analysis (unknowns) → suffix rules → scansion → DP alignment → 
 - **RFTagger** — C++ POS tagger compiled to WebAssembly (~13MB model)
 - **Morpheus / cruncher** — C morphological analyzer compiled to WebAssembly (~23MB data)
 - **Wordlist** — 812k wordform entries from `macrons.txt` (32MB), served as plain text, cached in IndexedDB or in-memory Map
-- **Scansion** — automaton-based verse meter scanning (dactylic hexameter, pentameter, hendecasyllable, iambic)
+- **Scansion** — automaton-based verse meter scanning (dactylic hexameter, elegiac distichs, hendecasyllable, iambic trimeter + dimeter)
 - **DP alignment** — edit-distance algorithm placing macrons by matching plain text against accented forms
 
 ## Quick start
@@ -106,14 +106,14 @@ src/
 The C/C++ sources are in `native/rftagger/` and `native/morpheus/c/`. WASM builds use Docker:
 
 ```bash
-# RFTagger
-docker compose -f native/build/docker-compose.yml up wasm-builder
+# RFTagger WASM
+docker compose -f native/build/docker-compose.yml run --rm wasm-builder
 
-# Morpheus
+# Morpheus WASM
 # See native/morpheus/js/docker-compose.morpheus.yml
 ```
 
-Build scripts in `native/build/`.
+Build scripts in `native/build/`. Use `docker compose run --rm` (not `up`) so artifacts land in the mounted volume. Verify WASM rebuilds with `node test/e2e/test-compare-wasm-tags.mjs`.
 
 ## License
 

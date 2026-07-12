@@ -23,6 +23,9 @@ npm run test:parity        # full-pipeline parity vs Python reference (Node, no 
 npm run test:watch         # watch mode
 npx jest test/unit/latin.test.ts  # single file
 
+# Test coverage
+npm run test:coverage        # Jest with --coverage flag
+
 # E2E tests (Node, requires npm run build first)
 node test/e2e/test-scansion.mjs           # validates all 5 meter options on real verse
 node test/e2e/test-orthography.mjs        # validates u→v/i→j semantics
@@ -34,10 +37,12 @@ node test/e2e/test-py-compare-ortho.mjs
 
 # Lint / Format
 npm run lint
+npm run lint:fix
 npm run format
+npm run format:check
 
 # WASM builds (Docker recommended)
-docker-compose -f native/build/docker-compose.yml up wasm-builder  # RFTagger WASM
+docker-compose -f native/build/docker-compose.yml run --rm wasm-builder  # RFTagger WASM (use run --rm, not up — see trap below)
 # Morpheus WASM: see native/morpheus/js/docker-compose.morpheus.yml
 
 # Serve for browser testing
@@ -65,14 +70,14 @@ Three layers: **analysis engines** (POS tagging, morphology, dictionaries) → *
 - **`src/analysis/WordlistEngine.ts`** — IndexedDB-backed wordform database (~812k entries from `macrons.txt`). Replaces Python's SQLite. Integrates with Morpheus for unknown words.
 - **`src/analysis/LemmaEngine.ts`** — Lemma dictionary lookup from `src/data/lemmas.json`.
 - **`src/analysis/EndingPatternEngine.ts`** — Suffix-based vowel length rules from `src/data/endings.json`.
-- **`src/api/MacronizerAPI.ts`** — Thin convenience wrapper for `demo.html`. Handles initialization with progress callbacks.
+- **`src/api/MacronizerAPI.ts`** — Thin convenience wrapper for `index.html`. Handles initialization with progress callbacks.
 - **`src/utils/latin.ts`** — Shared utilities: text normalization, case conversion, enclitic handling, orthography (u↔v, i↔j).
 
 ### WASM Integration
 
 Two separate WASM modules loaded at runtime:
 
-1. **RFTagger** (`public/wasm/rftagger.{wasm,js}`) — C++ POS tagger. Loaded via `<script>` tag in `demo.html`, exposes global `RFTaggerModule`. Uses Emscripten embind C++ class API (`new RFTagger()`, `loadModel()`, `tagSentences()`). Model file: `rftagger-ldt.model` (~13MB, fetched and written to virtual FS at runtime).
+1. **RFTagger** (`public/wasm/rftagger.{wasm,js}`) — C++ POS tagger. Loaded via `<script>` tag in `index.html`, exposes global `RFTaggerModule`. Uses Emscripten embind C++ class API (`new RFTagger()`, `loadModel()`, `tagSentences()`). Model file: `rftagger-ldt.model` (~13MB, fetched and written to virtual FS at runtime).
 
 2. **Morpheus (cruncher)** (`public/wasm/cruncher.{wasm,js,data}`) — C morphological analyzer. Loaded via `<script>` tag. Exposes `window.Morpheus` factory. Uses `ccall('morpheus_analyze', ...)` with the C API.
 
@@ -104,7 +109,7 @@ Latin text
 
 ### WASM Build Process
 
-- RFTagger: Emscripten compilation via Docker (`docker-compose -f native/build/docker-compose.yml up wasm-builder`). Source in `native/rftagger/`. Build scripts: `native/build/build-rftagger-wasm.sh`, `native/build/emscripten-build.sh`.
+- RFTagger: Emscripten compilation via Docker (`docker-compose -f native/build/docker-compose.yml run --rm wasm-builder`). Source in `native/rftagger/`. Build scripts: `native/build/build-rftagger-wasm.sh`, `native/build/emscripten-build.sh`.
 - Morpheus: Separate build in `native/morpheus/js/` directory. Source in `native/morpheus/c/`. Build: `native/morpheus/js/build-morpheus-wasm.sh` via Docker (`native/morpheus/js/docker-compose.morpheus.yml`).
 
 ### Testing
@@ -123,8 +128,8 @@ typos don't qualify; anything you had to *discover* does.
 
 ## Known traps (error log)
 
-- [macronizer] `docker compose up <svc>` runs the build during IMAGE build, so outputs never land in the mounted volume — the working copy stays untouched; use `docker compose run --rm <svc>` when you actually want artifacts written.
-- [macronizer] emcc with embind sources but without `--bind` + `ERROR_ON_UNDEFINED_SYMBOLS=0` silently emits a broken .wasm (undefined `_embind_register_*`); `native/build/build-rftagger-wasm.sh` is broken this way (also wrong EXPORT_NAME — glue expects `RFTaggerModule`). NEVER rebuild `public/wasm/rftagger.{js,wasm}` — the committed binary is proven bit-identical to native g++ (289/289 tags).
+- [macronizer] `docker compose up <svc>` runs the build during IMAGE build if the Dockerfile uses `RUN`; when using volume mounts, outputs never land in the mounted volume — use `docker compose run --rm <svc>` instead. **(Build script fixed: `RUN` → `CMD` so build runs at container start.)**
+- [macronizer] emcc with embind sources but without `--bind` + `ERROR_ON_UNDEFINED_SYMBOLS=0` silently emits a broken .wasm (undefined `_embind_register_*`); `native/build/build-rftagger-wasm.sh` **was** broken this way (also wrong `EXPORT_NAME` — glue expects `RFTaggerModule`). The build script was fixed 2026-07-12: added `--bind`, changed `EXPORT_NAME="RFTagger"` → `EXPORT_NAME="RFTaggerModule"`. The committed binary (`public/wasm/rftagger.{js,wasm}`) is the proven reference — verify any rebuild with `test/e2e/test-compare-wasm-tags.mjs`.
 - [macronizer] TS `Token` uses camelCase `isSpace`; Python-style `token.isspace` is silently `undefined`, so guards like `!token.isspace` are always-true dead code (this let whitespace tokens reach the POS tagger).
 - [macronizer] `test/data/py-output-full.txt` / `ts-output-full.txt` are from a DIFFERENT input text (stale); the canonical caesar.txt reference is `test/data/py-output.txt`.
 - [node] Emscripten *web-only* glue under Node: hide `process.versions` only around the module-factory call (and pass `wasmBinary`); hiding it process-wide breaks Node's own fetch/Response — undici lazily reads `process.versions.node.split(...)`.

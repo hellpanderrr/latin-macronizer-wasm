@@ -30,7 +30,9 @@ COPY public/wasm/rftagger-ldt.model /build/model/rftagger-ldt.model
 COPY native/build/build-rftagger-wasm.sh /build/build-rftagger-wasm.sh
 RUN chmod +x /build/build-rftagger-wasm.sh
 
-# Run the build
+# Run the build (runs during image build for multi-stage COPY --from=builder).
+# When using docker-compose, the `command:` field overrides this and re-runs
+# at container start, writing to the mounted volume.
 RUN /build/build-rftagger-wasm.sh
 
 # Stage 2: Production image
