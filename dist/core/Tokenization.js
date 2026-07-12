@@ -559,14 +559,13 @@ export class Tokenization {
     macronizeToken(token, domacronize, alsomaius, performutov, performitoj, endingEngine) {
         // Use original text for alignment (alignMacronized will handle u->v, i->j conversions)
         let text = token.text;
-        if (!domacronize) {
-            // Even if not macronizing, still apply orthographic conversions if requested
-            if (performutov) {
-                text = text.replace(/u/g, 'v').replace(/U/g, 'V');
-            }
-            if (performitoj) {
-                text = text.replace(/i/g, 'j').replace(/I/g, 'J');
-            }
+        // Python Token.macronize has a guard that returns plain when !domacronize
+        // AND neither orthographic conversion is requested.  When conversions ARE
+        // requested, Python falls through to the DP alignment, which handles
+        // u→v/i→j in the backtrack (only converting when the wordlist form
+        // specifically has 'v'/'j').  Do the same here by deferring to
+        // alignMacronized which mirrors Python's logic.
+        if (!domacronize && !performutov && !performitoj) {
             return token.with({ text, macronized: true });
         }
         // Get the accented form (with _ markers) from getAccents
@@ -580,7 +579,8 @@ export class Tokenization {
         // Clean: remove '^' markers and '_^' sequences (as in Python Token.macronize)
         accentedUnderscore = accentedUnderscore.replace(/_\^/g, '').replace(/\^/g, '');
         // Apply alsomaius: add macron before 'j' (or 'i') after short vowel, unless prefix with short j
-        if (alsomaius && /[ij]/.test(accentedUnderscore)) {
+        // Python guards this with domacronize — only makes sense when macronizing
+        if (domacronize && alsomaius && /[ij]/.test(accentedUnderscore)) {
             const lowerAcc = accentedUnderscore.toLowerCase();
             const startsWithShortJ = prefixesWithShortJ.some(prefix => lowerAcc.startsWith(prefix));
             if (!startsWithShortJ) {
@@ -606,15 +606,10 @@ export class Tokenization {
         else {
             macronizedUnicode = underscoreToUnicode(macronizedUnderscore);
         }
-        // Apply u→v and i→j conversions to non-macronized characters only
-        if (performutov) {
-            macronizedUnicode = macronizedUnicode
-                .replace(/u/g, 'v').replace(/U/g, 'V');
-        }
-        if (performitoj) {
-            macronizedUnicode = macronizedUnicode
-                .replace(/i/g, 'j').replace(/I/g, 'J');
-        }
+        // u→v and i→j conversions are handled inside alignMacronized's DP backtrack,
+        // only when the wordlist accented form specifically has 'v'/'j' at that
+        // position.  Blanket replacement here would incorrectly convert e.g. "cum"
+        // → "cvm" (wordlist form is "cum", not "cvm").
         return token.with({
             macronizedText: macronizedUnicode,
             macronized: true

@@ -97,23 +97,23 @@ export function alignMacronized(
     }
   }
 
-  // Early exact match: if plain equals accented without underscores, return accented (with underscores)
+  // Early exact match: if plain equals accented without underscores, return accented (with underscores).
+  // Python Token.macronize() matches this path when plain == accented.replace("_","") — it returns
+  // accented directly (with macrons) when domacronize, or plain otherwise.
+  // Crucially, Python does NOT apply u→v or i→j conversion here — those ONLY happen inside the DP
+  // backtrack (lines 192-202), and only when the wordlist accented form specifically has 'v'/'j'
+  // at that position.  Blanket replacement here would convert e.g. "cum" → "cvm" (wrong) because
+  // "cum" has no 'v' in its wordlist entry.
   const accentedWithoutUnderscores = accentedNorm.replace(/_/g, '');
   const isExactMatch = options.alsomaius
     ? plain.toLowerCase() === accentedWithoutUnderscores.toLowerCase()
     : plain === accentedWithoutUnderscores;
   if (isExactMatch) {
-    // APPLY u→v and i→j conversions even on exact match path (bug fix)
+    // Python: return plain when not macronizing (no macron markers), accented otherwise
+    if (!domacronize) return plain;
     let result = accentedNorm;
     if (options.alsomaius && plain[0] !== accentedNorm[0]) {
-      // Match the case of the first character
       result = plain[0] + accentedNorm.slice(1);
-    }
-    if (performutov) {
-      result = result.replace(/u/g, 'v').replace(/U/g, 'V');
-    }
-    if (performitoj) {
-      result = result.replace(/i/g, 'j').replace(/I/g, 'J');
     }
     return result;
   }
