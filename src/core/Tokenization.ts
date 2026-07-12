@@ -5,24 +5,21 @@
  */
 
 import { Token } from './Token';
-import { WasmTagger, TagResult } from '../analysis/WasmTagger';
+import { WasmTagger } from '../analysis/WasmTagger';
 import { LemmaEngine } from '../analysis/LemmaEngine';
 import { EndingPatternEngine } from '../analysis/EndingPatternEngine';
 import { normalizeTag } from '../utils/latin';
 import { WordlistEngine, WordlistEntry } from '../analysis/WordlistEngine';
 import { scanVerses as doScanVerses, MeterAutomaton } from './Scansion';
 import { alignMacronized, AlignOptions } from './alignMacronized';
-import { 
-  toAscii, 
-  isPunctuation, 
-  isWhitespace, 
+import {
+  toAscii,
+  isWhitespace,
   isSentenceEnder,
   splitEnclitic,
-  enclitics,
   tagDistance,
   levenshteinDistance,
   underscoreToUnicode,
-  unicodeToUnderscore,
   prefixesWithShortJ
 } from '../utils/latin';
 
@@ -40,7 +37,7 @@ export class Tokenization {
   public text: string;
   public originalText: string;
   private _scannedFeet: string[] = [];
-  
+
   // Enclitic compounds that must be split even if known (from Python tokenization.py)
   private static dividenda: Record<string, number> = {
     "nequid": 4, "attamen": 5, "unusquisque": 7, "unaquaeque": 7, "unumquodque": 7, "uniuscuiusque": 8,
@@ -61,17 +58,17 @@ export class Tokenization {
     "semetipsos": 5, "semetipsas": 5, "semetipsis": 5, "teipsum": 5, "temetipsum": 5, "vosmetipsos": 5,
     "idipsum": 5
   };
-  
+
   // Special enclitic words that should be split even if known (from Python)
   private static specialEncliticWords = new Set(['nec', 'neque', 'necnon', 'seque', 'seseque', 'quique', 'mecumque', 'tecumque', 'secumque']);
-  
+
   constructor(text: string, options: TokenizationOptions = {}) {
     this.text = text;
     this.originalText = text;
     this.tokenize(text, options);
     this.detectSentenceBoundaries();
   }
-  
+
   /**
    * Main tokenization method
    */
@@ -120,7 +117,7 @@ export class Tokenization {
               isSpace: true,
               startIndex: position,
               endIndex: position + 1
-            } as any));
+            }));
           }
         } else {
           // Punctuation
@@ -134,7 +131,7 @@ export class Tokenization {
             endssentence: endsSentence,
             startIndex: position,
             endIndex: position + 1
-          } as any));
+          }));
 
           // After a sentence-ending punctuation, reset
           if (endsSentence) {
@@ -151,7 +148,7 @@ export class Tokenization {
       this.addWordToken(currentWord, wordStart, position);
     }
   }
-   
+
   /**
    * Detect sentence boundaries and mark startssentence on tokens
    */
@@ -159,9 +156,9 @@ export class Tokenization {
     let startOfSentence = true;
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];
-      if ((token as any).isWord) {
+      if (token.isWord) {
         if (startOfSentence) {
-          this.tokens[i] = token.with({ startssentence: true } as any);
+          this.tokens[i] = token.with({ startssentence: true });
           startOfSentence = false;
         }
         if (token.endssentence) {
@@ -172,7 +169,7 @@ export class Tokenization {
       }
     }
   }
-   
+
   /**
    * Add a word token (without splitting enclitics yet)
    */
@@ -184,7 +181,7 @@ export class Tokenization {
       startIndex: start,
       endIndex: end,
       text: word
-    } as any));
+    }));
   }
 
   /**
@@ -196,13 +193,13 @@ export class Tokenization {
     const wordFormsToTag: string[] = [];
 
     for (const token of this.tokens) {
-      if (!(token as any).isWord || (token as any).isenclitic) {
+      if (!token.isWord || token.isenclitic) {
         newTokens.push(token);
         continue;
       }
 
       const asciiLower = toAscii(token.text).toLowerCase();
-      
+
       // Check if we should split this word (use getAllEntries since wordExists is private)
       const existingEntries = await wordlistEngine.getAllEntries(asciiLower);
       const exists = existingEntries.length > 0;
@@ -212,17 +209,16 @@ export class Tokenization {
 
       if (!shouldSplit) {
         newTokens.push(token);
-        if (token.isWord) wordFormsToTag.push(asciiLower);
+        wordFormsToTag.push(asciiLower);
         continue;
       }
 
       // Determine how to split
-      let parts: Token[] = [];
       let stemText: string = '';
       let encliticText: string | null = null;
       let isEncliticSplit = false;
-      const tokenStart = (token as any).startIndex ?? 0;
-      const tokenEnd = (token as any).endIndex ?? tokenStart + token.text.length;
+      const tokenStart = token.startIndex ?? 0;
+      const tokenEnd = token.endIndex ?? tokenStart + token.text.length;
 
       // Special cases: nec, necnon, dividenda
       if (asciiLower === 'nec') {
@@ -244,7 +240,7 @@ export class Tokenization {
           startIndex: tokenStart,
           endIndex: tokenStart + part1Stem.length,
           text: part1Stem
-        } as any);
+        });
         const cToken = new Token(part1Enclitic, {
           isWord: true,
           isSpace: false,
@@ -252,19 +248,17 @@ export class Tokenization {
           startIndex: tokenStart + part1Stem.length,
           endIndex: tokenStart + part1Stem.length + part1Enclitic.length,
           text: part1Enclitic
-        } as any);
+        });
         const nonToken = new Token(part2Text, {
           isWord: true,
           isSpace: false,
           startIndex: tokenStart + part1Stem.length + part1Enclitic.length,
           endIndex: tokenEnd,
           text: part2Text
-        } as any);
-        parts = [neToken, cToken, nonToken];
-        // Add non-enclitic word forms for tagging
+        });
         wordFormsToTag.push(toAscii(part1Stem).toLowerCase());
         wordFormsToTag.push(toAscii(part2Text).toLowerCase());
-        newTokens.push(...parts);
+        newTokens.push(neToken, cToken, nonToken);
         continue;
       } else if (asciiLower in Tokenization.dividenda && !exists) {
         // Only split dividenda compounds if word is unknown (matches Python behavior)
@@ -278,18 +272,17 @@ export class Tokenization {
           startIndex: tokenStart,
           endIndex: tokenStart + stemPart.length,
           text: stemPart
-        } as any);
+        });
         const restToken = new Token(restPart, {
           isWord: true,
           isSpace: false,
           startIndex: tokenStart + stemPart.length,
           endIndex: tokenEnd,
           text: restPart
-        } as any);
-        parts = [stemToken, restToken];
+        });
         wordFormsToTag.push(toAscii(stemPart).toLowerCase());
         wordFormsToTag.push(toAscii(restPart).toLowerCase());
-        newTokens.push(...parts);
+        newTokens.push(stemToken, restToken);
         continue;
       } else {
         // Generic enclitic split using utility
@@ -318,7 +311,7 @@ export class Tokenization {
           startIndex: tokenStart,
           endIndex: tokenStart + stemText.length,
           text: stemText
-        } as any);
+        });
         const encliticToken = new Token(encliticText, {
           isWord: true,
           isSpace: false,
@@ -326,8 +319,7 @@ export class Tokenization {
           startIndex: tokenStart + stemText.length,
           endIndex: tokenEnd,
           text: encliticText
-        } as any);
-        parts = [stemToken, encliticToken];
+        });
         wordFormsToTag.push(toAscii(stemText).toLowerCase());
         newTokens.push(stemToken, encliticToken);
       }
@@ -336,29 +328,20 @@ export class Tokenization {
     this.tokens = newTokens;
     return wordFormsToTag;
   }
-  
+
   /**
    * Get all word forms for lookup
    */
   allWordForms(): string[] {
     const forms: string[] = [];
     for (const token of this.tokens) {
-      if ((token as any).isWord && !(token as any).isenclitic) {
+      if (token.isWord && !token.isenclitic) {
         forms.push(toAscii(token.text).toLowerCase());
       }
     }
     return [...new Set(forms)]; // Remove duplicates
   }
-  
-  /**
-   * Split tokens for wordlist lookup
-   */
-  splitTokens(wordlist: any): string[] {
-    // TODO: Implement token splitting based on wordlist
-    // This handles compound words and contractions
-    return [];
-  }
-  
+
   /**
    * Add tags to tokens from RFTagger output
    */
@@ -366,7 +349,7 @@ export class Tokenization {
     let tagIdx = 0;
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];
-      if ((token as any).isWord && !(token as any).isenclitic) {
+      if (token.isWord && !token.isenclitic) {
         if (tagIdx < tags.length) {
           this.tokens[i] = token.with({
             // Convert RFTagger dots to dashes to match wordlist format (n.-.s. → n-s--)
@@ -377,7 +360,7 @@ export class Tokenization {
       }
     }
   }
-  
+
   /**
    * Tag tokens using WasmTagger
    * Gets words from tokens and applies POS tags from RFTagger
@@ -395,7 +378,7 @@ export class Tokenization {
     let savedBearerIdx: number = -1;
 
     for (let i = 0; i < this.tokens.length; i++) {
-      const token = this.tokens[i] as any;
+      const token = this.tokens[i];
       if (!token.isSpace) {
         // Python: if tokentext == tokentext.upper(): tokentext = tokentext.lower()
         // No length check — single letters like "M" (abbreviation) become "m",
@@ -447,7 +430,7 @@ export class Tokenization {
       }
     }
   }
-  
+
   /**
    * Add lemmas to tokens.
    * Exact port of Python tokenization.py addlemmas():
@@ -463,7 +446,7 @@ export class Tokenization {
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];
       // Lemmas are only consumed downstream for non-enclitic word tokens
-      if (!(token as any).isWord || (token as any).isenclitic) continue;
+      if (!token.isWord || token.isenclitic) continue;
 
       const wordform = toAscii(token.text); // original case, like Python
       let bestLemma = '-';
@@ -497,7 +480,7 @@ export class Tokenization {
       this.tokens[i] = token.with({ lemma: bestLemma });
     }
   }
-  
+
   /**
    * Get accents for tokens
    * Ported from latin_macronizer/tokenization.py (getaccents method)
@@ -512,7 +495,7 @@ export class Tokenization {
 
     for (let idx = 0; idx < this.tokens.length; idx++) {
       const token = this.tokens[idx];
-      if (!(token as any).isWord) continue;
+      if (!token.isWord) continue;
 
       // Python: wordform = toascii(token.text); iscapital = wordform.istitle();
       //         wordform = wordform.lower()
@@ -603,10 +586,10 @@ export class Tokenization {
         accented,
         isAmbiguous,
         isUnknown
-      } as any);
+      });
     }
   }
-  
+
   /**
    * Apply macronization to all tokens
    */
@@ -619,19 +602,19 @@ export class Tokenization {
   ): void {
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];
-      if ((token as any).isWord) {
+      if (token.isWord) {
         this.tokens[i] = this.macronizeToken(
-          token, 
-          domacronize, 
-          alsomaius, 
-          performutov, 
+          token,
+          domacronize,
+          alsomaius,
+          performutov,
           performitoj,
           endingEngine
         );
       }
     }
   }
-  
+
   /**
    * Macronize single token
    * Ported from latin_macronizer/tokenization.py (macronize method)
@@ -656,7 +639,7 @@ export class Tokenization {
       if (performitoj) {
         text = text.replace(/i/g, 'j').replace(/I/g, 'J');
       }
-      return token.with({ text, macronized: true } as any);
+      return token.with({ text, macronized: true });
     }
 
     // Get the accented form (with _ markers) from getAccents
@@ -664,7 +647,7 @@ export class Tokenization {
 
     if (!accentedCandidates || accentedCandidates.length === 0) {
       // No accented form available, fallback
-      return token.with({ text, macronized: true } as any);
+      return token.with({ text, macronized: true });
     }
 
     // Use the first (best) accented candidate
@@ -684,7 +667,7 @@ export class Tokenization {
 
     // If accented form became empty after cleaning, fallback to plain text
     if (!accentedUnderscore) {
-      return token.with({ text, macronized: true } as any);
+      return token.with({ text, macronized: true });
     }
 
     // Apply DP alignment to produce macronized output
@@ -717,58 +700,58 @@ export class Tokenization {
     return token.with({
       macronizedText: macronizedUnicode,
       macronized: true
-    } as any);
+    });
   }
-  
+
   /**
    * Convert tokens back to text
    */
-  detokenize(markAmbigs: boolean = false): string {
+  detokenize(): string {
     let result = '';
     let lastEnd = 0;
-    
+
     for (const token of this.tokens) {
-      const start = (token as any).startIndex ?? lastEnd;
-      
+      const start = token.startIndex ?? lastEnd;
+
       // Add original whitespace between tokens
       if (start > lastEnd) {
         const whitespace = this.originalText?.substring(lastEnd, start) || ' ';
         result += whitespace;
       }
-      
+
       // Add token text - convert underscore notation to Unicode
-      let text = (token as any).macronizedText ?? token.text;
+      let text = token.macronizedText ?? token.text;
       // Strip remaining underscores that aren't part of macron notation
       // (should already be converted, but double-check)
       if (text) {
         text = text.replace(/_/g, '');
       }
       result += text;
-      
-      lastEnd = (token as any).endIndex ?? (start + (token as any).text?.length || text.length);
+
+      lastEnd = token.endIndex ?? (start + (token.text?.length || text.length));
     }
-    
+
     return result;
   }
-  
+
   /**
    * Get plain text without HTML
    */
   getPlainText(): string {
     return this.tokens
-      .map(t => (t as any).macronizedText ?? t.text)
+      .map(t => t.macronizedText ?? t.text)
       .join(' ')
       .replace(/\s+/g, ' ')
       .trim();
   }
-  
+
   /**
    * Scan verses using meter automata
    */
   scanVerses(meterAutomatons: MeterAutomaton[]): void {
-    this._scannedFeet = doScanVerses(this.tokens as any, meterAutomatons);
+    this._scannedFeet = doScanVerses(this.tokens, meterAutomatons);
   }
-  
+
   /**
    * Get scanned feet (if scansion was performed)
    */

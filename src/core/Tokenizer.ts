@@ -96,7 +96,7 @@ export class Tokenizer {
       currentSentence += token.text;
 
       // Check for sentence end (set by tokenize() during punctuation handling)
-      if ((token as any).endssentence) {
+      if (token.endssentence) {
         sentences.push(currentSentence.trim());
         currentSentence = '';
       } else if (!/[.;:?!]/.test(token.text)) {

@@ -55,10 +55,6 @@ export declare class Tokenization {
      */
     allWordForms(): string[];
     /**
-     * Split tokens for wordlist lookup
-     */
-    splitTokens(wordlist: any): string[];
-    /**
      * Add tags to tokens from RFTagger output
      */
     addTags(tags: Array<{
@@ -101,7 +97,7 @@ export declare class Tokenization {
     /**
      * Convert tokens back to text
      */
-    detokenize(markAmbigs?: boolean): string;
+    detokenize(): string;
     /**
      * Get plain text without HTML
      */

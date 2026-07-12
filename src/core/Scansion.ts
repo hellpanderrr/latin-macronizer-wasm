@@ -399,7 +399,7 @@ export function scanVerses(
 
         // Reorder accented candidates: move best-scansion form to front
         for (const [tokenIndex, newAccented] of indexAccentPairs) {
-          const t = tokens[tokenIndex] as any;
+          const t = tokens[tokenIndex];
           if (t.accented) {
             const idx = t.accented.indexOf(newAccented);
             if (idx > -1) {

@@ -26,13 +26,6 @@ export interface Statistics {
     unknownWords: number;
     ambiguousForms: number;
 }
-export interface MacronizeOptions {
-    macronize?: boolean;
-    alsomaius?: boolean;
-    performutov?: boolean;
-    performitoj?: boolean;
-    scan?: string;
-}
 export interface MacronizeResult {
     original: string;
     macronized: string;
@@ -48,16 +41,13 @@ export interface MacronizeResult {
  * Coordinates all components for Latin text processing
  */
 export declare class Macronizer {
-    private tokenizer;
     private tokenization;
     private tagger;
     private lemmaEngine;
     private endingEngine;
-    private editDistanceEngine;
     private wordlistEngine;
     private morpheusAnalyzer;
     private useWasm;
-    private confidenceThreshold;
     private cache;
     private wordlistUrl?;
     private morpheusWasmPath?;
@@ -72,18 +62,6 @@ export declare class Macronizer {
      * Uses Tokenization pipeline with DP alignment
      */
     macronize(text: string, options?: MacronizeOptions): Promise<MacronizeResult>;
-    /**
-     * Tag tokens with POS tags
-     */
-    private tagTokens;
-    /**
-     * Check if token is a word (not punctuation or number)
-     */
-    private isWordToken;
-    /**
-     * Fallback tagging using morphological rules
-     */
-    private fallbackTagging;
     /**
      * Calculate overall confidence score
      */

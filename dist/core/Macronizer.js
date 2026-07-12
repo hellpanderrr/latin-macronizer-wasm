@@ -3,12 +3,10 @@
  * Core macronization engine integrating WASM RFTagger with Latin rules
  * Orchestrates tokenization, POS tagging, and vowel length assignment
  */
-import { Tokenizer } from './Tokenizer.js';
 import { Tokenization } from './Tokenization.js';
 import { WasmTagger, FallbackTagger } from '../analysis/WasmTagger.js';
 import { LemmaEngine } from '../analysis/LemmaEngine.js';
 import { EndingPatternEngine } from '../analysis/EndingPatternEngine.js';
-import { EditDistanceEngine } from '../analysis/EditDistanceEngine.js';
 import { WordlistEngine } from '../analysis/WordlistEngine.js';
 import { MorpheusAnalyzer } from '../analysis/MorpheusAnalyzer.js';
 import { toAscii } from '../utils/latin.js';
@@ -20,13 +18,7 @@ import metersData from '../data/meters.json' with { type: 'json' };
  */
 export class Macronizer {
     constructor(options = {}) {
-        var _a, _b, _c;
-        Object.defineProperty(this, "tokenizer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
+        var _a, _b;
         Object.defineProperty(this, "tokenization", {
             enumerable: true,
             configurable: true,
@@ -51,12 +43,6 @@ export class Macronizer {
             writable: true,
             value: void 0
         });
-        Object.defineProperty(this, "editDistanceEngine", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         Object.defineProperty(this, "wordlistEngine", {
             enumerable: true,
             configurable: true,
@@ -70,12 +56,6 @@ export class Macronizer {
             value: null
         });
         Object.defineProperty(this, "useWasm", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "confidenceThreshold", {
             enumerable: true,
             configurable: true,
             writable: true,
@@ -100,13 +80,10 @@ export class Macronizer {
             value: void 0
         });
         this.useWasm = (_a = options.useWasm) !== null && _a !== void 0 ? _a : true;
-        this.confidenceThreshold = (_b = options.confidenceThreshold) !== null && _b !== void 0 ? _b : 0.80;
         this.cache = new Map();
-        this.tokenizer = new Tokenizer();
         this.tokenization = new Tokenization('', { preserveWhitespace: true });
         this.lemmaEngine = new LemmaEngine();
         this.endingEngine = new EndingPatternEngine();
-        this.editDistanceEngine = new EditDistanceEngine();
         this.wordlistEngine = new WordlistEngine();
         this.wordlistUrl = options.wordlistUrl;
         this.morpheusWasmPath = options.morpheusWasmPath || '../wasm/cruncher.js';
@@ -115,7 +92,7 @@ export class Macronizer {
             this.tagger = new WasmTagger({
                 modelPath: options.wasmModelPath,
                 wasmPath: options.wasmPath,
-                enableCache: (_c = options.enableCache) !== null && _c !== void 0 ? _c : true,
+                enableCache: (_b = options.enableCache) !== null && _b !== void 0 ? _b : true,
             });
         }
         else {
@@ -246,24 +223,20 @@ export class Macronizer {
             };
             const automatons = meterMap[scanOption];
             if (automatons) {
-                const meterNames = automatons.map(a => { var _a, _b; return (_b = (_a = Object.keys(a)[0]) === null || _a === void 0 ? void 0 : _a.split("'")[1]) !== null && _b !== void 0 ? _b : '?'; }).join(', ');
-                console.log(`[Macronizer] Scanning verse as ${scanOption} (${meterNames})...`);
+                console.log(`[Macronizer] Scanning verse as ${scanOption}...`);
                 tokenization.scanVerses(automatons);
                 scannedFeet = tokenization.scannedFeet;
                 console.log(`[Macronizer] Scansion complete: ${scannedFeet.length} verse(s) scanned`);
             }
         }
         // Step 5: Macronize (DP alignment with alsomaius)
-        console.log('[Macronizer] Calling tokenization.macronize()...');
         tokenization.macronize(doMacronize, alsomaius, performutov, performitoj, this.endingEngine);
-        console.log('[Macronizer] tokenization.macronize() done');
         // Final tokens
         const macronizedTokens = tokenization.tokens;
         // Step 6: Reconstruct text
         const macronizedText = tokenization.detokenize();
         // Calculate confidence
         const confidence = this.calculateConfidence(originalTokens, macronizedTokens);
-        // Calculate statistics
         const statistics = this.calculateStatistics(originalTokens, macronizedTokens);
         const result = {
             original: text,
@@ -280,72 +253,6 @@ export class Macronizer {
         return result;
     }
     /**
-     * Tag tokens with POS tags
-     */
-    async tagTokens(tokens) {
-        // Filter only word tokens (exclude punctuation, numbers)
-        const wordTokens = tokens.filter(t => this.isWordToken(t));
-        const tokenTexts = wordTokens.map(t => t.text.toLowerCase());
-        if (tokenTexts.length === 0) {
-            return tokens;
-        }
-        try {
-            // Use WASM tagger if available
-            if (this.useWasm && this.tagger.isReady()) {
-                const tagResults = this.tagger.tag(tokenTexts);
-                // Map tags back to word tokens only
-                let resultIdx = 0;
-                return tokens.map((token) => {
-                    if (!this.isWordToken(token)) {
-                        // Non-word tokens keep their original tag (or empty)
-                        return token.with({ tag: 'u.-.-.-.-.-.-.-.-' });
-                    }
-                    const tagResult = tagResults[resultIdx++];
-                    return token.with({
-                        tag: tagResult.tag,
-                        confidence: tagResult.confidence,
-                    });
-                });
-            }
-            else {
-                // Fallback to JavaScript tagger
-                const tagResults = this.tagger.tag(tokenTexts);
-                let resultIdx = 0;
-                return tokens.map((token) => {
-                    if (!this.isWordToken(token)) {
-                        return token.with({ tag: 'u.-.-.-.-.-.-.-.-' });
-                    }
-                    const tagResult = tagResults[resultIdx++];
-                    return token.with({
-                        tag: tagResult.tag,
-                    });
-                });
-            }
-        }
-        catch (error) {
-            console.warn('POS tagging failed, using fallback:', error);
-            // Fallback to morphological analysis
-            return this.fallbackTagging(tokens);
-        }
-    }
-    /**
-     * Check if token is a word (not punctuation or number)
-     */
-    isWordToken(token) {
-        const text = token.text;
-        // Must contain at least one letter
-        return /[a-zA-Z\u00C0-\u024F]/.test(text);
-    }
-    /**
-     * Fallback tagging using morphological rules
-     */
-    fallbackTagging(tokens) {
-        return tokens.map(token => {
-            const tag = this.endingEngine.inferTag(token.text);
-            return token.with({ tag });
-        });
-    }
-    /**
      * Calculate overall confidence score
      */
     calculateConfidence(tokens, macronized) {
@@ -353,7 +260,6 @@ export class Macronizer {
         let count = 0;
         for (let i = 0; i < tokens.length; i++) {
             const token = tokens[i];
-            const mac = macronized[i];
             // High confidence for lemma matches
             if (this.lemmaEngine.hasLemma(token.text)) {
                 totalConfidence += 0.95;
@@ -361,10 +267,6 @@ export class Macronizer {
             // Medium confidence for pattern matches
             else if (this.endingEngine.hasPattern(token.text)) {
                 totalConfidence += 0.85;
-            }
-            // Lower confidence for edit distance
-            else if (mac.text !== token.text) {
-                totalConfidence += 0.75;
             }
             // Default confidence
             else {
@@ -378,7 +280,6 @@ export class Macronizer {
      * Calculate statistics about the macronization
      */
     calculateStatistics(tokens, macronized) {
-        var _a;
         let totalWords = 0;
         let knownWords = 0;
         let unknownWords = 0;
@@ -387,7 +288,7 @@ export class Macronizer {
             const token = tokens[i];
             const mac = macronized[i];
             // Skip punctuation and non-word tokens
-            if (!this.isWordToken(token)) {
+            if (!token.isWord) {
                 continue;
             }
             totalWords++;
@@ -399,7 +300,7 @@ export class Macronizer {
                 unknownWords++;
             }
             // Check if ambiguous (original has diacritics or multiple forms)
-            if (mac.isAmbiguous || ((_a = mac.accented) === null || _a === void 0 ? void 0 : _a.length) > 1) {
+            if (mac.isAmbiguous || (mac.accented && mac.accented.length > 1)) {
                 ambiguousForms++;
             }
         }

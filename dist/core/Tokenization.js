@@ -170,12 +170,10 @@ export class Tokenization {
             const shouldSplit = asciiLower !== 'que' && (!exists || Tokenization.specialEncliticWords.has(asciiLower));
             if (!shouldSplit) {
                 newTokens.push(token);
-                if (token.isWord)
-                    wordFormsToTag.push(asciiLower);
+                wordFormsToTag.push(asciiLower);
                 continue;
             }
             // Determine how to split
-            let parts = [];
             let stemText = '';
             let encliticText = null;
             let isEncliticSplit = false;
@@ -218,11 +216,9 @@ export class Tokenization {
                     endIndex: tokenEnd,
                     text: part2Text
                 });
-                parts = [neToken, cToken, nonToken];
-                // Add non-enclitic word forms for tagging
                 wordFormsToTag.push(toAscii(part1Stem).toLowerCase());
                 wordFormsToTag.push(toAscii(part2Text).toLowerCase());
-                newTokens.push(...parts);
+                newTokens.push(neToken, cToken, nonToken);
                 continue;
             }
             else if (asciiLower in Tokenization.dividenda && !exists) {
@@ -245,10 +241,9 @@ export class Tokenization {
                     endIndex: tokenEnd,
                     text: restPart
                 });
-                parts = [stemToken, restToken];
                 wordFormsToTag.push(toAscii(stemPart).toLowerCase());
                 wordFormsToTag.push(toAscii(restPart).toLowerCase());
-                newTokens.push(...parts);
+                newTokens.push(stemToken, restToken);
                 continue;
             }
             else {
@@ -286,7 +281,6 @@ export class Tokenization {
                     endIndex: tokenEnd,
                     text: encliticText
                 });
-                parts = [stemToken, encliticToken];
                 wordFormsToTag.push(toAscii(stemText).toLowerCase());
                 newTokens.push(stemToken, encliticToken);
             }
@@ -305,14 +299,6 @@ export class Tokenization {
             }
         }
         return [...new Set(forms)]; // Remove duplicates
-    }
-    /**
-     * Split tokens for wordlist lookup
-     */
-    splitTokens(wordlist) {
-        // TODO: Implement token splitting based on wordlist
-        // This handles compound words and contractions
-        return [];
     }
     /**
      * Add tags to tokens from RFTagger output
@@ -637,7 +623,7 @@ export class Tokenization {
     /**
      * Convert tokens back to text
      */
-    detokenize(markAmbigs = false) {
+    detokenize() {
         var _a, _b, _c, _d, _f;
         let result = '';
         let lastEnd = 0;
@@ -656,7 +642,7 @@ export class Tokenization {
                 text = text.replace(/_/g, '');
             }
             result += text;
-            lastEnd = (_d = token.endIndex) !== null && _d !== void 0 ? _d : (start + ((_f = token.text) === null || _f === void 0 ? void 0 : _f.length) || text.length);
+            lastEnd = (_d = token.endIndex) !== null && _d !== void 0 ? _d : (start + (((_f = token.text) === null || _f === void 0 ? void 0 : _f.length) || text.length));
         }
         return result;
     }

@@ -5,12 +5,10 @@
  */
 
 import { Token } from './Token';
-import { Tokenizer } from './Tokenizer';
 import { Tokenization } from './Tokenization';
 import { WasmTagger, FallbackTagger } from '../analysis/WasmTagger';
 import { LemmaEngine } from '../analysis/LemmaEngine';
 import { EndingPatternEngine } from '../analysis/EndingPatternEngine';
-import { EditDistanceEngine } from '../analysis/EditDistanceEngine';
 import { WordlistEngine } from '../analysis/WordlistEngine';
 import { MorpheusAnalyzer } from '../analysis/MorpheusAnalyzer';
 import { toAscii } from '../utils/latin';
@@ -44,14 +42,6 @@ export interface Statistics {
   ambiguousForms: number;
 }
 
-export interface MacronizeOptions {
-  macronize?: boolean;
-  alsomaius?: boolean;
-  performutov?: boolean;
-  performitoj?: boolean;
-  scan?: string;
-}
-
 export interface MacronizeResult {
   original: string;
   macronized: string;
@@ -68,44 +58,38 @@ export interface MacronizeResult {
  * Coordinates all components for Latin text processing
  */
 export class Macronizer {
-  private tokenizer: Tokenizer;
   private tokenization: Tokenization;
   private tagger: WasmTagger | FallbackTagger;
   private lemmaEngine: LemmaEngine;
   private endingEngine: EndingPatternEngine;
-  private editDistanceEngine: EditDistanceEngine;
   private wordlistEngine: WordlistEngine;
   private morpheusAnalyzer: MorpheusAnalyzer | null = null;
   private useWasm: boolean;
-  private confidenceThreshold: number;
   private cache: Map<string, MacronizeResult>;
   private wordlistUrl?: string;
   private morpheusWasmPath?: string;
 
   constructor(options: MacronizerOptions = {}) {
     this.useWasm = options.useWasm ?? true;
-    this.confidenceThreshold = options.confidenceThreshold ?? 0.80;
     this.cache = new Map();
 
-    this.tokenizer = new Tokenizer();
     this.tokenization = new Tokenization('', { preserveWhitespace: true });
     this.lemmaEngine = new LemmaEngine();
     this.endingEngine = new EndingPatternEngine();
-    this.editDistanceEngine = new EditDistanceEngine();
     this.wordlistEngine = new WordlistEngine();
     this.wordlistUrl = options.wordlistUrl;
     this.morpheusWasmPath = options.morpheusWasmPath || '../wasm/cruncher.js';
 
     // Initialize tagger based on configuration
-     if (this.useWasm) {
-       this.tagger = new WasmTagger({
-         modelPath: options.wasmModelPath,
-         wasmPath: options.wasmPath,
-         enableCache: options.enableCache ?? true,
-       });
-     } else {
-       this.tagger = new FallbackTagger();
-     }
+    if (this.useWasm) {
+      this.tagger = new WasmTagger({
+        modelPath: options.wasmModelPath,
+        wasmPath: options.wasmPath,
+        enableCache: options.enableCache ?? true,
+      });
+    } else {
+      this.tagger = new FallbackTagger();
+    }
 
     // Initialize Morpheus for unknown word analysis
     this.morpheusAnalyzer = new MorpheusAnalyzer(this.morpheusWasmPath);
@@ -202,7 +186,7 @@ export class Macronizer {
     // Only tokens for words that were actually analyzed by Morpheus (not just in wordlist) get morpheusAnalyzed=true
     for (let i = 0; i < tokenization.tokens.length; i++) {
       const t = tokenization.tokens[i];
-      if ((t as any).isWord && !(t as any).isenclitic) {
+      if (t.isWord && !t.isenclitic) {
         // Normalize same way as ensureAnalyzed (toAscii + lowercase + trim) for cache lookup
         const wordNorm = toAscii(t.text).toLowerCase().trim();
         // Check if this word has Morpheus analysis cached (i.e., was unknown and analyzed)
@@ -211,7 +195,7 @@ export class Macronizer {
           tokenization.tokens[i] = t.with({
             morpheusAnalyzed: true,
             morpheusResults: morpheusResults ?? null
-          } as any);
+          });
         }
       }
     }
@@ -246,8 +230,7 @@ export class Macronizer {
       };
       const automatons = meterMap[scanOption];
       if (automatons) {
-        const meterNames = automatons.map(a => Object.keys(a)[0]?.split("'")[1] ?? '?').join(', ');
-        console.log(`[Macronizer] Scanning verse as ${scanOption} (${meterNames})...`);
+        console.log(`[Macronizer] Scanning verse as ${scanOption}...`);
         tokenization.scanVerses(automatons);
         scannedFeet = tokenization.scannedFeet;
         console.log(`[Macronizer] Scansion complete: ${scannedFeet.length} verse(s) scanned`);
@@ -255,9 +238,7 @@ export class Macronizer {
     }
 
     // Step 5: Macronize (DP alignment with alsomaius)
-    console.log('[Macronizer] Calling tokenization.macronize()...');
     tokenization.macronize(doMacronize, alsomaius, performutov, performitoj, this.endingEngine);
-    console.log('[Macronizer] tokenization.macronize() done');
 
     // Final tokens
     const macronizedTokens = tokenization.tokens;
@@ -267,8 +248,6 @@ export class Macronizer {
 
     // Calculate confidence
     const confidence = this.calculateConfidence(originalTokens, macronizedTokens);
-
-    // Calculate statistics
     const statistics = this.calculateStatistics(originalTokens, macronizedTokens);
 
     const result: MacronizeResult = {
@@ -289,79 +268,6 @@ export class Macronizer {
   }
 
   /**
-   * Tag tokens with POS tags
-   */
-  private async tagTokens(tokens: Token[]): Promise<Token[]> {
-    // Filter only word tokens (exclude punctuation, numbers)
-    const wordTokens = tokens.filter(t => this.isWordToken(t));
-    const tokenTexts = wordTokens.map(t => t.text.toLowerCase());
-
-    if (tokenTexts.length === 0) {
-      return tokens;
-    }
-
-    try {
-      // Use WASM tagger if available
-      if (this.useWasm && (this.tagger as WasmTagger).isReady()) {
-        const tagResults = (this.tagger as WasmTagger).tag(tokenTexts);
-        
-        // Map tags back to word tokens only
-        let resultIdx = 0;
-        return tokens.map((token) => {
-          if (!this.isWordToken(token)) {
-            // Non-word tokens keep their original tag (or empty)
-            return token.with({ tag: 'u.-.-.-.-.-.-.-.-' });
-          }
-          
-          const tagResult = tagResults[resultIdx++];
-          return token.with({
-            tag: tagResult.tag,
-            confidence: tagResult.confidence,
-          });
-        });
-      } else {
-        // Fallback to JavaScript tagger
-        const tagResults = (this.tagger as FallbackTagger).tag(tokenTexts);
-        
-        let resultIdx = 0;
-        return tokens.map((token) => {
-          if (!this.isWordToken(token)) {
-            return token.with({ tag: 'u.-.-.-.-.-.-.-.-' });
-          }
-          
-          const tagResult = tagResults[resultIdx++];
-          return token.with({
-            tag: tagResult.tag,
-          });
-        });
-      }
-    } catch (error) {
-      console.warn('POS tagging failed, using fallback:', error);
-      // Fallback to morphological analysis
-      return this.fallbackTagging(tokens);
-    }
-  }
-
-  /**
-   * Check if token is a word (not punctuation or number)
-   */
-  private isWordToken(token: Token): boolean {
-    const text = token.text;
-    // Must contain at least one letter
-    return /[a-zA-Z\u00C0-\u024F]/.test(text);
-  }
-
-  /**
-   * Fallback tagging using morphological rules
-   */
-  private fallbackTagging(tokens: Token[]): Token[] {
-    return tokens.map(token => {
-      const tag = this.endingEngine.inferTag(token.text);
-      return token.with({ tag });
-    });
-  }
-
-  /**
    * Calculate overall confidence score
    */
   private calculateConfidence(tokens: Token[], macronized: Token[]): number {
@@ -370,7 +276,6 @@ export class Macronizer {
 
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
-      const mac = macronized[i];
 
       // High confidence for lemma matches
       if (this.lemmaEngine.hasLemma(token.text)) {
@@ -379,10 +284,6 @@ export class Macronizer {
       // Medium confidence for pattern matches
       else if (this.endingEngine.hasPattern(token.text)) {
         totalConfidence += 0.85;
-      }
-      // Lower confidence for edit distance
-      else if (mac.text !== token.text) {
-        totalConfidence += 0.75;
       }
       // Default confidence
       else {
@@ -409,7 +310,7 @@ export class Macronizer {
       const mac = macronized[i];
 
       // Skip punctuation and non-word tokens
-      if (!this.isWordToken(token)) {
+      if (!token.isWord) {
         continue;
       }
 
@@ -423,7 +324,7 @@ export class Macronizer {
       }
 
       // Check if ambiguous (original has diacritics or multiple forms)
-      if ((mac as any).isAmbiguous || (mac as any).accented?.length > 1) {
+      if (mac.isAmbiguous || (mac.accented && mac.accented.length > 1)) {
         ambiguousForms++;
       }
     }
