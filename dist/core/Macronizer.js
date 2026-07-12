@@ -230,7 +230,7 @@ export class Macronizer {
             }
         }
         // Step 5: Macronize (DP alignment with alsomaius)
-        tokenization.macronize(doMacronize, alsomaius, performutov, performitoj, this.endingEngine);
+        tokenization.macronize(doMacronize, alsomaius, performutov, performitoj);
         // Final tokens
         const macronizedTokens = tokenization.tokens;
         // Step 6: Reconstruct text
@@ -246,7 +246,7 @@ export class Macronizer {
             confidence,
             processingTime: performance.now() - startTime,
             statistics,
-            scannedFeet: scannedFeet.length > 0 ? scannedFeet : undefined,
+            scannedFeet,
         };
         // Cache result
         this.cache.set(cacheKey, result);

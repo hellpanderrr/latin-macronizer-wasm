@@ -8,7 +8,7 @@
 // Core exports
 export { Macronizer, Token, Tokenization, Tokenizer } from './core/index.js';
 // Analysis engines
-export { WasmTagger, LemmaEngine, EndingPatternEngine, EditDistanceEngine, FallbackTagger, MorpheusAnalyzer
+export { WasmTagger, LemmaEngine, EndingPatternEngine, FallbackTagger, MorpheusAnalyzer
 // Note: MorpheusAnalysis and MorpheusOptions are types exported from './analysis.js'
  } from './analysis/index.js';
 // Public API

@@ -379,8 +379,7 @@ export class Tokenization {
                 const tokenIdx = indices[w];
                 const result = sentTags[w];
                 this.tokens[tokenIdx] = this.tokens[tokenIdx].with({
-                    tag: normalizeTag(result.tag.replace(/\./g, '')),
-                    confidence: result.confidence
+                    tag: normalizeTag(result.tag.replace(/\./g, ''))
                 });
             }
         }
@@ -543,11 +542,11 @@ export class Tokenization {
     /**
      * Apply macronization to all tokens
      */
-    macronize(domacronize, alsomaius, performutov, performitoj, endingEngine) {
+    macronize(domacronize, alsomaius, performutov, performitoj) {
         for (let i = 0; i < this.tokens.length; i++) {
             const token = this.tokens[i];
             if (token.isWord) {
-                this.tokens[i] = this.macronizeToken(token, domacronize, alsomaius, performutov, performitoj, endingEngine);
+                this.tokens[i] = this.macronizeToken(token, domacronize, alsomaius, performutov, performitoj);
             }
         }
     }
@@ -556,7 +555,7 @@ export class Tokenization {
      * Ported from latin_macronizer/tokenization.py (macronize method)
      * Uses DP alignment to add macrons to the token's accented form
      */
-    macronizeToken(token, domacronize, alsomaius, performutov, performitoj, endingEngine) {
+    macronizeToken(token, domacronize, alsomaius, performutov, performitoj) {
         // Use original text for alignment (alignMacronized will handle u->v, i->j conversions)
         let text = token.text;
         // Python Token.macronize has a guard that returns plain when !domacronize

@@ -1,7 +1,7 @@
 /**
  * MorpheusAnalyzer.ts
  * TypeScript wrapper for Morpheus WASM morphological analyzer
- * 
+ *
  * Provides clean API for analyzing Latin words using Morpheus engine
  * compiled to WebAssembly. Matches Python latin_macronizer.wordlist.crunchwords()
  */
@@ -34,7 +34,7 @@ export interface MorpheusAnalysis {
     lemma: string;
     stem: string;
     ending: string;
-    accented: string;   // Accented form with macrons (underscore notation)
+    accented: string;
     formInfo: {
       partOfSpeech?: string;
       case?: string;
@@ -46,7 +46,7 @@ export interface MorpheusAnalysis {
       person?: string;
       degree?: string;
     };
-    raw: string;        // Full raw output line
+    raw: string;
   }>;
   success: boolean;
   raw: string;
@@ -63,85 +63,61 @@ export interface MorpheusOptions {
 /**
  * MorpheusAnalyzer class
  * WebAssembly wrapper for Morpheus morphological analyzer
- * 
- * Uses the same pattern as the working native/morpheus/js/MorpheusTagger.js
  */
 export class MorpheusAnalyzer {
   private wasmModule: any;
   private initialized: boolean = false;
   private defaultLanguage: string = 'latin';
   private wasmPath: string;
+  private debug: boolean;
 
-  constructor(wasmPath: string = '/wasm/cruncher.js') {
+  constructor(wasmPath: string = '/wasm/cruncher.js', debug: boolean = false) {
     this.wasmPath = wasmPath;
+    this.debug = debug;
+  }
+
+  private log(...args: any[]): void {
+    if (this.debug) console.log('[Morpheus]', ...args);
   }
 
   /**
    * Initialize the WASM module
-   * Uses the same pattern as native/morpheus/js/MorpheusTagger.js that works
    */
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
     try {
-      console.log('[Morpheus] Starting initialization...');
-      console.log('[Morpheus] wasmPath:', this.wasmPath);
-      
-      // Load the script - same as MorpheusTagger.js
-      console.log('[Morpheus] Loading script:', this.wasmPath);
+      this.log('Starting initialization... wasmPath:', this.wasmPath);
+
       await this.loadScript(this.wasmPath);
-      console.log('[Morpheus] Script loaded');
-      
-      // Get the global Morpheus object
+
       const Module = (window as any).Morpheus;
       if (!Module) {
-        throw new Error('Morpheus not found on window. Did the script load?');
+        throw new Error('Morpheus not found on window');
       }
-      console.log('[Morpheus] window.Morpheus type:', typeof Module);
-      
-      // Configure locateFile to find .data file in the same directory as .js
-      // This MUST be done before calling Module() - same as MorpheusTagger.js
+
       const wasmDir = this.wasmPath.substring(0, this.wasmPath.lastIndexOf('/') + 1);
-      console.log('[Morpheus] wasmDir:', wasmDir);
-      
+
       Module['locateFile'] = (path: string, prefix: string) => {
-        console.log('[Morpheus] locateFile called:', path, prefix);
         if (path.endsWith('.data') || path.endsWith('.wasm')) {
-          const result = wasmDir + path;
-          console.log('[Morpheus] locateFile returning:', result);
-          return result;
+          return wasmDir + path;
         }
         return prefix + path;
       };
-      
-      // Instantiate the module - this is when the WASM is actually loaded
-      console.log('[Morpheus] Calling Module() to instantiate...');
+
       this.wasmModule = await Module();
-      console.log('[Morpheus] Module instantiated:', typeof this.wasmModule);
-      console.log('[Morpheus] Module keys:', Object.keys(this.wasmModule || {}));
-      
-      // Check if ccall exists
+      this.log('Module instantiated');
+
       if (!this.wasmModule.ccall) {
-        console.error('[Morpheus] ccall not found on module:', Object.keys(this.wasmModule));
         throw new Error('WASM module does not have ccall method');
       }
-      
-      // Initialize Morpheus C library
-      console.log('[Morpheus] Calling morpheus_init...');
+
       this.wasmModule.ccall('morpheus_init', null, [], []);
-      console.log('[Morpheus] morpheus_init done');
-      
-      // Mark as initialized BEFORE calling setLanguage
       this.initialized = true;
-      
+
       this.setLanguage(this.defaultLanguage);
-      
-      // Test with a known word
-      console.log('[Morpheus] Testing with "puella"...');
-      const testResult = this.analyze('puella');
-      console.log('[Morpheus] Test result:', testResult);
-      
-      console.log('[Morpheus] Initialization complete');
+
+      this.log('Initialization complete');
     } catch (error) {
       console.error('[Morpheus] Initialization failed:', error);
       throw new Error(`Failed to initialize Morpheus WASM: ${error}`);
@@ -158,20 +134,18 @@ export class MorpheusAnalyzer {
     }
 
     const flags = this.optionsToFlags(options);
-    
-    // Try multiple case variations (Morpheus dictionary may have specific case)
+
     const variations = [
-      word,                           // original
-      word.charAt(0).toUpperCase() + word.slice(1),  // Capitalize first letter
-      word.toLowerCase(),             // all lowercase
-      word.toUpperCase()              // all uppercase
+      word,
+      word.charAt(0).toUpperCase() + word.slice(1),
+      word.toLowerCase(),
+      word.toUpperCase()
     ];
-    
-    // Remove duplicates
+
     const uniqueVariations = [...new Set(variations)];
-    
+
     for (const variant of uniqueVariations) {
-      console.log(`[Morpheus] analyze("${variant}") flags=${flags} (0x${flags.toString(16)})`);
+      this.log('analyze("%s") flags=%s', variant, `0x${flags.toString(16)}`);
       const bufferSize = 65536;
       const bufferPtr = this.wasmModule._malloc(bufferSize);
 
@@ -184,22 +158,16 @@ export class MorpheusAnalyzer {
         );
 
         const output = this.wasmModule.UTF8ToString(bufferPtr);
-        console.log(`[Morpheus] analyze("${variant}") => numAnalyses=${numAnalyses}, output length=${output.length}`);
-        
+
         if (numAnalyses > 0 && output.length > 0) {
-          console.log(`[Morpheus] SUCCESS with variant "${variant}"`);
-          if (output.length > 0) {
-            console.log(`[Morpheus] raw output (first 200 chars):`, output.substring(0, 200));
-          }
+          this.log('SUCCESS with variant "%s"', variant);
           return this.parseOutput(word, output, numAnalyses);
         }
       } finally {
         this.wasmModule._free(bufferPtr);
       }
     }
-    
-    // All variations failed
-    console.log(`[Morpheus] WARNING: all case variations failed for "${word}"`);
+
     return {
       word,
       analyses: [],
@@ -216,13 +184,7 @@ export class MorpheusAnalyzer {
       throw new Error('Morpheus not initialized. Call initialize() first.');
     }
 
-    const results: MorpheusAnalysis[] = [];
-    
-    for (const word of words) {
-      results.push(this.analyze(word, options));
-    }
-
-    return results;
+    return words.map(word => this.analyze(word, options));
   }
 
   /**
@@ -266,24 +228,16 @@ export class MorpheusAnalyzer {
 
   private loadScript(url: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      console.log('[Morpheus] loadScript:', url);
       const script = document.createElement('script');
       script.src = url;
       script.async = true;
-      script.onload = () => {
-        console.log('[Morpheus] Script onload:', url);
-        resolve();
-      };
-      script.onerror = () => {
-        console.error('[Morpheus] Script onerror:', url);
-        reject(new Error(`Failed to load script: ${url}`));
-      };
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error(`Failed to load script: ${url}`));
       document.head.appendChild(script);
     });
   }
 
   private optionsToFlags(options: MorpheusOptions): number {
-    // Use PERSEUS_FORMAT for structured <NL>...</NL> output
     let flags = PERSEUS_FORMAT;
 
     if (options.format === 'lemma') flags |= SHOW_LEMMA;
@@ -292,17 +246,16 @@ export class MorpheusAnalyzer {
     if (options.checkPreverb) flags |= CHECK_PREVERB;
     if (options.verbsOnly) flags |= VERBS_ONLY;
 
-    flags |= LATIN; // Always use Latin
+    flags |= LATIN;
     return flags;
   }
 
   private parseOutput(word: string, raw: string, numAnalyses: number): MorpheusAnalysis {
     const analyses: MorpheusAnalysis['analyses'] = [];
-    
-    // Parse <NL>...</NL> format
+
     const regex = /<NL>([^<]*)<\/NL>/g;
     let match;
-    
+
     while ((match = regex.exec(raw)) !== null) {
       const line = match[1].trim();
       if (line) {
@@ -326,12 +279,11 @@ export class MorpheusAnalyzer {
     if (parts.length < 2) return null;
 
     const posCode = parts[0];
-    const accented = parts[1];   // Morpheus output: second field is accented form (or lemma if no comma)
-    const stem = accented;       // By default, stem = accented (will be overridden if comma present)
+    const accented = parts[1];
+    const stem = accented;
     const ending = parts[parts.length - 1];
     const formInfo = this.parseFormInfo(posCode, parts.slice(2, -1));
 
-    // If there is a comma, the part after comma is the lemma (like "fero,ferre")
     let lemma = stem;
     if (accented.includes(',')) {
       const commaParts = accented.split(',');
@@ -342,15 +294,15 @@ export class MorpheusAnalyzer {
       lemma,
       stem,
       ending,
-      accented,   // raw accented form from Morpheus (underscore notation)
+      accented,
       formInfo,
       raw: line
     };
   }
 
   private parseFormInfo(posCode: string, features: string[]): MorpheusAnalysis['analyses'][0]['formInfo'] {
-    const info: MorpheusAnalysis['analyses'][0]['formInfo'] = { 
-      partOfSpeech: this.posCodeToName(posCode) 
+    const info: MorpheusAnalysis['analyses'][0]['formInfo'] = {
+      partOfSpeech: this.posCodeToName(posCode)
     };
 
     for (const f of features) {

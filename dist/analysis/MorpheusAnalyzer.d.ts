@@ -38,18 +38,17 @@ export interface MorpheusOptions {
 /**
  * MorpheusAnalyzer class
  * WebAssembly wrapper for Morpheus morphological analyzer
- *
- * Uses the same pattern as the working native/morpheus/js/MorpheusTagger.js
  */
 export declare class MorpheusAnalyzer {
     private wasmModule;
     private initialized;
     private defaultLanguage;
     private wasmPath;
-    constructor(wasmPath?: string);
+    private debug;
+    constructor(wasmPath?: string, debug?: boolean);
+    private log;
     /**
      * Initialize the WASM module
-     * Uses the same pattern as native/morpheus/js/MorpheusTagger.js that works
      */
     initialize(): Promise<void>;
     /**

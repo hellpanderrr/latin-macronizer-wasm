@@ -1,5 +1,6 @@
+"use strict";
 /**
  * Data module exports
  */
-export { DataLoader, dataLoader } from './DataLoader.js';
+// Exports reserved for future use; engines load their data independently.
 //# sourceMappingURL=index.js.map

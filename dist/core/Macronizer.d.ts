@@ -9,7 +9,6 @@ export interface MacronizerOptions {
     wasmModelPath?: string;
     wasmPath?: string;
     enableCache?: boolean;
-    confidenceThreshold?: number;
     wordlistUrl?: string;
     morpheusWasmPath?: string;
 }

@@ -3,7 +3,7 @@
  * Core token representation for Latin macronizer
  * Immutable token with POS tagging and macronization capabilities
  */
-import { MorpheusAnalysis } from '../analysis/MorpheusAnalyzer';
+import type { MorpheusAnalysis } from '../analysis/MorpheusAnalyzer';
 export interface TokenOptions {
     text?: string;
     tag?: string;
@@ -55,87 +55,5 @@ export declare class Token {
      * Create a new token with updated properties (immutable update)
      */
     with(options: Partial<TokenOptions>): Token;
-    /**
-     * Split token by hyphen (for compound words)
-     */
-    split(): Token[];
-    /**
-     * Display token with all metadata
-     */
-    show(): string;
-    /**
-     * Apply macronization to this token
-     */
-    macronize(macronizer: Macronizer): Token;
-    /**
-     * Check if token is punctuation
-     */
-    isPunctuation(): boolean;
-    /**
-     * Check if token is a number
-     */
-    isNumber(): boolean;
-    /**
-     * Get part of speech from tag
-     */
-    getPOS(): string;
-    /**
-     * Check if token has specific POS tag
-     */
-    hasPOS(pos: string): boolean;
-    /**
-     * Get case from LDT tag (positions 5-6)
-     */
-    getCase(): string;
-    /**
-     * Get number from LDT tag (positions 7-8)
-     */
-    getNumber(): string;
-    /**
-     * Get gender from LDT tag (position 9)
-     */
-    getGender(): string;
-    /**
-     * Check if token is a verb
-     */
-    isVerb(): boolean;
-    /**
-     * Check if token is a noun
-     */
-    isNoun(): boolean;
-    /**
-     * Check if token is an adjective
-     */
-    isAdjective(): boolean;
-    /**
-     * Check if token is an adverb
-     */
-    isAdverb(): boolean;
-    /**
-     * Check if token is a preposition
-     */
-    isPreposition(): boolean;
-    /**
-     * Check if token is a conjunction
-     */
-    isConjunction(): boolean;
-    /**
-     * Check if token is a pronoun
-     */
-    isPronoun(): boolean;
-    /**
-     * Convert token to JSON-serializable format
-     */
-    toJSON(): object;
-    /**
-     * Create token from JSON
-     */
-    static fromJSON(data: any): Token;
-}
-/**
- * Macronizer interface for dependency injection
- */
-export interface Macronizer {
-    macronize(token: Token): string;
 }
 //# sourceMappingURL=Token.d.ts.map

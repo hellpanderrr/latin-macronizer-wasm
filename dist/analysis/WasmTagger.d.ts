@@ -13,12 +13,10 @@ export interface WasmTaggerOptions {
 export interface TagResult {
     token: string;
     tag: string;
-    confidence?: number;
 }
 /**
  * WebAssembly-based RFTagger implementation
  * Uses Emscripten C++ class API (new RFTagger(), loadModel(), tagSentences())
- * This matches the API used in test-full-pipeline.html
  */
 export declare class WasmTagger {
     private wasmModule;
@@ -39,39 +37,27 @@ export declare class WasmTagger {
     initialize(): Promise<void>;
     /**
      * Load Emscripten-compiled WASM module
-     * Handles both pre-instantiated global (from script tag) and dynamic import (factory function)
      */
     private loadWasmModule;
     /**
      * Load the statistical model
-     * Fetches model data and writes it to virtual filesystem before loading
      */
     private loadModel;
     /**
-     * Tag tokens using RFTagger statistical model
-     * Supports both flat token array and sentence array
+     * Tag a vector of words using the RFTagger statistical model.
+     * Returns tags without confidence values — the WASM embind wrapper does not
+     * expose beam probabilities.
      */
     tag(tokens: string[]): TagResult[];
     /**
-     * Tag multiple sentences (batch processing)
+     * Tag multiple sentences (batch processing).
+     * This is the primary method used by the macronization pipeline.
      */
     tagSentences(sentences: string[][]): TagResult[][];
-    /**
-     * Tag a sentence (convenience method)
-     */
-    tagSentence(sentence: string): TagResult[];
-    /**
-     * Get confidence score for a tag
-     */
-    private getConfidence;
     /**
      * Clear cache
      */
     clearCache(): void;
-    /**
-     * Get cache size
-     */
-    getCacheSize(): number;
     /**
      * Check if model is loaded
      */

@@ -22,8 +22,6 @@ export {
   LemmaEngine,
   EndingPatternEngine,
   EndingPattern,
-  EditDistanceEngine,
-  EditResult,
   FallbackTagger,
   MorpheusAnalyzer
   // Note: MorpheusAnalysis and MorpheusOptions are types exported from './analysis'
@@ -35,18 +33,7 @@ export { MacronizerAPI };
 
 // Types
 export type {
-  POSTag,
-  WordEntry,
-  LemmaEntry as LemmaEntryType,
-  MacronizerOptions,
-  MacronizerResult,
-  EvaluationResult,
-  WasmTagger as WasmTaggerInterface,
   ScanOption,
-  MeterState,
-  VowelLength,
-  ScansionResult
-  // Note: MorpheusAnalysis and MorpheusOptions are exported from './analysis' as both values and types
 } from './types/index.js';
 
 // Utilities

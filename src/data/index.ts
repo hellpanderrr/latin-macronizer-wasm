@@ -2,4 +2,4 @@
  * Data module exports
  */
 
-export { DataLoader, dataLoader, LoadedData } from './DataLoader';
+// Exports reserved for future use; engines load their data independently.

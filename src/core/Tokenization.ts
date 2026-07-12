@@ -424,8 +424,7 @@ export class Tokenization {
         const tokenIdx = indices[w];
         const result = sentTags[w];
         this.tokens[tokenIdx] = this.tokens[tokenIdx].with({
-          tag: normalizeTag(result.tag.replace(/\./g, '')),
-          confidence: result.confidence
+          tag: normalizeTag(result.tag.replace(/\./g, ''))
         });
       }
     }
@@ -598,7 +597,6 @@ export class Tokenization {
     alsomaius: boolean,
     performutov: boolean,
     performitoj: boolean,
-    endingEngine?: EndingPatternEngine
   ): void {
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];
@@ -609,7 +607,6 @@ export class Tokenization {
           alsomaius,
           performutov,
           performitoj,
-          endingEngine
         );
       }
     }
@@ -626,7 +623,6 @@ export class Tokenization {
     alsomaius: boolean,
     performutov: boolean,
     performitoj: boolean,
-    endingEngine?: EndingPatternEngine
   ): Token {
     // Use original text for alignment (alignMacronized will handle u->v, i->j conversions)
     let text = token.text;

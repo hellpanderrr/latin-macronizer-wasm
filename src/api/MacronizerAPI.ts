@@ -29,7 +29,6 @@ export class MacronizerAPI {
      this.macronizer = new Macronizer({
        useWasm: true,
        enableCache: true,
-       confidenceThreshold: 0.80,
        // Paths relative to Vite server root (public/ serves as /)
        wasmModelPath: '/wasm/rftagger-ldt.model',  // Path to the model file
        wasmPath: '/wasm/rftagger.js',               // Path to the JS wrapper

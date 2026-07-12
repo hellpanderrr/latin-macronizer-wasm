@@ -87,7 +87,7 @@ export declare class Tokenization {
     /**
      * Apply macronization to all tokens
      */
-    macronize(domacronize: boolean, alsomaius: boolean, performutov: boolean, performitoj: boolean, endingEngine?: EndingPatternEngine): void;
+    macronize(domacronize: boolean, alsomaius: boolean, performutov: boolean, performitoj: boolean): void;
     /**
      * Macronize single token
      * Ported from latin_macronizer/tokenization.py (macronize method)

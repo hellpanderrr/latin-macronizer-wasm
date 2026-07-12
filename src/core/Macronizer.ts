@@ -22,7 +22,6 @@ export interface MacronizerOptions {
   wasmModelPath?: string;
   wasmPath?: string;      // Path to the WASM JavaScript wrapper
   enableCache?: boolean;
-  confidenceThreshold?: number;
   wordlistUrl?: string; // URL to load wordlist from
   morpheusWasmPath?: string; // Path to Morpheus WASM module
 }
@@ -238,7 +237,7 @@ export class Macronizer {
     }
 
     // Step 5: Macronize (DP alignment with alsomaius)
-    tokenization.macronize(doMacronize, alsomaius, performutov, performitoj, this.endingEngine);
+    tokenization.macronize(doMacronize, alsomaius, performutov, performitoj);
 
     // Final tokens
     const macronizedTokens = tokenization.tokens;
@@ -258,7 +257,7 @@ export class Macronizer {
       confidence,
       processingTime: performance.now() - startTime,
       statistics,
-      scannedFeet: scannedFeet.length > 0 ? scannedFeet : undefined,
+      scannedFeet,
     };
 
     // Cache result
