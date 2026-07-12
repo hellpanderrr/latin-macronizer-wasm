@@ -23,6 +23,15 @@ npm run test:parity        # full-pipeline parity vs Python reference (Node, no 
 npm run test:watch         # watch mode
 npx jest test/unit/latin.test.ts  # single file
 
+# E2E tests (Node, requires npm run build first)
+node test/e2e/test-scansion.mjs           # validates all 5 meter options on real verse
+node test/e2e/test-orthography.mjs        # validates u→v/i→j semantics
+node test/e2e/test-py-compare-ortho.mjs   # byte-level vs Python (Docker), 7 flag combos
+
+# Python comparison via Docker (full parity including utov/itoj)
+docker build -t macronizer-py-compare -f native/build/Dockerfile.py-compare .
+node test/e2e/test-py-compare-ortho.mjs
+
 # Lint / Format
 npm run lint
 npm run format
@@ -50,7 +59,7 @@ Three layers: **analysis engines** (POS tagging, morphology, dictionaries) → *
 - **`src/core/Tokenization.ts`** — Central pipeline: tokenize → split enclitics → POS tag → add lemmas → get accents → macronize → detokenize. Largest port from Python `tokenization.py`.
 - **`src/core/Token.ts`** — Immutable token class with `with()` for property updates.
 - **`src/core/alignMacronized.ts`** — DP edit-distance algorithm that places macrons by aligning plain text against accented forms. Port of Python `Token.macronize()`. Critical for correctness.
-- **`src/core/Scansion.ts`** — Verse meter scanning (dactylic hexameter, pentameter, hendecasyllable). Port of Python `scansion.py`. Uses automaton approach.
+- **`src/core/Scansion.ts`** — Verse meter scanning (dactylic hexameter, elegiac distichs, hendecasyllable, iambic trimeter/dimeter). Port of Python `scansion.py`. Uses automaton approach with 5 meter options matching Python exactly.
 - **`src/analysis/WasmTagger.ts`** — Wraps RFTagger C++ compiled to WASM. Falls back to `FallbackTagger` (simple suffix rules) when WASM unavailable.
 - **`src/analysis/MorpheusAnalyzer.ts`** — Wraps Morpheus C analyzer compiled to WASM. Analyzes unknown words (crucial for handling out-of-vocabulary Latin). Uses `ccall()` to invoke C functions from `cruncher.wasm`.
 - **`src/analysis/WordlistEngine.ts`** — IndexedDB-backed wordform database (~812k entries from `macrons.txt`). Replaces Python's SQLite. Integrates with Morpheus for unknown words.
@@ -101,7 +110,24 @@ Latin text
 ### Testing
 
 - Unit tests (`test/unit/`): `alignMacronized.test.ts` (DP alignment), `latin.test.ts` (utilities).
+- E2E Node tests (`test/e2e/`): `test-scansion.mjs` (5 meters), `test-orthography.mjs` (u→v/i→j), `test-py-compare-ortho.mjs` (Docker-based byte-level vs Python, 7 flag combos).
 - HTML test pages (manual browser testing): `test/pages/test-pages/` directory — full pipeline, functional WASM, Morpheus tests, etc.
 - E2E browser tests (puppeteer): `test/e2e/` — `test-e2e.js`, `test-e2e-real.js`, `test-e2e-large.js`.
 - Node.js test (no browser, uses FallbackTagger): `test/test-node.mjs`.
-- Python comparison: `python/macronize.py` compares TS vs Python output.
+- Python comparison via Docker: `test/e2e/test-py-compare-ortho.mjs` — byte-level exact match for default/utov/itoj/utov+itoj/maius/nomacrons/nomacrons+utov.
+
+**Self-updating error log** — the `## Known traps (error log)` section at the bottom of this
+file is maintained BY THE AGENT: whenever you stumble on a persistent/recurring error (wrong
+ assumption, encoding trap, stale artifact, environment quirk — anything a future session would hit again), append a one-line entry there in the same commit as your fix. One-off
+typos don't qualify; anything you had to *discover* does.
+
+## Known traps (error log)
+
+- [macronizer] `docker compose up <svc>` runs the build during IMAGE build, so outputs never land in the mounted volume — the working copy stays untouched; use `docker compose run --rm <svc>` when you actually want artifacts written.
+- [macronizer] emcc with embind sources but without `--bind` + `ERROR_ON_UNDEFINED_SYMBOLS=0` silently emits a broken .wasm (undefined `_embind_register_*`); `native/build/build-rftagger-wasm.sh` is broken this way (also wrong EXPORT_NAME — glue expects `RFTaggerModule`). NEVER rebuild `public/wasm/rftagger.{js,wasm}` — the committed binary is proven bit-identical to native g++ (289/289 tags).
+- [macronizer] TS `Token` uses camelCase `isSpace`; Python-style `token.isspace` is silently `undefined`, so guards like `!token.isspace` are always-true dead code (this let whitespace tokens reach the POS tagger).
+- [macronizer] `test/data/py-output-full.txt` / `ts-output-full.txt` are from a DIFFERENT input text (stale); the canonical caesar.txt reference is `test/data/py-output.txt`.
+- [node] Emscripten *web-only* glue under Node: hide `process.versions` only around the module-factory call (and pass `wasmBinary`); hiding it process-wide breaks Node's own fetch/Response — undici lazily reads `process.versions.node.split(...)`.
+- [macronizer] Python-parity of tagger input: punctuation tokens ARE sent to RFTagger (they shape Viterbi context), ALL-CAPS words are lowercased with NO length check, and sentence enders are `.;:?!` (5 chars, not just `.!?`).
+- [macronizer] index.html's Cache API store (`wasm-files-vN`) is cache-first and URL-keyed: bump the version constant whenever ANY file in public/wasm/ changes, or returning browsers serve the old binary forever (v1 could hold the broken 99KB rftagger.wasm cached 2026-07-11; v2 auto-purges older versions on startup).
+- [macronizer] u→v/i→j (`performutov`/`performitoj`) must ONLY fire inside the DP backtrack when the wordlist accented form has 'v'/'j' at that position. Blanket `text.replace(/u/g,'v')` in the exact-match path or post-DP in `macronizeToken()` incorrectly converts `cum`→`cvm`. The `alignMacronized` exact-match path returns accented as-is (no orthographic conv), and the DP backtrack handles it per-character. Verified byte-level vs Python (Docker) across all 7 flag combos.
