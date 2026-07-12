@@ -29,6 +29,10 @@ export class WordlistEngine {
   private readonly STORE_NAME = 'wordlist';
   /** Cache of Morpheus analyses by normalized wordform (for UI display) */
   private morpheusCache: Map<string, MorpheusAnalysis> = new Map();
+  /** In-memory cache for getAllEntries — eliminates redundant IndexedDB cursor
+   * calls across the 3+ passes (ensureAnalyzed, addLemmas, getAccents) that
+   * each look up every wordform. Keyed by lowered wordform. */
+  private entriesCache: Map<string, WordlistEntry[]> = new Map();
 
   /**
    * Initialize IndexedDB database
@@ -88,6 +92,12 @@ export class WordlistEngine {
     return this.entryCount;
   }
 
+  /** Clear the in-memory getAllEntries cache. Call between large documents
+   * to prevent unbounded memory growth — the cache repopulates on demand. */
+  clearEntriesCache(): void {
+    this.entriesCache.clear();
+  }
+
   /**
    * Lookup exact macronized form for word + tag
    */
@@ -118,26 +128,27 @@ export class WordlistEngine {
     if (!this.db) await this.init();
 
     const normalizedWord = wordform.toLowerCase().trim();
+
+    // Cache hit — avoids redundant IndexedDB trips across the 3+ passes
+    const cached = this.entriesCache.get(normalizedWord);
+    if (cached !== undefined) return cached;
+
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction([this.STORE_NAME], 'readonly');
       const store = transaction.objectStore(this.STORE_NAME);
       const index = store.index('wordform');
       const range = IDBKeyRange.only(normalizedWord);
-      const request = index.openCursor(range);
+      // Use getAll() instead of openCursor — returns all matching rows as a
+      // single array, avoiding per-row event-loop overhead (2-5x faster).
+      const request = index.getAll(range);
 
-      const entries: WordlistEntry[] = [];
       request.onsuccess = () => {
-        const cursor = request.result;
-        if (cursor) {
-          const entry = cursor.value;
-          // Only include entries that have accentedUnderscore (i.e., from file)
-          if (entry.accentedUnderscore) {
-            entries.push(entry);
-          }
-          cursor.continue();
-        } else {
-          resolve(entries);
-        }
+        const all = (request.result ?? []) as WordlistEntry[];
+        // Only include entries that have accentedUnderscore (i.e., from file)
+        const entries = all.filter(e => e.accentedUnderscore);
+        // Populate cache for subsequent calls from any pipeline stage
+        this.entriesCache.set(normalizedWord, entries);
+        resolve(entries);
       };
       request.onerror = () => reject(request.error);
     });

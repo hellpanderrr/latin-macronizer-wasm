@@ -68,6 +68,15 @@ export class WordlistEngine {
             writable: true,
             value: new Map()
         });
+        /** In-memory cache for getAllEntries — eliminates redundant IndexedDB cursor
+         * calls across the 3+ passes (ensureAnalyzed, addLemmas, getAccents) that
+         * each look up every wordform. Keyed by lowered wordform. */
+        Object.defineProperty(this, "entriesCache", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: new Map()
+        });
     }
     /**
      * Initialize IndexedDB database
@@ -122,6 +131,11 @@ export class WordlistEngine {
     size() {
         return this.entryCount;
     }
+    /** Clear the in-memory getAllEntries cache. Call between large documents
+     * to prevent unbounded memory growth — the cache repopulates on demand. */
+    clearEntriesCache() {
+        this.entriesCache.clear();
+    }
     /**
      * Lookup exact macronized form for word + tag
      */
@@ -149,26 +163,26 @@ export class WordlistEngine {
         if (!this.db)
             await this.init();
         const normalizedWord = wordform.toLowerCase().trim();
+        // Cache hit — avoids redundant IndexedDB trips across the 3+ passes
+        const cached = this.entriesCache.get(normalizedWord);
+        if (cached !== undefined)
+            return cached;
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([this.STORE_NAME], 'readonly');
             const store = transaction.objectStore(this.STORE_NAME);
             const index = store.index('wordform');
             const range = IDBKeyRange.only(normalizedWord);
-            const request = index.openCursor(range);
-            const entries = [];
+            // Use getAll() instead of openCursor — returns all matching rows as a
+            // single array, avoiding per-row event-loop overhead (2-5x faster).
+            const request = index.getAll(range);
             request.onsuccess = () => {
-                const cursor = request.result;
-                if (cursor) {
-                    const entry = cursor.value;
-                    // Only include entries that have accentedUnderscore (i.e., from file)
-                    if (entry.accentedUnderscore) {
-                        entries.push(entry);
-                    }
-                    cursor.continue();
-                }
-                else {
-                    resolve(entries);
-                }
+                var _a;
+                const all = ((_a = request.result) !== null && _a !== void 0 ? _a : []);
+                // Only include entries that have accentedUnderscore (i.e., from file)
+                const entries = all.filter(e => e.accentedUnderscore);
+                // Populate cache for subsequent calls from any pipeline stage
+                this.entriesCache.set(normalizedWord, entries);
+                resolve(entries);
             };
             request.onerror = () => reject(request.error);
         });

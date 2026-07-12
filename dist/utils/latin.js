@@ -294,16 +294,71 @@ export function normalizeTag(tag) {
     if (tag.length === 9 || tag.length === 12) {
         return tag;
     }
+    // Remove dots (RFTagger 17-char dotted format: v.3.s.p.i.a.-.-.- → v3spia---- → extract
+    // even positions → v3spia---). Also handles any odd-length dotted variants.
+    const undotted = tag.replace(/\./g, '');
+    if (undotted.length >= 9) {
+        // Extract data at even positions (0=pos, 2=person, 4=number, 6=tense, 8=mood,
+        // 10=voice, 12=gender, 14=case, 16=degree), capped at 9 chars.
+        let result = '';
+        for (let i = 0; i < undotted.length && result.length < 9; i += 2) {
+            result += undotted[i];
+        }
+        return result;
+    }
     if (tag.length !== 17) {
-        console.warn(`normalizeTag: unexpected tag length ${tag.length}: "${tag}"`);
+        console.warn(`normalizeTag: unexpected tag format length=${tag.length}: "${tag}"`);
         return tag;
     }
-    // Extract data at even positions (0=pos, 2=person, 4=number, 6=tense, 8=mood, 10=voice, 12=gender, 14=case, 16=degree)
-    let result = '';
-    for (let i = 0; i < tag.length; i += 2) {
-        result += tag[i];
+    return tag;
+}
+/**
+ * Decode an LDT tag into structured feature pairs, omitting empty (`-`) slots.
+ *
+ * Returns an array of { feature, value, raw } objects — one per filled
+ * position — suitable for rendering as labeled rows in a UI table.
+ */
+export function decodeLdtTagToFeatures(tag) {
+    const normalized = normalizeTag(tag);
+    if (normalized.length !== 9)
+        return [];
+    const f = (i) => i < normalized.length ? normalized[i] : '-';
+    const posMap = { n: 'noun', v: 'verb', a: 'adjective', d: 'adverb', c: 'conjunction', r: 'preposition', p: 'pronoun', m: 'numeral', i: 'interjection', e: 'exclamation', u: 'punctuation' };
+    const personMap = { '1': '1st person', '2': '2nd person', '3': '3rd person' };
+    const numMap = { s: 'singular', p: 'plural' };
+    const tenseMap = { p: 'present', i: 'imperfect', r: 'perfect', l: 'pluperfect', t: 'future perfect', f: 'future' };
+    const moodMap = { i: 'indicative', s: 'subjunctive', n: 'infinitive', m: 'imperative', p: 'participle', d: 'gerund', g: 'gerundive', u: 'supine' };
+    const voiceMap = { a: 'active', p: 'passive' };
+    const genderMap = { m: 'masculine', f: 'feminine', n: 'neuter' };
+    const caseMap = { n: 'nominative', g: 'genitive', d: 'dative', a: 'accusative', b: 'ablative', v: 'vocative', l: 'locative' };
+    const degreeMap = { c: 'comparative', s: 'superlative' };
+    const defs = [
+        ['POS', posMap, 0],
+        ['Person', personMap, 1],
+        ['Number', numMap, 2],
+        ['Tense', tenseMap, 3],
+        ['Mood', moodMap, 4],
+        ['Voice', voiceMap, 5],
+        ['Gender', genderMap, 6],
+        ['Case', caseMap, 7],
+        ['Degree', degreeMap, 8],
+    ];
+    const out = [];
+    for (const [featName, map, pos] of defs) {
+        const raw = f(pos);
+        if (raw === '-')
+            continue;
+        const value = map[raw] || `unknown (${raw})`;
+        out.push({ feature: featName, value, raw });
     }
-    return result;
+    return out;
+}
+/**
+ * Legacy: decode an LDT tag into a comma-separated string.
+ * Prefer decodeLdtTagToFeatures for structured UI rendering.
+ */
+export function decodeLdtTag(tag) {
+    return decodeLdtTagToFeatures(tag).map(f => f.value).join(', ') || 'unknown';
 }
 /**
  * Compute distance between two LDT tags

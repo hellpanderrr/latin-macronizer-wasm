@@ -116,6 +116,36 @@ export declare function filterAccents(accented: string): string;
  */
 export declare function normalizeTag(tag: string): string;
 /**
+ * Decode an LDT tag into human-readable morphological feature labels.
+ *
+ * LDT tags are 9-character strings where each position encodes a feature:
+ *   pos, person, number, tense, mood, voice, gender, case, degree
+ * Position values are defined in latin_macronizer/postags.py (ldt_to_parse).
+ *
+ * Unknown/empty (`-`) features are omitted from the output so the string
+ * is readable at a glance (e.g. "verb, 3rd person singular, present
+ * indicative active" instead of "verb, 3rd, singular, present, indicative,
+ * active, -, -, -").
+ */
+/** Structured morphological feature returned by decodeLdtTagToFeatures */
+export interface LdtFeature {
+    feature: string;
+    value: string;
+    raw: string;
+}
+/**
+ * Decode an LDT tag into structured feature pairs, omitting empty (`-`) slots.
+ *
+ * Returns an array of { feature, value, raw } objects — one per filled
+ * position — suitable for rendering as labeled rows in a UI table.
+ */
+export declare function decodeLdtTagToFeatures(tag: string): LdtFeature[];
+/**
+ * Legacy: decode an LDT tag into a comma-separated string.
+ * Prefer decodeLdtTagToFeatures for structured UI rendering.
+ */
+export declare function decodeLdtTag(tag: string): string;
+/**
  * Compute distance between two LDT tags
  * Ported from latin_macronizer/postags.py (tag_distance function)
  *

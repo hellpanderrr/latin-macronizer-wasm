@@ -175,6 +175,10 @@ export class Macronizer {
      */
     async macronize(text, options = {}) {
         const startTime = performance.now();
+        // Clear the wordlist entry cache so each macronize() starts fresh.
+        // The cache repopulates on the first pass (ensureAnalyzed) and serves
+        // subsequent passes (addLemmas, getAccents) without redundant IDB trips.
+        this.wordlistEngine.clearEntriesCache();
         // Default options
         const doMacronize = options.macronize !== false; // default true
         const alsomaius = options.alsomaius === true; // default false
@@ -216,7 +220,9 @@ export class Macronizer {
         }
         // Step 2: POS Tagging (WASM or fallback)
         if (this.useWasm && this.tagger.isReady()) {
+            const t0 = performance.now();
             await tokenization.tagWithWasm(this.tagger);
+            console.error(`WASM tag: ${(performance.now() - t0).toFixed(0)}ms`);
         }
         else {
             const wordsToTag = tokenization.allWordForms();

@@ -25,6 +25,10 @@ export declare class WordlistEngine {
     private readonly STORE_NAME;
     /** Cache of Morpheus analyses by normalized wordform (for UI display) */
     private morpheusCache;
+    /** In-memory cache for getAllEntries — eliminates redundant IndexedDB cursor
+     * calls across the 3+ passes (ensureAnalyzed, addLemmas, getAccents) that
+     * each look up every wordform. Keyed by lowered wordform. */
+    private entriesCache;
     /**
      * Initialize IndexedDB database
      */
@@ -37,6 +41,9 @@ export declare class WordlistEngine {
      * Get entry count
      */
     size(): number;
+    /** Clear the in-memory getAllEntries cache. Call between large documents
+     * to prevent unbounded memory growth — the cache repopulates on demand. */
+    clearEntriesCache(): void;
     /**
      * Lookup exact macronized form for word + tag
      */

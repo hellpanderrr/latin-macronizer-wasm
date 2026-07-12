@@ -84,7 +84,7 @@ export class WasmTagger {
         this.cache = new Map();
         this.useSentences = true;
         this.beamSize = 0.001; // native rft-annotate default beam threshold (Python: rft-annotate -s -q)
-        this.debugMode = true;
+        this.debugMode = false; // Must match 'rft-annotate -q' (quiet mode)
     }
     /**
      * Initialize WASM module and load model
@@ -113,6 +113,7 @@ export class WasmTagger {
         const globalRFTagger = window.RFTaggerModule;
         if (globalRFTagger && typeof globalRFTagger === 'function') {
             return await globalRFTagger({
+                printErr: () => { }, // Suppress C++ cerr debug flooding (~10k+ Viterbi lines)
                 locateFile: (path) => {
                     if (path.endsWith('.wasm') || path.endsWith('.data')) {
                         return '/wasm/' + path;
