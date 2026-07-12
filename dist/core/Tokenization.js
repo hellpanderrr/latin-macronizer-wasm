@@ -593,7 +593,7 @@ export class Tokenization {
         }
         // Apply DP alignment to produce macronized output
         const alignOptions = {
-            domacronize: true,
+            domacronize,
             alsomaius: alsomaius,
             performutov: performutov,
             performitoj: performitoj
