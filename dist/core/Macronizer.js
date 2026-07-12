@@ -237,10 +237,18 @@ export class Macronizer {
         let scannedFeet = [];
         if (scanOption !== 'prose') {
             const allMeters = metersData;
-            const meterName = scanOption;
-            if (allMeters[meterName]) {
-                console.log(`[Macronizer] Scanning verse as ${meterName}...`);
-                tokenization.scanVerses([allMeters[meterName]]);
+            // Compound meter dispatch: some options alternate between two meters
+            const meterMap = {
+                'dactylichexameter': [allMeters['dactylichexameter']],
+                'hendecasyllable': [allMeters['hendecasyllable']],
+                'elegiacdistichs': [allMeters['dactylichexameter'], allMeters['dactylicpentameter']],
+                'iambic': [allMeters['iambictrimeter'], allMeters['iambicdimeter']],
+            };
+            const automatons = meterMap[scanOption];
+            if (automatons) {
+                const meterNames = automatons.map(a => { var _a, _b; return (_b = (_a = Object.keys(a)[0]) === null || _a === void 0 ? void 0 : _a.split("'")[1]) !== null && _b !== void 0 ? _b : '?'; }).join(', ');
+                console.log(`[Macronizer] Scanning verse as ${scanOption} (${meterNames})...`);
+                tokenization.scanVerses(automatons);
                 scannedFeet = tokenization.scannedFeet;
                 console.log(`[Macronizer] Scansion complete: ${scannedFeet.length} verse(s) scanned`);
             }

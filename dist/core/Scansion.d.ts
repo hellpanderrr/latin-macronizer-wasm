@@ -47,6 +47,7 @@ export declare function scanVerse(verse: VerseEntry[], automaton: MeterAutomaton
 export declare function scanVerses(tokens: {
     text: string;
     isWord?: boolean;
+    isSpace?: boolean;
     isUnknown?: boolean;
     accented?: string[];
 }[], meterAutomatons: MeterAutomaton[]): string[];

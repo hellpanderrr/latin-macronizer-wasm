@@ -66,8 +66,11 @@ export function segmentAccented(accented) {
     let segmentStart = 0;
     let pos = 0;
     while (true) {
-        // Diphthong check (must come before single vowel check)
-        if (['ae', 'au', 'ei', 'eu', 'oe'].includes(text.substring(pos, pos + 2))) {
+        // Diphthong check — Python also requires that the character after the
+        // potential diphthong NOT be a length marker (_^+).  If it IS marked,
+        // treat as separate vowels (e.g. "ae_" → two vowel segments).
+        if (['ae', 'au', 'ei', 'eu', 'oe'].includes(text.substring(pos, pos + 2))
+            && !'_^+'.includes(text.charAt(pos + 2))) {
             pos += 2;
         }
         // Single vowel + length markers
@@ -291,28 +294,33 @@ export function scanVerses(tokens, meterAutomatons) {
                 if (nextIndex === tokens.length || tokens[nextIndex].text.includes('\n')) {
                     break;
                 }
-                if (!tokens[nextIndex].isWord) {
+                if (tokens[nextIndex].isSpace) {
                     followingText += ' ';
                 }
-                else {
+                else if (tokens[nextIndex].isWord) {
                     followingText += ((_a = tokens[nextIndex].accented) === null || _a === void 0 ? void 0 : _a[0]) || '';
                     if (/[aeiouy]/.test(followingText)) {
                         break;
                     }
                 }
+                // else: punctuation — no action (matches Python: neither isspace nor isword → skip)
             }
-            followingText = followingText.toLowerCase().replace(/h/g, '').trim();
+            // Python uses .lower().replace("h", "") on the raw (untrimmed) followingtext,
+            // then re.match with leading-space-consuming regexes.
+            // Do NOT .trim() — trailing spaces affect whether the empty-string sentinel
+            // triggers (Python: `" "` → regex no-match → "CC", not "#").
+            followingText = followingText.toLowerCase().replace(/h/g, '');
             // Determine following segment based on how the following word BEGINS.
-            // This is critical for "long by position" — a vowel followed by 2+ consonants
-            // (including across word boundaries) is long.
+            // Python uses re.match(" *[aeiouy]", followingtext) — leading spaces consumed by ` *`.
+            // Our ^ equivalents must include ` *` since we no longer trim.
             let followingSegment;
             if (followingText === '') {
                 followingSegment = '#';
             }
-            else if (/^[aeiouy]/.test(followingText)) {
+            else if (/^ *[aeiouy]/.test(followingText)) {
                 followingSegment = 'V';
             }
-            else if (/^([bcdfgjklmnpqrstv] *|[tpcdbgf][lr])[aeiouy]/.test(followingText)) {
+            else if (/^ *([bcdfgjklmnpqrstv] *|[tpcdbgf][lr])[aeiouy]/.test(followingText)) {
                 followingSegment = 'C';
             }
             else {
