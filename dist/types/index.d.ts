@@ -66,7 +66,7 @@ export interface MacronizerOptions {
     scan: ScanOption;
     evaluate?: boolean;
 }
-export type ScanOption = 'prose' | 'dactylichexameter' | 'dactylicpentameter' | 'hendecasyllable' | 'iambictrimeter' | 'iambicdimeter';
+export type ScanOption = 'prose' | 'dactylichexameter' | 'elegiacdistichs' | 'hendecasyllable' | 'iambic';
 export interface MacronizerResult {
     text: string;
     html: string;

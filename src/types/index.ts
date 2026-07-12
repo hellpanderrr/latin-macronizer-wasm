@@ -78,13 +78,12 @@ export interface MacronizerOptions {
   evaluate?: boolean;        // Compare with gold standard
 }
 
-export type ScanOption = 
-  | 'prose' 
-  | 'dactylichexameter' 
-  | 'dactylicpentameter' 
+export type ScanOption =
+  | 'prose'
+  | 'dactylichexameter'
+  | 'elegiacdistichs'
   | 'hendecasyllable'
-  | 'iambictrimeter'
-  | 'iambicdimeter';
+  | 'iambic';
 
 // Macronizer result
 export interface MacronizerResult {

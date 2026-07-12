@@ -34,7 +34,7 @@ export interface MacronizeOptions {
   alsomaius?: boolean;
   performutov?: boolean;
   performitoj?: boolean;
-  scan?: string; // Meter name: 'dactylichexameter', 'dactylicpentameter', 'hendecasyllable', or 'prose'
+  scan?: string; // Meter: 'dactylichexameter', 'elegiacdistichs', 'hendecasyllable', 'iambic', or 'prose'
 }
 
 export interface Statistics {
@@ -237,10 +237,18 @@ export class Macronizer {
     let scannedFeet: string[] = [];
     if (scanOption !== 'prose') {
       const allMeters = metersData as unknown as Record<string, MeterAutomaton>;
-      const meterName = scanOption;
-      if (allMeters[meterName]) {
-        console.log(`[Macronizer] Scanning verse as ${meterName}...`);
-        tokenization.scanVerses([allMeters[meterName]]);
+      // Compound meter dispatch: some options alternate between two meters
+      const meterMap: Record<string, MeterAutomaton[]> = {
+        'dactylichexameter': [allMeters['dactylichexameter']],
+        'hendecasyllable': [allMeters['hendecasyllable']],
+        'elegiacdistichs': [allMeters['dactylichexameter'], allMeters['dactylicpentameter']],
+        'iambic': [allMeters['iambictrimeter'], allMeters['iambicdimeter']],
+      };
+      const automatons = meterMap[scanOption];
+      if (automatons) {
+        const meterNames = automatons.map(a => Object.keys(a)[0]?.split("'")[1] ?? '?').join(', ');
+        console.log(`[Macronizer] Scanning verse as ${scanOption} (${meterNames})...`);
+        tokenization.scanVerses(automatons);
         scannedFeet = tokenization.scannedFeet;
         console.log(`[Macronizer] Scansion complete: ${scannedFeet.length} verse(s) scanned`);
       }
