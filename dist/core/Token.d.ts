@@ -11,7 +11,6 @@ export interface TokenOptions {
     macronized?: boolean;
     macronizedText?: string;
     originalText?: string;
-    confidence?: number;
     accented?: string[];
     isAmbiguous?: boolean;
     isUnknown?: boolean;
@@ -36,7 +35,6 @@ export declare class Token {
     readonly macronized: boolean;
     readonly macronizedText?: string;
     readonly originalText: string;
-    readonly confidence?: number;
     readonly accented?: string[];
     readonly isAmbiguous?: boolean;
     readonly isUnknown?: boolean;

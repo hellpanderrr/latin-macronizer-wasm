@@ -44,13 +44,7 @@ export class Token {
             configurable: true,
             writable: true,
             value: void 0
-        });
-        Object.defineProperty(this, "confidence", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
+        }); // Original text before normalization
         Object.defineProperty(this, "accented", {
             enumerable: true,
             configurable: true,
@@ -135,7 +129,6 @@ export class Token {
         this.macronized = options.macronized || false;
         this.macronizedText = options.macronizedText;
         this.originalText = options.originalText || text;
-        this.confidence = options.confidence;
         this.accented = options.accented;
         this.isAmbiguous = options.isAmbiguous || false;
         this.isUnknown = options.isUnknown || false;
@@ -155,7 +148,7 @@ export class Token {
      * Create a new token with updated properties (immutable update)
      */
     with(options) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
         return new Token(this.text, {
             text: (_a = options.text) !== null && _a !== void 0 ? _a : this.text,
             tag: (_b = options.tag) !== null && _b !== void 0 ? _b : this.tag,
@@ -163,20 +156,19 @@ export class Token {
             macronized: (_d = options.macronized) !== null && _d !== void 0 ? _d : this.macronized,
             macronizedText: (_e = options.macronizedText) !== null && _e !== void 0 ? _e : this.macronizedText,
             originalText: (_f = options.originalText) !== null && _f !== void 0 ? _f : this.originalText,
-            confidence: (_g = options.confidence) !== null && _g !== void 0 ? _g : this.confidence,
-            accented: (_h = options.accented) !== null && _h !== void 0 ? _h : this.accented,
-            isAmbiguous: (_j = options.isAmbiguous) !== null && _j !== void 0 ? _j : this.isAmbiguous,
-            isUnknown: (_k = options.isUnknown) !== null && _k !== void 0 ? _k : this.isUnknown,
-            morpheusAnalyzed: (_l = options.morpheusAnalyzed) !== null && _l !== void 0 ? _l : this.morpheusAnalyzed,
-            morpheusResults: (_m = options.morpheusResults) !== null && _m !== void 0 ? _m : this.morpheusResults,
-            startssentence: (_o = options.startssentence) !== null && _o !== void 0 ? _o : this.startssentence,
-            endssentence: (_p = options.endssentence) !== null && _p !== void 0 ? _p : this.endssentence,
-            hasenclitic: (_q = options.hasenclitic) !== null && _q !== void 0 ? _q : this.hasenclitic,
-            isenclitic: (_r = options.isenclitic) !== null && _r !== void 0 ? _r : this.isenclitic,
-            isWord: (_s = options.isWord) !== null && _s !== void 0 ? _s : this.isWord,
-            isSpace: (_t = options.isSpace) !== null && _t !== void 0 ? _t : this.isSpace,
-            startIndex: (_u = options.startIndex) !== null && _u !== void 0 ? _u : this.startIndex,
-            endIndex: (_v = options.endIndex) !== null && _v !== void 0 ? _v : this.endIndex,
+            accented: (_g = options.accented) !== null && _g !== void 0 ? _g : this.accented,
+            isAmbiguous: (_h = options.isAmbiguous) !== null && _h !== void 0 ? _h : this.isAmbiguous,
+            isUnknown: (_j = options.isUnknown) !== null && _j !== void 0 ? _j : this.isUnknown,
+            morpheusAnalyzed: (_k = options.morpheusAnalyzed) !== null && _k !== void 0 ? _k : this.morpheusAnalyzed,
+            morpheusResults: (_l = options.morpheusResults) !== null && _l !== void 0 ? _l : this.morpheusResults,
+            startssentence: (_m = options.startssentence) !== null && _m !== void 0 ? _m : this.startssentence,
+            endssentence: (_o = options.endssentence) !== null && _o !== void 0 ? _o : this.endssentence,
+            hasenclitic: (_p = options.hasenclitic) !== null && _p !== void 0 ? _p : this.hasenclitic,
+            isenclitic: (_q = options.isenclitic) !== null && _q !== void 0 ? _q : this.isenclitic,
+            isWord: (_r = options.isWord) !== null && _r !== void 0 ? _r : this.isWord,
+            isSpace: (_s = options.isSpace) !== null && _s !== void 0 ? _s : this.isSpace,
+            startIndex: (_t = options.startIndex) !== null && _t !== void 0 ? _t : this.startIndex,
+            endIndex: (_u = options.endIndex) !== null && _u !== void 0 ? _u : this.endIndex,
         });
     }
 }

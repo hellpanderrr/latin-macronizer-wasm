@@ -19,12 +19,6 @@ import metersData from '../data/meters.json' with { type: 'json' };
 export class Macronizer {
     constructor(options = {}) {
         var _a, _b;
-        Object.defineProperty(this, "tokenization", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         Object.defineProperty(this, "tagger", {
             enumerable: true,
             configurable: true,
@@ -81,7 +75,6 @@ export class Macronizer {
         });
         this.useWasm = (_a = options.useWasm) !== null && _a !== void 0 ? _a : true;
         this.cache = new Map();
-        this.tokenization = new Tokenization('', { preserveWhitespace: true });
         this.lemmaEngine = new LemmaEngine();
         this.endingEngine = new EndingPatternEngine();
         this.wordlistEngine = new WordlistEngine();
@@ -162,8 +155,9 @@ export class Macronizer {
         const performutov = options.performutov === true; // default false
         const performitoj = options.performitoj === true; // default false
         const scanOption = options.scan || 'prose'; // default: no scansion
-        // Check cache (key includes options to avoid returning stale results)
-        const cacheKey = `${text}|m=${doMacronize}|a=${alsomaius}|v=${performutov}|j=${performitoj}|s=${scanOption}`;
+        // Check cache (hashing the text avoids multi-kilobyte cache keys)
+        const textHash = hashFnv32(text);
+        const cacheKey = `${textHash}|m=${doMacronize}|a=${alsomaius}|v=${performutov}|j=${performitoj}|s=${scanOption}`;
         if (this.cache.has(cacheKey)) {
             return this.cache.get(cacheKey);
         }
@@ -235,15 +229,15 @@ export class Macronizer {
         const macronizedTokens = tokenization.tokens;
         // Step 6: Reconstruct text
         const macronizedText = tokenization.detokenize();
-        // Calculate confidence
-        const confidence = this.calculateConfidence(originalTokens, macronizedTokens);
+        // Calculate word coverage (fraction of tokens recognized by lemma or pattern engine)
+        const coverage = this.calcCoverage(originalTokens, macronizedTokens);
         const statistics = this.calculateStatistics(originalTokens, macronizedTokens);
         const result = {
             original: text,
             macronized: macronizedText,
             tokens: originalTokens,
             taggedTokens: macronizedTokens,
-            confidence,
+            confidence: coverage,
             processingTime: performance.now() - startTime,
             statistics,
             scannedFeet,
@@ -253,9 +247,14 @@ export class Macronizer {
         return result;
     }
     /**
-     * Calculate overall confidence score
+     * Calculate word coverage fraction: what proportion of tokens are recognized
+     * by the lemma or ending-pattern engine.  This is NOT a probabilistic
+     * confidence score — it measures whether each token was even known to any
+     * lookup table.  A word that hits the lemma engine gets 0.95, a word that
+     * only matches an ending pattern gets 0.85, and an entirely unknown word
+     * gets 0.60.  These are arbitrary labels, not Viterbi beam probabilities.
      */
-    calculateConfidence(tokens, macronized) {
+    calcCoverage(tokens, macronized) {
         let totalConfidence = 0;
         let count = 0;
         for (let i = 0; i < tokens.length; i++) {
@@ -385,5 +384,18 @@ export class Macronizer {
         this.wordlistEngine.close();
         // Reload needed after clear
     }
+}
+/**
+ * FNV-1a 32-bit hash — fast, deterministic, keeps cache keys short
+ * even when the input text spans thousands of characters.
+ */
+function hashFnv32(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+    }
+    // Return unsigned hex to keep the key readable
+    return (h >>> 0).toString(16);
 }
 //# sourceMappingURL=Macronizer.js.map

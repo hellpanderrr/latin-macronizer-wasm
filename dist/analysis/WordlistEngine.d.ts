@@ -112,10 +112,6 @@ export declare class WordlistEngine {
      */
     hasMorpheusAnalysis(wordform: string): boolean;
     /**
-     * Lookup word in wordlist, fallback to Morpheus analysis if not found
-     */
-    lookupOrAnalyze(wordform: string, tag: string): Promise<string | null>;
-    /**
      * Analyze unknown words using Morpheus and cache results
      * Ported from latin_macronizer/wordlist.py::crunchwords()
      * Produces multiple entries per word (different lemma+tag combinations)
@@ -127,14 +123,6 @@ export declare class WordlistEngine {
      * Matches Python Wordlist.loadwords() behavior.
      */
     ensureAnalyzed(wordForms: string[]): Promise<void>;
-    /**
-     * Check if word exists in wordlist
-     */
-    private wordExists;
-    /**
-     * Find analysis matching the given tag
-     */
-    private findMatchingAnalysis;
     /**
      * Convert a Morpheus analysis to an LDT 9-char tag
      * Ported from latin_macronizer/postags.py (parse_to_ldt)

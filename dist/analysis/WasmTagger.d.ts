@@ -23,13 +23,13 @@ export declare class WasmTagger {
     private tagger;
     private modelLoaded;
     private cache;
-    private modelPath;
-    private wasmPath;
-    private wasmDir;
-    private modelUrl;
-    private useSentences;
-    private beamSize;
-    private debugMode;
+    private readonly modelPath;
+    private readonly wasmPath;
+    private readonly wasmDir;
+    private readonly modelUrl;
+    private readonly useSentences;
+    private readonly beamSize;
+    private readonly debugMode;
     constructor(options?: WasmTaggerOptions);
     /**
      * Initialize WASM module and load model

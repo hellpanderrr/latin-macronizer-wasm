@@ -26,13 +26,13 @@ export class WasmTagger {
   private tagger: any;
   private modelLoaded: boolean = false;
   private cache: Map<string, TagResult[]>;
-  private modelPath: string;
-  private wasmPath: string;
-  private wasmDir: string = '';
-  private modelUrl: string;
-  private useSentences: boolean;
-  private beamSize: number;
-  private debugMode: boolean;
+  private readonly modelPath: string;
+  private readonly wasmPath: string;
+  private readonly wasmDir: string;
+  private readonly modelUrl: string;
+  private readonly useSentences: boolean;
+  private readonly beamSize: number;
+  private readonly debugMode: boolean;
 
   constructor(options: WasmTaggerOptions = {}) {
     this.modelPath = options.modelPath || '/wasm/rftagger-ldt.model';

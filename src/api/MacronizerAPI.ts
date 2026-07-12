@@ -5,11 +5,34 @@
  */
 
 import { Macronizer } from '../core/Macronizer.js';
-import { WasmTagger } from '../analysis/WasmTagger.js';
-import { LemmaEngine } from '../analysis/LemmaEngine.js';
-import { EndingPatternEngine } from '../analysis/EndingPatternEngine.js';
-import { WordlistEngine } from '../analysis/WordlistEngine.js';
-import { MorpheusAnalyzer } from '../analysis/MorpheusAnalyzer.js';
+import type { Statistics } from '../core/Macronizer.js';
+import type { MorpheusAnalysis } from '../analysis/MorpheusAnalyzer.js';
+
+/** JSON-serialized token shape returned by MacronizerAPI.process() */
+export interface ApiToken {
+  text: string;
+  tag: string;
+  lemma: string;
+  macronizedText?: string;
+  isAmbiguous?: boolean;
+  isUnknown?: boolean;
+  morpheusAnalyzed?: boolean;
+  morpheusResults?: MorpheusAnalysis | null;
+  startIndex?: number;
+  endIndex?: number;
+  accented?: string[];
+}
+
+/** Return type of MacronizerAPI.process() */
+export interface ApiResult {
+  original: string;
+  macronized: string;
+  tokens: ApiToken[];
+  statistics: Statistics;
+  confidence: number;
+  processingTime: number;
+  scannedFeet?: string[];
+}
 
 export class MacronizerAPI {
   private macronizer: Macronizer | null = null;
@@ -49,7 +72,7 @@ export class MacronizerAPI {
     console.log('MacronizerAPI: initialized');
   }
 
-  async process(text: string, options: any = {}): Promise<any> {
+  async process(text: string, options: any = {}): Promise<ApiResult> {
     if (!this.initialized || !this.macronizer) {
       throw new Error('Macronizer not initialized. Call initialize() first.');
     }

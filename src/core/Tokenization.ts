@@ -24,7 +24,6 @@ import {
 } from '../utils/latin';
 
 export interface TokenizationOptions {
-  preserveCase?: boolean;
   preserveWhitespace?: boolean;
 }
 

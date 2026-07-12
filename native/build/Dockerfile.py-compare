@@ -1,0 +1,49 @@
+# Dockerfile to run the complete Python macronizer for comparison against TS output
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libfl-dev \
+    flex \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# --- Build native RFTagger ---
+COPY native/rftagger/src/*.C /app/rftagger/
+COPY native/rftagger/src/*.h /app/rftagger/
+COPY native/rftagger/src/Makefile /app/rftagger/Makefile
+RUN cd /app/rftagger && make CC="g++ -std=c++11" && strip /app/rftagger/rft-annotate
+
+# --- Build native Cruncher ---
+COPY native/morpheus/c/ /app/morpheus/
+RUN cd /app/morpheus && \
+    rm -f src/gkends/indexendtables.c src/greeklib/sprntGkflags.c && \
+    sed -i '/^sprntGkflags\.o/d' src/greeklib/makefile && \
+    sed -i 's/indexendtables\.o //' src/gkends/makefile && \
+    cd src && make -C greeklib && make -C morphlib && make -C gkends gkends.a && \
+    make -C gkdict && make -C gener && make -C anal cruncher && \
+    mkdir -p /app/bin && cp anal/cruncher /app/bin/
+
+ENV MORPHLIB=/app/morpheus/stemlib
+
+# --- Copy Python code as latin_macronizer package ---
+COPY python/ /app/latin_macronizer/
+
+# --- Copy data files ---
+COPY public/wasm/rftagger-ldt.model /app/latin_macronizer/rftagger-ldt.model
+COPY public/macrons.txt /app/latin_macronizer/macrons.txt
+
+# --- Strip Greek stemlib (Latin-only) to match WASM Latin-only build ---
+RUN rm -rf /app/morpheus/stemlib/Greek
+
+# --- Fix paths for Docker environment ---
+RUN sed -i 's|RFTAGGER_DIR = .*|RFTAGGER_DIR = "/app/rftagger"|' /app/latin_macronizer/tokenization.py && \
+    sed -i 's|MORPHEUS_DIR = .*|MORPHEUS_DIR = "/app"|' /app/latin_macronizer/wordlist.py && \
+    sed -i 's|MACRONS_FILE = .*|MACRONS_FILE = "/app/latin_macronizer/macrons.txt"|' /app/latin_macronizer/wordlist.py
+
+# --- Copy the runner ---
+COPY native/build/py-runner.py /app/py-runner.py
+
+ENTRYPOINT ["python3", "/app/py-runner.py"]

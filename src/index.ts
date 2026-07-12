@@ -21,7 +21,6 @@ export {
   TagResult,
   LemmaEngine,
   EndingPatternEngine,
-  EndingPattern,
   FallbackTagger,
   MorpheusAnalyzer
   // Note: MorpheusAnalysis and MorpheusOptions are types exported from './analysis'

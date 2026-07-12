@@ -10,7 +10,6 @@ import { EndingPatternEngine } from '../analysis/EndingPatternEngine';
 import { WordlistEngine } from '../analysis/WordlistEngine';
 import { MeterAutomaton } from './Scansion';
 export interface TokenizationOptions {
-    preserveCase?: boolean;
     preserveWhitespace?: boolean;
 }
 /**

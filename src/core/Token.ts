@@ -12,8 +12,7 @@ export interface TokenOptions {
   lemma?: string;
   macronized?: boolean;
   macronizedText?: string;  // Macronized form of the text
-  originalText?: string;
-  confidence?: number;
+  originalText?: string;    // Original text before normalization
   accented?: string[];   // List of candidate accented forms (with _ markers)
   isAmbiguous?: boolean;
   isUnknown?: boolean;
@@ -38,8 +37,7 @@ export class Token {
   public readonly lemma: string;
   public readonly macronized: boolean;
   public readonly macronizedText?: string;  // Macronized form
-  public readonly originalText: string;
-  public readonly confidence?: number;
+  public readonly originalText: string;    // Original text before normalization
   public readonly accented?: string[];   // Candidate accented forms (with _ markers)
   public readonly isAmbiguous?: boolean;
   public readonly isUnknown?: boolean;
@@ -61,7 +59,6 @@ export class Token {
     this.macronized = options.macronized || false;
     this.macronizedText = options.macronizedText;
     this.originalText = options.originalText || text;
-    this.confidence = options.confidence;
     this.accented = options.accented;
     this.isAmbiguous = options.isAmbiguous || false;
     this.isUnknown = options.isUnknown || false;
@@ -89,7 +86,6 @@ export class Token {
       macronized: options.macronized ?? this.macronized,
       macronizedText: options.macronizedText ?? this.macronizedText,
       originalText: options.originalText ?? this.originalText,
-      confidence: options.confidence ?? this.confidence,
       accented: options.accented ?? this.accented,
       isAmbiguous: options.isAmbiguous ?? this.isAmbiguous,
       isUnknown: options.isUnknown ?? this.isUnknown,

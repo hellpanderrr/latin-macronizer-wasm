@@ -49,7 +49,7 @@ export class WasmTagger {
             enumerable: true,
             configurable: true,
             writable: true,
-            value: ''
+            value: void 0
         });
         Object.defineProperty(this, "modelUrl", {
             enumerable: true,

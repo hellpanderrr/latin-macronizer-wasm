@@ -6,7 +6,7 @@
  */
 
 import { MorpheusAnalyzer, MorpheusAnalysis } from './MorpheusAnalyzer';
-import { unicodeToUnderscore, tagDistance, toAscii } from '../utils/latin';
+import { unicodeToUnderscore, toAscii } from '../utils/latin';
 
 export interface WordlistEntry {
   wordform: string;
@@ -396,43 +396,6 @@ export class WordlistEngine {
   }
 
   /**
-   * Lookup word in wordlist, fallback to Morpheus analysis if not found
-   */
-  async lookupOrAnalyze(wordform: string, tag: string): Promise<string | null> {
-    // First try wordlist
-    const result = await this.lookup(wordform, tag);
-    if (result) {
-      return result;
-    }
-
-    // If not found and Morpheus is available, analyze
-    if (this.morpheusAnalyzer && this.morpheusAnalyzer.isInitialized()) {
-      const analysis = this.morpheusAnalyzer.analyze(wordform);
-      if (analysis.success && analysis.analyses.length > 0) {
-        // Find analysis matching the tag, or use first
-        const matchingAnalysis = this.findMatchingAnalysis(analysis, tag);
-        if (matchingAnalysis) {
-          // Convert macron marks from Morpheus output
-          const macronized = this.convertMacronMarks(matchingAnalysis.raw);
-          
-          // Cache result in wordlist for future lookups
-          await this.addEntry({
-            wordform: wordform.toLowerCase().trim(),
-            tag: this.normalizeTag(tag),
-            lemma: matchingAnalysis.lemma,
-            macronized,
-            accentedUnderscore: unicodeToUnderscore(macronized) // approximate
-          });
-          
-          return macronized;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  /**
    * Analyze unknown words using Morpheus and cache results
    * Ported from latin_macronizer/wordlist.py::crunchwords()
    * Produces multiple entries per word (different lemma+tag combinations)
@@ -455,18 +418,14 @@ export class WordlistEngine {
     }
 
     if (unknownWords.length === 0) {
-      console.log('[WordlistEngine] No unknown words, skipping Morpheus analysis');
       return results;
     }
 
-    console.log('[WordlistEngine] Analyzing unknown words with Morpheus:', unknownWords);
     // Analyze with Morpheus (batch)
     const analyses = this.morpheusAnalyzer.analyzeBatch(unknownWords);
 
     for (const analysis of analyses) {
-      console.log(`[WordlistEngine] Morpheus result for "${analysis.word}": success=${analysis.success}, analysesCount=${analysis.analyses.length}`);
       if (!analysis.success || analysis.analyses.length === 0) {
-        console.warn(`[WordlistEngine] WARNING: Morpheus analysis failed for "${analysis.word}"`);
         continue;
       }
 
@@ -547,61 +506,6 @@ export class WordlistEngine {
 
     // Analyze missing words with Morpheus (batch)
     await this.analyzeUnknownWords(missing);
-  }
-
-  /**
-   * Check if word exists in wordlist
-   */
-  private async wordExists(wordform: string): Promise<boolean> {
-    if (!this.db) await this.init();
-    
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.STORE_NAME], 'readonly');
-      const store = transaction.objectStore(this.STORE_NAME);
-      const index = store.index('wordform');
-      const range = IDBKeyRange.only(wordform.toLowerCase());
-      const request = index.openCursor(range);
-      
-      request.onsuccess = () => {
-        resolve(request.result !== null);
-      };
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  /**
-   * Find analysis matching the given tag
-   */
-  private findMatchingAnalysis(
-    analysis: MorpheusAnalysis,
-    targetTag: string
-  ): MorpheusAnalysis['analyses'][0] | null {
-    if (analysis.analyses.length === 0) {
-      return null;
-    }
-
-    // If only one analysis, return it
-    if (analysis.analyses.length === 1) {
-      return analysis.analyses[0];
-    }
-
-    // Convert target LDT tag to comparable form (normalize)
-    const normalizedTarget = this.normalizeTag(targetTag.trim());
-
-    // Score each analysis by tag distance to target
-    let bestAnalysis = analysis.analyses[0];
-    let bestDistance = tagDistance(normalizedTarget, this.analysisToLdtTag(bestAnalysis));
-
-    for (let i = 1; i < analysis.analyses.length; i++) {
-      const cand = analysis.analyses[i];
-      const dist = tagDistance(normalizedTarget, this.analysisToLdtTag(cand));
-      if (dist < bestDistance) {
-        bestDistance = dist;
-        bestAnalysis = cand;
-      }
-    }
-
-    return bestAnalysis;
   }
 
   /**
