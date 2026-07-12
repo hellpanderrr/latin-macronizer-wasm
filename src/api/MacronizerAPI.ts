@@ -151,6 +151,10 @@ export class MacronizerAPI {
     return this.macronizer?.isWordlistLoaded() ?? false;
   }
 
+  getWordlistEntryCount(): number {
+    return this.macronizer?.getWordlistEntryCount() ?? 0;
+  }
+
   getWordlistMode(): string {
     return this.macronizer?.getWordlistMode() ?? 'indexeddb';
   }

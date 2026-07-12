@@ -418,6 +418,10 @@ export class Macronizer {
     return this.wordlistEngine.size() > 0;
   }
 
+  getWordlistEntryCount(): number {
+    return this.wordlistEngine.size();
+  }
+
   getWordlistMode(): string {
     // Always 'indexeddb' — the wordlist engine always uses IndexedDB when available
     return 'indexeddb';

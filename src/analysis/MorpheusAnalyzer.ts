@@ -105,7 +105,11 @@ export class MorpheusAnalyzer {
         return prefix + path;
       };
 
-      this.wasmModule = await Module();
+      // The factory must receive locateFile as an argument: inside cruncher.js
+      // the `Morpheus` parameter shadows the global, so properties set on the
+      // factory function itself are invisible and .data/.wasm resolve to the
+      // page's directory instead of wasmDir.
+      this.wasmModule = await Module({ locateFile: Module['locateFile'] });
       this.log('Module instantiated');
 
       if (!this.wasmModule.ccall) {
