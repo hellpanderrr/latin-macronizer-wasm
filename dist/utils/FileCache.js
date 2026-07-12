@@ -3,7 +3,8 @@
  * Caches large binary files (WASM, data, models) via the Cache API.
  * Enables offline-capable loading of heavy WASM resources on repeat visits.
  */
-const DEFAULT_CACHE_NAME = 'wasm-files-v1';
+// Keep in sync with WASM_CACHE in index.html — bump when public/wasm/ changes
+const DEFAULT_CACHE_NAME = 'wasm-files-v2';
 export class FileCache {
     constructor(cacheName) {
         Object.defineProperty(this, "cacheName", {

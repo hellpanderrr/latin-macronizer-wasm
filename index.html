@@ -20,13 +20,24 @@
 
         // Heavy files to cache via Cache API
         var HEAVY_FILES = ['rftagger.wasm', 'rftagger-ldt.model', 'cruncher.wasm', 'cruncher.data'];
-        var WASM_CACHE = 'wasm-files-v1';
+        // Cache is URL-keyed and cache-first: bump this version whenever any
+        // file in public/wasm/ changes, or returning browsers keep the old
+        // binary forever (v1 could hold a broken 99KB rftagger.wasm).
+        var WASM_CACHE = 'wasm-files-v2';
 
         // Proactive caching: fetch + cache each file, then create blob URLs for WASM scripts
         window.__wasmReady = new Promise(function (resolve) {
             (async function () {
                 var cache;
                 try {
+                    // Purge stale cache versions first (e.g. wasm-files-v1 may
+                    // hold a broken rftagger.wasm cached before 2026-07-12)
+                    var cacheKeys = await caches.keys();
+                    for (var ck of cacheKeys) {
+                        if (ck.indexOf('wasm-files-') === 0 && ck !== WASM_CACHE) {
+                            await caches.delete(ck);
+                        }
+                    }
                     cache = await caches.open(WASM_CACHE);
                 } catch (e) {
                     cache = null;
@@ -346,9 +357,12 @@
             try {
                 // Clear wordlist cache
                 await api.clearWordlistCache();
-                // Clear WASM file cache
+                // Clear WASM file cache (all versions)
                 try {
-                    await caches.delete('wasm-files-v1');
+                    const cacheKeys = await caches.keys();
+                    await Promise.all(cacheKeys
+                        .filter((k) => k.startsWith('wasm-files-'))
+                        .map((k) => caches.delete(k)));
                 } catch (e) {
                     console.warn('Failed to clear file cache:', e);
                 }
