@@ -7,7 +7,7 @@ import { Token } from './Token.js';
 import { normalizeTag } from '../utils/latin.js';
 import { scanVerses as doScanVerses } from './Scansion.js';
 import { alignMacronized } from './alignMacronized.js';
-import { toAscii, isWhitespace, isSentenceEnder, splitEnclitic, tagDistance, levenshteinDistance, underscoreToUnicode, unicodeToUnderscore, prefixesWithShortJ } from '../utils/latin.js';
+import { toAscii, isWhitespace, isSentenceEnder, splitEnclitic, tagDistance, levenshteinDistance, underscoreToUnicode, prefixesWithShortJ } from '../utils/latin.js';
 /**
  * Tokenization class - splits Latin text into tokens
  * Handles enclitics (-que, -ve, -ne), sentence boundaries
@@ -260,7 +260,11 @@ export class Tokenization {
                     wordFormsToTag.push(asciiLower);
                     continue;
                 }
-                [stemText, encliticText] = splitResult;
+                // Slice the ORIGINAL text (Python Token.split preserves case);
+                // only the match is done on the lowercased form.
+                const encLen = splitResult[1].length;
+                stemText = token.text.slice(0, -encLen);
+                encliticText = token.text.slice(-encLen);
                 isEncliticSplit = true;
             }
             // Create tokens for enclitic split (nec or generic)
@@ -345,9 +349,12 @@ export class Tokenization {
         let savedBearerIdx = -1;
         for (let i = 0; i < this.tokens.length; i++) {
             const token = this.tokens[i];
-            if (!token.isspace) {
+            if (!token.isSpace) {
+                // Python: if tokentext == tokentext.upper(): tokentext = tokentext.lower()
+                // No length check — single letters like "M" (abbreviation) become "m",
+                // and punctuation is unaffected (",".toUpperCase() === ",").
                 let tokentext = token.text;
-                if (tokentext === tokentext.toUpperCase() && tokentext.length > 1) {
+                if (tokentext === tokentext.toUpperCase()) {
                     tokentext = tokentext.toLowerCase();
                 }
                 if (token.hasenclitic) {
@@ -393,99 +400,52 @@ export class Tokenization {
         }
     }
     /**
-     * Correct case for 1st declension feminine nouns/adjectives following
-     * ablative prepositions. WASM RFTagger occasionally assigns nominative
-     * where the preposition context requires ablative. This correction
-     * matches Python native RFTagger behavior by using Latin grammar rules.
-     */
-    correctAblativeCase() {
-        const ablativePreps = new Set(['ab', 'a', 'cum', 'de', 'ex', 'e', 'pro', 'sine']);
-        for (let i = 0; i < this.tokens.length; i++) {
-            const token = this.tokens[i];
-            if (!token.isWord)
-                continue;
-            const tag = token.tag;
-            // Check if tag is a feminine noun/adjective (9-char LDT: n-s---fn- or a-s---fn-)
-            if (tag.length < 8)
-                continue;
-            if (tag[0] !== 'n' && tag[0] !== 'a')
-                continue;
-            if (tag[6] !== 'f' || tag[7] !== 'n')
-                continue;
-            // Find previous non-space word token
-            let prevWord = null;
-            for (let j = i - 1; j >= 0; j--) {
-                const prev = this.tokens[j];
-                if (prev.isWord) {
-                    prevWord = toAscii(prev.text).toLowerCase();
-                    break;
-                }
-            }
-            // If preceded by an ablative preposition, override to ablative case
-            if (prevWord && ablativePreps.has(prevWord)) {
-                this.tokens[i] = token.with({
-                    tag: tag.slice(0, 7) + 'b' + tag.slice(8)
-                });
-            }
-        }
-    }
-    /**
-     * Add lemmas to tokens using LemmaEngine
-     */
-    /**
      * Add lemmas to tokens.
-     * Ported from Python tokenization.py addlemmas() — two-tier frequency-based selection.
-     * Tier 1: direct wordform+tag lookup in LemmaEngine
-     * Tier 2: wordlist-supplied lemmas ranked by corpus frequency (matches Python's lemma_frequency)
+     * Exact port of Python tokenization.py addlemmas():
+     *   wordform = toascii(token.text)          # ORIGINAL case
+     *   best_lemma = "-"; max_freq = -1
+     *   Tier 1: wordform in wordform_to_corpus_lemmas →
+     *           best corpus lemma by word_lemma_freq[(wordform, lemma)]
+     *   Tier 2: wordform.lower() in wordlist.formtolemmas →
+     *           best wordlist lemma by lemma_frequency.get(lemma, 0)
+     * (No POS tag involved; strict > keeps the FIRST max in iteration order.)
      */
     async addLemmas(lemmaEngine, wordlistEngine) {
         for (let i = 0; i < this.tokens.length; i++) {
             const token = this.tokens[i];
-            // Only add lemmas to word tokens
-            if (token.isWord && !token.isenclitic) {
-                // Tier 1: Look up lemma by word form and POS tag (hardcoded + corpus lemmas)
-                const lemmaEntry = lemmaEngine.lookup(token.text, token.tag);
-                if (lemmaEntry) {
-                    this.tokens[i] = token.with({
-                        lemma: lemmaEntry.lemma
-                    });
-                }
-                else if (wordlistEngine) {
-                    // Tier 2: wordlist lemmas ranked by corpus frequency (matches Python tier 2)
-                    // Python: for lex_lemma in wordlist.formtolemmas[wordform.lower()]:
-                    //           if lemma_frequency.get(lex_lemma, 0) > max_freq: best_lemma = lex_lemma
-                    const wordformLower = toAscii(token.text).toLowerCase();
-                    let bestLemma = toAscii(token.text).toLowerCase(); // fallback
-                    let maxFreq = -1;
-                    try {
-                        const entries = await wordlistEngine.getAllEntries(wordformLower);
-                        const seenLemmas = new Set();
-                        for (const entry of entries) {
-                            const lexLemma = entry.lemma;
-                            if (seenLemmas.has(lexLemma))
-                                continue;
-                            seenLemmas.add(lexLemma);
-                            const freq = lemmaEngine.getFrequency(lexLemma);
-                            if (freq > maxFreq) {
-                                maxFreq = freq;
-                                bestLemma = lexLemma;
-                            }
-                        }
+            // Lemmas are only consumed downstream for non-enclitic word tokens
+            if (!token.isWord || token.isenclitic)
+                continue;
+            const wordform = toAscii(token.text); // original case, like Python
+            let bestLemma = '-';
+            let maxFreq = -1;
+            const corpus = lemmaEngine.getCorpusLemmas(wordform);
+            if (corpus && corpus.length > 0) {
+                for (const [lemma, freq] of corpus) {
+                    if (freq > maxFreq) {
+                        maxFreq = freq;
+                        bestLemma = lemma;
                     }
-                    catch (_e) {
-                        // Wordlist lookup failed; keep fallback lemma
-                    }
-                    this.tokens[i] = token.with({
-                        lemma: bestLemma
-                    });
-                }
-                else {
-                    // No wordlist available — fallback to wordform itself
-                    this.tokens[i] = token.with({
-                        lemma: toAscii(token.text).toLowerCase()
-                    });
                 }
             }
+            else if (wordlistEngine) {
+                try {
+                    // Entries come back in macrons.txt file order (seq-keyed store),
+                    // matching Python's formtolemmas list order.
+                    const entries = await wordlistEngine.getAllEntries(wordform.toLowerCase());
+                    for (const entry of entries) {
+                        const freq = lemmaEngine.getFrequency(entry.lemma);
+                        if (freq > maxFreq) {
+                            maxFreq = freq;
+                            bestLemma = entry.lemma;
+                        }
+                    }
+                }
+                catch (_e) {
+                    // Wordlist lookup failed; keep "-"
+                }
+            }
+            this.tokens[i] = token.with({ lemma: bestLemma });
         }
     }
     /**
@@ -504,11 +464,13 @@ export class Tokenization {
             const token = this.tokens[idx];
             if (!token.isWord)
                 continue;
+            // Python: wordform = toascii(token.text); iscapital = wordform.istitle();
+            //         wordform = wordform.lower()
             const wordformAscii = toAscii(token.text);
+            const isCapital = isTitleCase(wordformAscii);
             const wordformLower = wordformAscii.toLowerCase();
             const tag = token.tag;
             const lemma = token.lemma;
-            const isCapital = /^[A-Z]/.test(token.text);
             let accented = [];
             let isUnknown = false;
             let isAmbiguous = false;
@@ -520,7 +482,7 @@ export class Tokenization {
                 accented = ['ne'];
             }
             else {
-                // Try wordlist: get all entries for this wordform
+                // Try wordlist: get all entries for this wordform (macrons.txt file order)
                 let entries = [];
                 try {
                     entries = await wordlistEngine.getAllEntries(wordformLower);
@@ -530,81 +492,57 @@ export class Tokenization {
                     console.warn('getAllEntries error for', wordformLower, error);
                     entries = [];
                 }
-                if (entries.length > 0) {
-                    const allAccented = entries.map(e => e.accentedUnderscore).filter(a => a !== undefined);
-                    const uniqueAccented = Array.from(new Set(allAccented));
-                    if (uniqueAccented.length === 1) {
-                        accented = [uniqueAccented[0]];
+                entries = entries.filter(e => e.accentedUnderscore !== undefined);
+                // Python formtoaccenteds stores accented.lower(); the unique check and
+                // the single-candidate result both use the LOWERCASED accented form.
+                const loweredAccenteds = entries.map(e => e.accentedUnderscore.toLowerCase());
+                if (entries.length > 0 && new Set(loweredAccenteds).size === 1) {
+                    accented = [loweredAccenteds[0]];
+                }
+                else if (entries.length > 0) {
+                    // Multiple candidates: rank exactly like Python candidates.sort() on
+                    // the tuple (casedist, tagdist, lemdist, accented) — the accented
+                    // string is the final tiebreaker.
+                    const candidates = [];
+                    for (const entry of entries) {
+                        const lexLemma = entry.lemma;
+                        const lexTag = entry.tag;
+                        // Python: casedist = 0 if iscapital == lexlemma.istitle()
+                        //                      or token.startssentence and iscapital else 1
+                        const casedist = (isCapital === isTitleCase(lexLemma) || (token.startssentence && isCapital)) ? 0 : 1;
+                        const tagdist = tagDistance(tag, lexTag);
+                        const lemdist = levenshteinDistance(lemma, lexLemma);
+                        candidates.push({ casedist, tagdist, lemdist, accented: entry.accentedUnderscore });
                     }
-                    else {
-                        // Multiple candidates: rank them
-                        const candidates = [];
-                        for (const entry of entries) {
-                            if (!entry.accentedUnderscore)
-                                continue;
-                            const lexLemma = entry.lemma;
-                            const lexTag = entry.tag;
-                            const lexIsTitle = isTitleCase(lexLemma);
-                            const tokenIsTitle = isTitleCase(token.text);
-                            const casedist = (tokenIsTitle === lexIsTitle || (token.startssentence && tokenIsTitle)) ? 0 : 1;
-                            const tagdist = tagDistance(tag, lexTag);
-                            const lemdist = levenshteinDistance(lemma, lexLemma);
-                            candidates.push({ casedist, tagdist, lemdist, accented: entry.accentedUnderscore });
-                        }
-                        // Sort by casedist, then tagdist, then lemdist (exact match to Python)
-                        candidates.sort((a, b) => {
-                            if (a.casedist !== b.casedist)
-                                return a.casedist - b.casedist;
-                            if (a.tagdist !== b.tagdist)
-                                return a.tagdist - b.tagdist;
-                            return a.lemdist - b.lemdist;
-                        });
-                        if (candidates.length > 0) {
-                            // Get all candidates with the best (lowest) casedist
-                            const bestCasedist = candidates[0].casedist;
-                            const bestAccented = candidates
-                                .filter(c => c.casedist === bestCasedist)
-                                .sort((a, b) => {
-                                if (a.tagdist !== b.tagdist)
-                                    return a.tagdist - b.tagdist;
-                                return a.lemdist - b.lemdist;
-                            })
-                                .map(c => c.accented);
-                            // Deduplicate while preserving order
-                            const seen = new Set();
-                            const uniq = [];
-                            for (const acc of bestAccented) {
-                                if (!seen.has(acc)) {
-                                    seen.add(acc);
-                                    uniq.push(acc);
-                                }
-                            }
-                            accented = uniq;
-                            isAmbiguous = uniq.length > 1;
-                        }
-                        else {
-                            accented = [token.text];
+                    candidates.sort((a, b) => (a.casedist - b.casedist) ||
+                        (a.tagdist - b.tagdist) ||
+                        (a.lemdist - b.lemdist) ||
+                        (a.accented < b.accented ? -1 : a.accented > b.accented ? 1 : 0));
+                    // Python: append unseen accenteds while casedist == best casedist
+                    const bestCasedist = candidates[0].casedist;
+                    accented = [];
+                    for (const c of candidates) {
+                        if (c.casedist === bestCasedist && !accented.includes(c.accented)) {
+                            accented.push(c.accented);
                         }
                     }
+                    isAmbiguous = accented.length > 1;
                 }
                 else {
-                    // Unknown word: try ending patterns
-                    isUnknown = true;
+                    // Unknown word — Python: accented = [token.text]; if it has vowels,
+                    // scan tag_to_endings[tag] IN ORDER and take the first suffix match
+                    // (built on the lowercase ascii wordform), then mark as unknown.
                     accented = [token.text];
-                    if (/[aeiouy]/i.test(token.text)) {
-                        const patterns = endingEngine.getPatterns(token.text, tag);
-                        for (const pattern of patterns) {
-                            const plainEnding = pattern.suffix;
+                    if (/[aeiouyAEIOUY]/.test(token.text)) {
+                        const endings = endingEngine.getEndingsForTag(tag);
+                        for (const accentedEnding of endings) {
+                            const plainEnding = accentedEnding.replace(/[_^]/g, '');
                             if (wordformLower.endsWith(plainEnding)) {
-                                const originalLower = token.text.toLowerCase();
-                                const stemOriginal = originalLower.slice(0, -plainEnding.length);
-                                // Convert Unicode macron in replacement to underscore notation for accented field
-                                const replacementUnderscore = unicodeToUnderscore(pattern.replacement);
-                                const candidate = stemOriginal + replacementUnderscore;
-                                accented = [candidate];
+                                accented = [wordformLower.slice(0, wordformLower.length - plainEnding.length) + accentedEnding];
                                 break;
                             }
                         }
+                        isUnknown = true;
                     }
                 }
             }

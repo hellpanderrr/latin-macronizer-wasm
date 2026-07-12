@@ -71,20 +71,15 @@ export declare class Tokenization {
      */
     tagWithWasm(tagger: WasmTagger): Promise<void>;
     /**
-     * Correct case for 1st declension feminine nouns/adjectives following
-     * ablative prepositions. WASM RFTagger occasionally assigns nominative
-     * where the preposition context requires ablative. This correction
-     * matches Python native RFTagger behavior by using Latin grammar rules.
-     */
-    correctAblativeCase(): void;
-    /**
-     * Add lemmas to tokens using LemmaEngine
-     */
-    /**
      * Add lemmas to tokens.
-     * Ported from Python tokenization.py addlemmas() — two-tier frequency-based selection.
-     * Tier 1: direct wordform+tag lookup in LemmaEngine
-     * Tier 2: wordlist-supplied lemmas ranked by corpus frequency (matches Python's lemma_frequency)
+     * Exact port of Python tokenization.py addlemmas():
+     *   wordform = toascii(token.text)          # ORIGINAL case
+     *   best_lemma = "-"; max_freq = -1
+     *   Tier 1: wordform in wordform_to_corpus_lemmas →
+     *           best corpus lemma by word_lemma_freq[(wordform, lemma)]
+     *   Tier 2: wordform.lower() in wordlist.formtolemmas →
+     *           best wordlist lemma by lemma_frequency.get(lemma, 0)
+     * (No POS tag involved; strict > keeps the FIRST max in iteration order.)
      */
     addLemmas(lemmaEngine: LemmaEngine, wordlistEngine?: WordlistEngine): Promise<void>;
     /**

@@ -13,7 +13,14 @@ export declare class EndingPatternEngine {
     private patterns;
     private suffixTree;
     private loaded;
+    /** Raw Python tag_to_endings: exact 9-char LDT tag → ORDERED accented endings
+     *  (underscore/caret notation), straight from endings.json. */
+    private rawEndings;
     constructor();
+    /**
+     * Python: tag_to_endings.get(tag, []) — exact-tag lookup, list order preserved.
+     */
+    getEndingsForTag(tag: string): string[];
     /**
      * Load ending patterns
      */

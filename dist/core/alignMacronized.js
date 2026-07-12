@@ -57,17 +57,8 @@ function charsMatch(p, a) {
  */
 export function alignMacronized(plain, accented, options = {}) {
     const { domacronize = true, alsomaius = false, performutov = false, performitoj = false } = options;
-    // DEBUG: enable logging for problematic words
-    const debugWords = ['matrona', 'longissime', 'minime', 'sequana', 'eos', 'hi', 'matrona_', 'longissime_'];
-    const shouldLog = debugWords.includes(plain.toLowerCase()) || debugWords.includes(accented.toLowerCase());
-    if (shouldLog) {
-        console.log(`  [alignMacronized] Input: plain="${plain}", accented="${accented}"`);
-        console.log(`    Options: domacronize=${domacronize}, alsomaius=${alsomaius}, utov=${performutov}, itoj=${performitoj}`);
-    }
     // Early exit: if no macronization and no conversions, return plain
     if (!domacronize && !performutov && !performitoj) {
-        if (shouldLog)
-            console.log('    Early exit: no macronization/conversion needed');
         return plain;
     }
     // Clean accented: remove breve markers (_^ and ^)
@@ -101,8 +92,6 @@ export function alignMacronized(plain, accented, options = {}) {
         if (performitoj) {
             result = result.replace(/i/g, 'j').replace(/I/g, 'J');
         }
-        if (shouldLog)
-            console.log(`    Early exact match: "${plain}" === "${accentedWithoutUnderscores}" (alsomaius=${options.alsomaius}), returning "${result}"`);
         return result;
     }
     const n = plain.length;
@@ -152,13 +141,8 @@ export function alignMacronized(plain, accented, options = {}) {
     let result = '';
     let i = n;
     let j = m;
-    if (shouldLog) {
-        console.log(`    Starting backtrack from [${n}][${m}], distance=${distance[n][m]}`);
-    }
     while (i > 0 || j > 0) {
         const move = backtrackDir[i][j];
-        if (shouldLog)
-            console.log(`      [${i}][${j}] move=${move}`);
         if (move === 'diag' && i > 0 && j > 0) {
             const pChar = plain[i - 1];
             const aChar = accentedNorm[j - 1];
@@ -215,16 +199,11 @@ export function alignMacronized(plain, accented, options = {}) {
         }
         else {
             // Safety: break if stuck
-            if (shouldLog)
-                console.log('      Safety break: stuck in backtrack');
             break;
         }
     }
     // Clean up double macrons (e.g., from multiple insertions)
     result = result.replace(/_+/g, '_');
-    if (shouldLog) {
-        console.log(`    Final result (underscore): "${result}"`);
-    }
     // Note: Do NOT strip trailing underscore — it marks a macron on the final vowel
     return result;
 }

@@ -98,7 +98,8 @@ export function splitSentences(text) {
  * Check if character ends a sentence
  */
 export function isSentenceEnder(c) {
-    return '.!?'.includes(c);
+    // Python tokenization.py: any(i in token.text for i in '.;:?!')
+    return '.;:?!'.includes(c);
 }
 /**
  * Check if token is punctuation
@@ -281,13 +282,13 @@ export function filterAccents(accented) {
     return result;
 }
 /**
- * Normalize RFTagger 17-char tag format to LDT 9-char format.
- * RFTagger: n---s-------f-n-- (17 chars, undotted) or n.-.s.-.-.-.f.b.- (dotted)
- * LDT:      n-s---fb- (9 chars: pos+person+number+tense+mood+voice+gender+case+degree)
+ * Normalize RFTagger tag format to LDT 9-char format.
+ * RFTagger dotted (17-chars): n.-.s.-.-.-.f.b.- → remove dots → n-s---fb- (9-char LDT)
+ * RFTagger undotted (17-chars): n---s-------f-b-- → extract even positions → n-s---fb-
+ * LDT: n-s---fn- (9 chars: pos+person+number+tense+mood+voice+gender+case+degree)
  *
- * Works with both dotted and undotted 17-char formats by extracting
- * the even-indexed positions (0, 2, 4, 6, 8, 10, 12, 14, 16) which hold
- * the significant tag data in both formats.
+ * Works with any odd-length tag format where data lives at even indices
+ * and separators at odd indices (both dotted and undotted variants).
  */
 export function normalizeTag(tag) {
     if (tag.length === 9 || tag.length === 12) {
@@ -297,8 +298,12 @@ export function normalizeTag(tag) {
         console.warn(`normalizeTag: unexpected tag length ${tag.length}: "${tag}"`);
         return tag;
     }
-    // Extract positions: 0=pos, 2=person, 4=number, 6=tense, 8=mood, 10=voice, 12=gender, 14=case, 16=degree
-    return `${tag[0]}${tag[2]}${tag[4]}${tag[6]}${tag[8]}${tag[10]}${tag[12]}${tag[14]}${tag[16]}`;
+    // Extract data at even positions (0=pos, 2=person, 4=number, 6=tense, 8=mood, 10=voice, 12=gender, 14=case, 16=degree)
+    let result = '';
+    for (let i = 0; i < tag.length; i += 2) {
+        result += tag[i];
+    }
+    return result;
 }
 /**
  * Compute distance between two LDT tags

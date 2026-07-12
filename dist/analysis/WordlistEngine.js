@@ -37,11 +37,17 @@ export class WordlistEngine {
             writable: true,
             value: null
         });
+        Object.defineProperty(this, "nextSeq", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: 0
+        });
         Object.defineProperty(this, "DB_NAME", {
             enumerable: true,
             configurable: true,
             writable: true,
-            value: 'MacronizerDB_v2'
+            value: 'MacronizerDB_v3'
         });
         Object.defineProperty(this, "DB_VERSION", {
             enumerable: true,
@@ -76,16 +82,15 @@ export class WordlistEngine {
             };
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
-                // Non-blocking migration: create new store with a different name.
-                // Old store (wordlist) is left intact but ignored. Fresh data required.
                 if (!db.objectStoreNames.contains(this.STORE_NAME)) {
+                    // Primary key = file-order sequence number. This preserves the exact
+                    // macrons.txt row order (Python iterates rows in file order) and keeps
+                    // duplicate (wordform, tag, lemma) rows that a composite key would drop.
                     const store = db.createObjectStore(this.STORE_NAME, {
-                        keyPath: ['wordform', 'tag', 'lemma']
+                        keyPath: 'seq'
                     });
-                    // Create indexes for efficient lookup
+                    // Cursor over this index yields (wordform, seq) order = file order per wordform
                     store.createIndex('wordform', 'wordform', { unique: false });
-                    store.createIndex('tag', 'tag', { unique: false });
-                    store.createIndex('lemma', 'lemma', { unique: false });
                 }
             };
         });
@@ -102,6 +107,10 @@ export class WordlistEngine {
             const countRequest = store.count();
             countRequest.onsuccess = () => {
                 this.entryCount = countRequest.result;
+                // Seed the sequence counter past existing rows (rows are numbered 0..n-1
+                // at load; later Morpheus additions append from here)
+                if (this.entryCount > this.nextSeq)
+                    this.nextSeq = this.entryCount;
                 resolve(this.entryCount > 0);
             };
             countRequest.onerror = () => reject(countRequest.error);
@@ -180,9 +189,11 @@ export class WordlistEngine {
         if (!this.db)
             await this.init();
         return new Promise((resolve, reject) => {
+            var _a;
             const transaction = this.db.transaction([this.STORE_NAME], 'readwrite');
             const store = transaction.objectStore(this.STORE_NAME);
             const request = store.put({
+                seq: (_a = entry.seq) !== null && _a !== void 0 ? _a : this.nextSeq++,
                 wordform: entry.wordform.toLowerCase().trim(),
                 tag: this.normalizeTag(entry.tag.trim()),
                 macronized: entry.macronized,
@@ -202,7 +213,7 @@ export class WordlistEngine {
     async addEntries(entries, onProgress) {
         if (!this.db)
             await this.init();
-        const BATCH_SIZE = 1000;
+        const BATCH_SIZE = 50000;
         let processed = 0;
         console.log('WordlistEngine: starting addEntries, total entries:', entries.length);
         for (let i = 0; i < entries.length; i += BATCH_SIZE) {
@@ -211,7 +222,9 @@ export class WordlistEngine {
                 const transaction = this.db.transaction([this.STORE_NAME], 'readwrite');
                 const store = transaction.objectStore(this.STORE_NAME);
                 batch.forEach(entry => {
+                    var _a;
                     store.put({
+                        seq: (_a = entry.seq) !== null && _a !== void 0 ? _a : this.nextSeq++,
                         wordform: entry.wordform.toLowerCase().trim(),
                         tag: this.normalizeTag(entry.tag.trim()),
                         macronized: entry.macronized,

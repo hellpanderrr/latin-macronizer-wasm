@@ -20,7 +20,6 @@ export {
   WasmTaggerOptions,
   TagResult,
   LemmaEngine,
-  LemmaEntry,
   EndingPatternEngine,
   EndingPattern,
   EditDistanceEngine,

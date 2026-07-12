@@ -44,7 +44,7 @@ export class WasmTagger {
     this.modelUrl = options.modelUrl || '/wasm/rftagger-ldt.model';
     this.cache = new Map();
     this.useSentences = true;
-    this.beamSize = 0.0;    // exact Viterbi — match native floating-point more closely
+    this.beamSize = 0.001;  // native rft-annotate default beam threshold (Python: rft-annotate -s -q)
     this.debugMode = true;
   }
 

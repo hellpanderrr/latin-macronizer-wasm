@@ -19,6 +19,7 @@ npx vite
 
 # Tests
 npm test                   # all tests (Jest)
+npm run test:parity        # full-pipeline parity vs Python reference (Node, no browser, ~1 min)
 npm run test:watch         # watch mode
 npx jest test/unit/latin.test.ts  # single file
 

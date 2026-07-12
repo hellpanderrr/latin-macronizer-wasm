@@ -15,11 +15,22 @@ export class EndingPatternEngine {
   private patterns: EndingPattern[];
   private suffixTree: Map<string, EndingPattern[]>;
   private loaded: boolean;
+  /** Raw Python tag_to_endings: exact 9-char LDT tag → ORDERED accented endings
+   *  (underscore/caret notation), straight from endings.json. */
+  private rawEndings: Map<string, string[]>;
 
   constructor() {
     this.patterns = [];
     this.suffixTree = new Map();
     this.loaded = false;
+    this.rawEndings = new Map();
+  }
+
+  /**
+   * Python: tag_to_endings.get(tag, []) — exact-tag lookup, list order preserved.
+   */
+  getEndingsForTag(tag: string): string[] {
+    return this.rawEndings.get(tag) ?? [];
   }
 
   /**
@@ -44,19 +55,20 @@ export class EndingPatternEngine {
         try {
           const response = await fetch(path);
           if (response.ok) {
-            // JSON is an object: { tag: [pattern, ...], ... }
+            // JSON is Python's tag_to_endings: { "n-s---fn-": ["a_tio_", ...], ... }
             const json = await response.json();
-            // Convert to array of patterns with tag property
             patternData = [];
-            for (const [tag, patterns] of Object.entries(json)) {
-              for (const pattern of (patterns as any[])) {
+            for (const [tag, endings] of Object.entries(json)) {
+              // Keep the raw ordered list for exact-tag lookups (Python semantics)
+              this.rawEndings.set(tag, endings as string[]);
+              for (const pattern of (endings as any[])) {
                 patternData.push({
                   ...pattern,
                   posTags: pattern.posTags || [tag] // include tag as posTags if not specified
                 });
               }
             }
-            console.log(`[EndingPatternEngine] Loaded ${patternData.length} patterns from ${path}`);
+            console.log(`[EndingPatternEngine] Loaded ${this.rawEndings.size} tag ending lists from ${path}`);
             break;
           }
         } catch (e) {

@@ -11,6 +11,7 @@ export interface WordlistEntry {
     macronized: string;
     accentedUnderscore: string;
     lemma: string;
+    seq?: number;
 }
 export declare class WordlistEngine {
     private db;
@@ -18,6 +19,7 @@ export declare class WordlistEngine {
     private entryCount;
     private morpheusAnalyzer;
     private loadingPromise;
+    private nextSeq;
     private readonly DB_NAME;
     private readonly DB_VERSION;
     private readonly STORE_NAME;

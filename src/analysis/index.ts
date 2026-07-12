@@ -5,7 +5,7 @@
 import { EndingPatternEngine } from './EndingPatternEngine.js';
 
 export { WasmTagger, WasmTaggerOptions, TagResult } from './WasmTagger.js';
-export { LemmaEngine, LemmaEntry } from './LemmaEngine.js';
+export { LemmaEngine } from './LemmaEngine.js';
 export { EndingPatternEngine, EndingPattern } from './EndingPatternEngine.js';
 export { EditDistanceEngine, EditResult } from './EditDistanceEngine.js';
 export { MorpheusAnalyzer } from './MorpheusAnalyzer.js';

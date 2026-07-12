@@ -106,13 +106,13 @@ export declare function unicodeToUnderscore(text: string): string;
  */
 export declare function filterAccents(accented: string): string;
 /**
- * Normalize RFTagger 17-char tag format to LDT 9-char format.
- * RFTagger: n---s-------f-n-- (17 chars, undotted) or n.-.s.-.-.-.f.b.- (dotted)
- * LDT:      n-s---fb- (9 chars: pos+person+number+tense+mood+voice+gender+case+degree)
+ * Normalize RFTagger tag format to LDT 9-char format.
+ * RFTagger dotted (17-chars): n.-.s.-.-.-.f.b.- → remove dots → n-s---fb- (9-char LDT)
+ * RFTagger undotted (17-chars): n---s-------f-b-- → extract even positions → n-s---fb-
+ * LDT: n-s---fn- (9 chars: pos+person+number+tense+mood+voice+gender+case+degree)
  *
- * Works with both dotted and undotted 17-char formats by extracting
- * the even-indexed positions (0, 2, 4, 6, 8, 10, 12, 14, 16) which hold
- * the significant tag data in both formats.
+ * Works with any odd-length tag format where data lives at even indices
+ * and separators at odd indices (both dotted and undotted variants).
  */
 export declare function normalizeTag(tag: string): string;
 /**

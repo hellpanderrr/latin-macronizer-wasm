@@ -220,9 +220,6 @@ export class Macronizer {
       tokenization.addTags(fallbackResults.map(r => ({ word: r.token, tag: r.tag })));
     }
 
-    // Step 2.5: Correct case for 1st declension nouns following ablative prepositions
-    tokenization.correctAblativeCase();
-
     // Step 3: Add lemmas (two-tier: corpus lookup + wordlist frequency fallback)
     await tokenization.addLemmas(this.lemmaEngine, this.wordlistEngine);
 

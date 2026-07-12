@@ -14,6 +14,7 @@ export interface WordlistEntry {
   macronized: string;           // Unicode macronized form (for display)
   accentedUnderscore: string;   // Underscore-marked form (for DP alignment)
   lemma: string;
+  seq?: number;                 // File-order sequence (primary key; preserves Python iteration order)
 }
 
 export class WordlistEngine {
@@ -22,7 +23,8 @@ export class WordlistEngine {
   private entryCount: number = 0;
   private morpheusAnalyzer: MorpheusAnalyzer | null = null;
   private loadingPromise: Promise<void> | null = null;
-  private readonly DB_NAME = 'MacronizerDB_v2';
+  private nextSeq: number = 0;
+  private readonly DB_NAME = 'MacronizerDB_v3';
   private readonly DB_VERSION = 1;
   private readonly STORE_NAME = 'wordlist';
   /** Cache of Morpheus analyses by normalized wordform (for UI display) */
@@ -43,17 +45,15 @@ export class WordlistEngine {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        // Non-blocking migration: create new store with a different name.
-        // Old store (wordlist) is left intact but ignored. Fresh data required.
         if (!db.objectStoreNames.contains(this.STORE_NAME)) {
+          // Primary key = file-order sequence number. This preserves the exact
+          // macrons.txt row order (Python iterates rows in file order) and keeps
+          // duplicate (wordform, tag, lemma) rows that a composite key would drop.
           const store = db.createObjectStore(this.STORE_NAME, {
-            keyPath: ['wordform', 'tag', 'lemma']
+            keyPath: 'seq'
           });
-          
-          // Create indexes for efficient lookup
+          // Cursor over this index yields (wordform, seq) order = file order per wordform
           store.createIndex('wordform', 'wordform', { unique: false });
-          store.createIndex('tag', 'tag', { unique: false });
-          store.createIndex('lemma', 'lemma', { unique: false });
         }
       };
     });
@@ -72,6 +72,9 @@ export class WordlistEngine {
 
       countRequest.onsuccess = () => {
         this.entryCount = countRequest.result;
+        // Seed the sequence counter past existing rows (rows are numbered 0..n-1
+        // at load; later Morpheus additions append from here)
+        if (this.entryCount > this.nextSeq) this.nextSeq = this.entryCount;
         resolve(this.entryCount > 0);
       };
       countRequest.onerror = () => reject(countRequest.error);
@@ -160,6 +163,7 @@ export class WordlistEngine {
       const store = transaction.objectStore(this.STORE_NAME);
       
       const request = store.put({
+        seq: entry.seq ?? this.nextSeq++,
         wordform: entry.wordform.toLowerCase().trim(),
         tag: this.normalizeTag(entry.tag.trim()),
         macronized: entry.macronized,
@@ -181,19 +185,20 @@ export class WordlistEngine {
   async addEntries(entries: WordlistEntry[], onProgress?: (count: number) => void): Promise<void> {
     if (!this.db) await this.init();
 
-    const BATCH_SIZE = 1000;
+    const BATCH_SIZE = 50000;
     let processed = 0;
 
     console.log('WordlistEngine: starting addEntries, total entries:', entries.length);
     for (let i = 0; i < entries.length; i += BATCH_SIZE) {
       const batch = entries.slice(i, i + BATCH_SIZE);
-      
+
       await new Promise<void>((resolve, reject) => {
         const transaction = this.db!.transaction([this.STORE_NAME], 'readwrite');
         const store = transaction.objectStore(this.STORE_NAME);
 
         batch.forEach(entry => {
           store.put({
+            seq: entry.seq ?? this.nextSeq++,
             wordform: entry.wordform.toLowerCase().trim(),
             tag: this.normalizeTag(entry.tag.trim()),
             macronized: entry.macronized,
