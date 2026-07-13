@@ -244,6 +244,8 @@ export class WordlistEngine {
 
       request.onsuccess = () => {
         this.entryCount = 0;
+        this.nextSeq = 0;
+        this.loaded = false;
         resolve();
       };
       request.onerror = () => reject(request.error);

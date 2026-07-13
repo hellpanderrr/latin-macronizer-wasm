@@ -428,8 +428,10 @@ export class Macronizer {
   }
 
   async clearWordlistCache(): Promise<void> {
-    this.wordlistEngine.close();
-    // Reload needed after clear
+    // Actually empty the IndexedDB store — closing the connection left the data on disk.
+    await this.wordlistEngine.clear();
+    this.wordlistEngine.clearEntriesCache();
+    this.clearCache();
   }
 }
 

@@ -16,10 +16,15 @@ export class EndingPatternEngine {
   /** Raw Python tag_to_endings: exact 9-char LDT tag → ORDERED accented endings
    *  (underscore/caret notation), straight from endings.json. */
   private rawEndings: Map<string, string[]>;
+  /** All endings with quantity marks stripped, for O(len) suffix lookup in hasPattern(). */
+  private plainEndings: Set<string>;
+  private maxEndingLength: number;
 
   constructor() {
     this.loaded = false;
     this.rawEndings = new Map();
+    this.plainEndings = new Set();
+    this.maxEndingLength = 0;
   }
 
   /**
@@ -49,6 +54,11 @@ export class EndingPatternEngine {
           const json = await response.json();
           for (const [tag, endings] of Object.entries(json)) {
             this.rawEndings.set(tag, endings as string[]);
+            for (const ending of endings as string[]) {
+              const plain = ending.replace(/[_^]/g, '');
+              this.plainEndings.add(plain);
+              if (plain.length > this.maxEndingLength) this.maxEndingLength = plain.length;
+            }
           }
           console.log(`[EndingPatternEngine] Loaded ${this.rawEndings.size} tag ending lists from ${path}`);
           found = true;
@@ -69,14 +79,13 @@ export class EndingPatternEngine {
    * Check if a pattern exists for this word
    */
   hasPattern(word: string): boolean {
-    // Returns true if any tag in rawEndings has an ending that matches this word
-    for (const endings of this.rawEndings.values()) {
-      for (const ending of endings) {
-        const plainEnding = ending.replace(/[_^]/g, '');
-        if (word.toLowerCase().endsWith(plainEnding)) {
-          return true;
-        }
-      }
+    // True if any tag's ending (quantity marks stripped) is a suffix of the word.
+    // Checked against a precomputed set: O(longest ending) rather than O(all endings).
+    const lower = word.toLowerCase();
+    if (this.plainEndings.has('')) return true;
+    const start = Math.max(0, lower.length - this.maxEndingLength);
+    for (let i = start; i < lower.length; i++) {
+      if (this.plainEndings.has(lower.slice(i))) return true;
     }
     return false;
   }

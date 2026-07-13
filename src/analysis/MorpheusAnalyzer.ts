@@ -6,6 +6,8 @@
  * compiled to WebAssembly. Matches Python latin_macronizer.wordlist.crunchwords()
  */
 
+import { resolveAssetUrl } from '../utils/assets.js';
+
 // PrntFlags from prntflags.h (decimal values)
 const SHOW_ANAL = 1;           // 0o1
 const SHOW_LEMMA = 2;          // 0o2
@@ -100,16 +102,13 @@ export class MorpheusAnalyzer {
 
       Module['locateFile'] = (path: string, prefix: string) => {
         if (path.endsWith('.data') || path.endsWith('.wasm')) {
-          return wasmDir + path;
+          // Prefer the host page's prefetched blob, else we re-download the file.
+          return resolveAssetUrl(path, wasmDir + path);
         }
         return prefix + path;
       };
 
-      // The factory must receive locateFile as an argument: inside cruncher.js
-      // the `Morpheus` parameter shadows the global, so properties set on the
-      // factory function itself are invisible and .data/.wasm resolve to the
-      // page's directory instead of wasmDir.
-      this.wasmModule = await Module({ locateFile: Module['locateFile'] });
+      this.wasmModule = await Module({ locateFile: (Module as any)['locateFile'] });
       this.log('Module instantiated');
 
       if (!this.wasmModule.ccall) {

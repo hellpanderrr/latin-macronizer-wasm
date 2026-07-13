@@ -4,6 +4,8 @@
  * Uses C++ class API from Emscripten (matching test-full-pipeline.html)
  */
 
+import { resolveAssetUrl } from '../utils/assets.js';
+
 export interface WasmTaggerOptions {
   wasmPath?: string;      // Path to the WASM JavaScript wrapper (default: '../wasm/rftagger.js')
   modelPath?: string;     // Virtual FS path for model (default: '/models/rftagger-ldt.model')
@@ -75,12 +77,7 @@ export class WasmTagger {
     if (globalRFTagger && typeof globalRFTagger === 'function') {
       return await globalRFTagger({
         printErr: () => {},
-        locateFile: (path: string) => {
-          if (path.endsWith('.wasm') || path.endsWith('.data')) {
-            return '/wasm/' + path;
-          }
-          return path;
-        }
+        locateFile: (path: string) => resolveAssetUrl(path, '/wasm/' + path)
       });
     }
 
@@ -92,10 +89,10 @@ export class WasmTagger {
         return await exported({
           locateFile: (path: string) => {
             if (path.endsWith('.wasm') || path.endsWith('.data')) {
-              return this.wasmDir + path;
+              return resolveAssetUrl(path, this.wasmDir + path);
             }
             if (path.endsWith('.model')) {
-              return '/wasm/rftagger-ldt.model';
+              return resolveAssetUrl(path, '/wasm/rftagger-ldt.model');
             }
             return path;
           }
@@ -117,7 +114,7 @@ export class WasmTagger {
       }
 
       try {
-        const response = await fetch(this.modelUrl);
+        const response = await fetch(resolveAssetUrl(this.modelUrl, this.modelUrl));
         if (!response.ok) {
           throw new Error(`Failed to fetch model: ${response.status} ${response.statusText}`);
         }

@@ -21,6 +21,9 @@ export interface ApiToken {
   startIndex?: number;
   endIndex?: number;
   accented?: string[];
+  hasenclitic?: boolean;
+  isenclitic?: boolean;
+  startssentence?: boolean;
 }
 
 /** Return type of MacronizerAPI.process() */
@@ -109,7 +112,10 @@ export class MacronizerAPI {
       } : null,
       startIndex: t.startIndex,
       endIndex: t.endIndex,
-      accented: t.accented
+      accented: t.accented,
+      hasenclitic: t.hasenclitic,
+      isenclitic: t.isenclitic,
+      startssentence: t.startssentence
     }));
 
     return {
@@ -152,7 +158,7 @@ export class MacronizerAPI {
   }
 
   getWordlistEntryCount(): number {
-    return this.macronizer?.getWordlistEntryCount() ?? 0;
+    return this.macronizer?.getWordlistEntryCount() || 0;
   }
 
   getWordlistMode(): string {
