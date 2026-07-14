@@ -5,8 +5,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc && node fix-imports.cjs && npm run copy-assets",
-    "build:prod": "tsc --project tsconfig.prod.json && npm run copy-assets",
+    "build": "tsc && node fix-imports.cjs && npm run copy-assets && npm run sync:site",
+    "build:prod": "tsc --project tsconfig.prod.json && npm run copy-assets && npm run sync:site",
+    "sync:site": "node sync-site.cjs",
     "dev": "tsc --watch",
     "test": "jest",
     "test:parity": "node test/e2e/parity-node.mjs",
