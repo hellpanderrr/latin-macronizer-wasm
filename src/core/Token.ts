@@ -6,6 +6,17 @@
 
 import type { MorpheusAnalysis } from '../analysis/MorpheusAnalyzer';
 
+/**
+ * Provenance for one entry of `accented`: which wordlist row produced it.
+ * Purely informational (the UI shows lemma + grammar per reading); the
+ * macronization itself only ever reads `accented`.
+ */
+export interface AccentedSource {
+  accented: string;  // same string as the matching entry in `accented`
+  lemma: string;
+  tag: string;
+}
+
 export interface TokenOptions {
   text?: string;
   tag?: string;
@@ -14,6 +25,7 @@ export interface TokenOptions {
   macronizedText?: string;  // Macronized form of the text
   originalText?: string;    // Original text before normalization
   accented?: string[];   // List of candidate accented forms (with _ markers)
+  accentedSources?: AccentedSource[];  // lemma/tag behind each accented form
   isAmbiguous?: boolean;
   isUnknown?: boolean;
   morpheusAnalyzed?: boolean;
@@ -39,6 +51,7 @@ export class Token {
   public readonly macronizedText?: string;  // Macronized form
   public readonly originalText: string;    // Original text before normalization
   public readonly accented?: string[];   // Candidate accented forms (with _ markers)
+  public readonly accentedSources?: AccentedSource[];
   public readonly isAmbiguous?: boolean;
   public readonly isUnknown?: boolean;
   public readonly morpheusAnalyzed?: boolean;
@@ -60,6 +73,7 @@ export class Token {
     this.macronizedText = options.macronizedText;
     this.originalText = options.originalText || text;
     this.accented = options.accented;
+    this.accentedSources = options.accentedSources;
     this.isAmbiguous = options.isAmbiguous || false;
     this.isUnknown = options.isUnknown || false;
     this.morpheusAnalyzed = options.morpheusAnalyzed;
@@ -87,6 +101,7 @@ export class Token {
       macronizedText: options.macronizedText ?? this.macronizedText,
       originalText: options.originalText ?? this.originalText,
       accented: options.accented ?? this.accented,
+      accentedSources: options.accentedSources ?? this.accentedSources,
       isAmbiguous: options.isAmbiguous ?? this.isAmbiguous,
       isUnknown: options.isUnknown ?? this.isUnknown,
       morpheusAnalyzed: options.morpheusAnalyzed ?? this.morpheusAnalyzed,

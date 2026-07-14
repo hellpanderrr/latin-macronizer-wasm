@@ -7,6 +7,7 @@
 
 import { MorpheusAnalyzer, MorpheusAnalysis } from './MorpheusAnalyzer';
 import { unicodeToUnderscore, toAscii } from '../utils/latin';
+import { fetchMaybeGzipped } from '../utils/assets';
 
 export interface WordlistEntry {
   wordform: string;
@@ -349,13 +350,15 @@ export class WordlistEngine {
   /**
    * Load wordlist from URL (fetch + parse)
    */
+  /**
+   * Load wordlist from URL. A `.gz` URL is decompressed in the browser
+   * (32MB of text ships as ~4MB); it falls back to the uncompressed file
+   * if the .gz is missing or the browser cannot gunzip.
+   */
   async loadFromUrl(url: string, onProgress?: (count: number) => void): Promise<void> {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to load wordlist: ${response.status} ${response.statusText}`);
-    }
-    
-    const text = await response.text();
+    const fallbackUrl = url.endsWith('.gz') ? url.slice(0, -3) : undefined;
+    const bytes = await fetchMaybeGzipped(url, fallbackUrl);
+    const text = new TextDecoder('utf-8').decode(bytes);
     await this.loadFromText(text, onProgress);
   }
 

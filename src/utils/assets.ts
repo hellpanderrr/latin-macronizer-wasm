@@ -20,3 +20,47 @@ export function resolveAssetUrl(pathOrUrl: string, fallback: string): string {
   const basename = pathOrUrl.split('/').pop() || pathOrUrl;
   return cacheUrls[basename] || fallback;
 }
+
+/** gzip magic number: every gzip member starts with 0x1f 0x8b. */
+function looksGzipped(bytes: Uint8Array): boolean {
+  return bytes.length > 1 && bytes[0] === 0x1f && bytes[1] === 0x8b;
+}
+
+export function canGunzip(): boolean {
+  return typeof DecompressionStream === 'function';
+}
+
+/**
+ * Fetch a possibly-gzipped asset and return its *decompressed* bytes.
+ *
+ * Only decompresses when the payload actually starts with the gzip magic number:
+ * a server may serve a .gz file with `Content-Encoding: gzip`, in which case the
+ * browser has already decompressed it for us and gunzipping again would fail.
+ *
+ * Falls back to `fallbackUrl` (the uncompressed file) when the .gz is missing or
+ * the browser has no DecompressionStream.
+ */
+export async function fetchMaybeGzipped(url: string, fallbackUrl?: string): Promise<Uint8Array> {
+  let response: Response | null = null;
+  try {
+    response = await fetch(url);
+  } catch {
+    response = null;
+  }
+
+  const gzUnusable = !response || !response.ok || (url.endsWith('.gz') && !canGunzip());
+  if (gzUnusable) {
+    if (!fallbackUrl) {
+      throw new Error(`Failed to load ${url} (${response ? response.status : 'network error'})`);
+    }
+    const plain = await fetch(fallbackUrl);
+    if (!plain.ok) throw new Error(`Failed to load ${fallbackUrl}: ${plain.status}`);
+    return new Uint8Array(await plain.arrayBuffer());
+  }
+
+  const raw = new Uint8Array(await response!.arrayBuffer());
+  if (!looksGzipped(raw)) return raw;   // server already decoded it (Content-Encoding: gzip)
+
+  const stream = new Blob([raw as BlobPart]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}

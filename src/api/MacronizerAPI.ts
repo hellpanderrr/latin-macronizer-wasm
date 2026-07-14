@@ -6,6 +6,7 @@
 
 import { Macronizer } from '../core/Macronizer.js';
 import type { Statistics } from '../core/Macronizer.js';
+import type { AccentedSource } from '../core/Token.js';
 import type { MorpheusAnalysis } from '../analysis/MorpheusAnalyzer.js';
 
 /** JSON-serialized token shape returned by MacronizerAPI.process() */
@@ -21,6 +22,7 @@ export interface ApiToken {
   startIndex?: number;
   endIndex?: number;
   accented?: string[];
+  accentedSources?: AccentedSource[];
   hasenclitic?: boolean;
   isenclitic?: boolean;
   startssentence?: boolean;
@@ -113,6 +115,7 @@ export class MacronizerAPI {
       startIndex: t.startIndex,
       endIndex: t.endIndex,
       accented: t.accented,
+      accentedSources: t.accentedSources,
       hasenclitic: t.hasenclitic,
       isenclitic: t.isenclitic,
       startssentence: t.startssentence
