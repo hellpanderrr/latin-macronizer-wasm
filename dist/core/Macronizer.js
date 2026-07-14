@@ -83,7 +83,7 @@ export class Macronizer {
         // Initialize tagger based on configuration
         if (this.useWasm) {
             this.tagger = new WasmTagger({
-                modelPath: options.wasmModelPath,
+                modelUrl: options.wasmModelPath,
                 wasmPath: options.wasmPath,
                 enableCache: (_b = options.enableCache) !== null && _b !== void 0 ? _b : true,
             });
@@ -376,13 +376,18 @@ export class Macronizer {
     isWordlistLoaded() {
         return this.wordlistEngine.size() > 0;
     }
+    getWordlistEntryCount() {
+        return this.wordlistEngine.size();
+    }
     getWordlistMode() {
         // Always 'indexeddb' — the wordlist engine always uses IndexedDB when available
         return 'indexeddb';
     }
     async clearWordlistCache() {
-        this.wordlistEngine.close();
-        // Reload needed after clear
+        // Actually empty the IndexedDB store — closing the connection left the data on disk.
+        await this.wordlistEngine.clear();
+        this.wordlistEngine.clearEntriesCache();
+        this.clearCache();
     }
 }
 /**

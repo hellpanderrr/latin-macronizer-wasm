@@ -83,7 +83,7 @@ export class Macronizer {
     // Initialize tagger based on configuration
     if (this.useWasm) {
       this.tagger = new WasmTagger({
-        modelPath: options.wasmModelPath,
+        modelUrl: options.wasmModelPath,
         wasmPath: options.wasmPath,
         enableCache: options.enableCache ?? true,
       });

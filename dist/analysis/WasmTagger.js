@@ -3,6 +3,7 @@
  * WebAssembly wrapper for RFTagger statistical POS tagger
  * Uses C++ class API from Emscripten (matching test-full-pipeline.html)
  */
+import { resolveAssetUrl } from '../utils/assets.js';
 /**
  * WebAssembly-based RFTagger implementation
  * Uses Emscripten C++ class API (new RFTagger(), loadModel(), tagSentences())
@@ -28,12 +29,6 @@ export class WasmTagger {
             value: false
         });
         Object.defineProperty(this, "cache", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "modelPath", {
             enumerable: true,
             configurable: true,
             writable: true,
@@ -75,7 +70,6 @@ export class WasmTagger {
             writable: true,
             value: void 0
         });
-        this.modelPath = options.modelPath || '/wasm/rftagger-ldt.model';
         const effectiveWasmPath = options.wasmPath || '../wasm/rftagger.js';
         this.wasmPath = effectiveWasmPath;
         this.wasmDir = effectiveWasmPath.substring(0, effectiveWasmPath.lastIndexOf('/') + 1);
@@ -112,12 +106,7 @@ export class WasmTagger {
         if (globalRFTagger && typeof globalRFTagger === 'function') {
             return await globalRFTagger({
                 printErr: () => { },
-                locateFile: (path) => {
-                    if (path.endsWith('.wasm') || path.endsWith('.data')) {
-                        return '/wasm/' + path;
-                    }
-                    return path;
-                }
+                locateFile: (path) => resolveAssetUrl(path, path.endsWith('.model') ? this.modelUrl : this.wasmDir + path)
             });
         }
         try {
@@ -127,10 +116,10 @@ export class WasmTagger {
                 return await exported({
                     locateFile: (path) => {
                         if (path.endsWith('.wasm') || path.endsWith('.data')) {
-                            return this.wasmDir + path;
+                            return resolveAssetUrl(path, this.wasmDir + path);
                         }
                         if (path.endsWith('.model')) {
-                            return '/wasm/rftagger-ldt.model';
+                            return resolveAssetUrl(path, this.modelUrl);
                         }
                         return path;
                     }
@@ -150,7 +139,7 @@ export class WasmTagger {
             throw new Error('RFTagger instance not created');
         }
         try {
-            const response = await fetch(this.modelUrl);
+            const response = await fetch(resolveAssetUrl(this.modelUrl, this.modelUrl));
             if (!response.ok) {
                 throw new Error(`Failed to fetch model: ${response.status} ${response.statusText}`);
             }

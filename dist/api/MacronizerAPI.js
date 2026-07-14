@@ -80,7 +80,11 @@ export class MacronizerAPI {
             } : null,
             startIndex: t.startIndex,
             endIndex: t.endIndex,
-            accented: t.accented
+            accented: t.accented,
+            accentedSources: t.accentedSources,
+            hasenclitic: t.hasenclitic,
+            isenclitic: t.isenclitic,
+            startssentence: t.startssentence
         }));
         return {
             original: result.original,
@@ -116,6 +120,10 @@ export class MacronizerAPI {
     isWordlistLoaded() {
         var _a, _b;
         return (_b = (_a = this.macronizer) === null || _a === void 0 ? void 0 : _a.isWordlistLoaded()) !== null && _b !== void 0 ? _b : false;
+    }
+    getWordlistEntryCount() {
+        var _a;
+        return ((_a = this.macronizer) === null || _a === void 0 ? void 0 : _a.getWordlistEntryCount()) || 0;
     }
     getWordlistMode() {
         var _a, _b;

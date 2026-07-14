@@ -459,6 +459,10 @@ export class Tokenization {
             let accented = [];
             let isUnknown = false;
             let isAmbiguous = false;
+            // Which wordlist row each accented form came from — informational only, so the UI
+            // can show the lemma and grammar of each reading instead of the token's single
+            // best-frequency lemma. Never read by the macronization itself.
+            let accentedSources = [];
             // Special enclitic cases
             if (token.isenclitic) {
                 accented = [token.text.toLowerCase() === 'ue' ? 've' : token.text.toLowerCase()];
@@ -483,6 +487,11 @@ export class Tokenization {
                 const loweredAccenteds = entries.map(e => e.accentedUnderscore.toLowerCase());
                 if (entries.length > 0 && new Set(loweredAccenteds).size === 1) {
                     accented = [loweredAccenteds[0]];
+                    accentedSources = [{
+                            accented: loweredAccenteds[0],
+                            lemma: entries[0].lemma,
+                            tag: entries[0].tag
+                        }];
                 }
                 else if (entries.length > 0) {
                     // Multiple candidates: rank exactly like Python candidates.sort() on
@@ -497,7 +506,8 @@ export class Tokenization {
                         const casedist = (isCapital === isTitleCase(lexLemma) || (token.startssentence && isCapital)) ? 0 : 1;
                         const tagdist = tagDistance(tag, lexTag);
                         const lemdist = levenshteinDistance(lemma, lexLemma);
-                        candidates.push({ casedist, tagdist, lemdist, accented: entry.accentedUnderscore });
+                        candidates.push({ casedist, tagdist, lemdist, accented: entry.accentedUnderscore,
+                            lemma: lexLemma, lexTag });
                     }
                     candidates.sort((a, b) => (a.casedist - b.casedist) ||
                         (a.tagdist - b.tagdist) ||
@@ -509,6 +519,7 @@ export class Tokenization {
                     for (const c of candidates) {
                         if (c.casedist === bestCasedist && !accented.includes(c.accented)) {
                             accented.push(c.accented);
+                            accentedSources.push({ accented: c.accented, lemma: c.lemma, tag: c.lexTag });
                         }
                     }
                     isAmbiguous = accented.length > 1;
@@ -534,6 +545,7 @@ export class Tokenization {
             // Update token with accented candidates and flags
             this.tokens[idx] = token.with({
                 accented,
+                accentedSources,
                 isAmbiguous,
                 isUnknown
             });

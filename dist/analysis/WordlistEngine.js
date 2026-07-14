@@ -5,6 +5,7 @@
  * Integrates with Morpheus for unknown words
  */
 import { unicodeToUnderscore, toAscii } from '../utils/latin.js';
+import { fetchMaybeGzipped } from '../utils/assets.js';
 export class WordlistEngine {
     constructor() {
         Object.defineProperty(this, "db", {
@@ -270,6 +271,8 @@ export class WordlistEngine {
             const request = store.clear();
             request.onsuccess = () => {
                 this.entryCount = 0;
+                this.nextSeq = 0;
+                this.loaded = false;
                 resolve();
             };
             request.onerror = () => reject(request.error);
@@ -365,12 +368,15 @@ export class WordlistEngine {
     /**
      * Load wordlist from URL (fetch + parse)
      */
+    /**
+     * Load wordlist from URL. A `.gz` URL is decompressed in the browser
+     * (32MB of text ships as ~4MB); it falls back to the uncompressed file
+     * if the .gz is missing or the browser cannot gunzip.
+     */
     async loadFromUrl(url, onProgress) {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to load wordlist: ${response.status} ${response.statusText}`);
-        }
-        const text = await response.text();
+        const fallbackUrl = url.endsWith('.gz') ? url.slice(0, -3) : undefined;
+        const bytes = await fetchMaybeGzipped(url, fallbackUrl);
+        const text = new TextDecoder('utf-8').decode(bytes);
         await this.loadFromText(text, onProgress);
     }
     /**

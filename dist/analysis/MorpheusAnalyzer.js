@@ -5,6 +5,7 @@
  * Provides clean API for analyzing Latin words using Morpheus engine
  * compiled to WebAssembly. Matches Python latin_macronizer.wordlist.crunchwords()
  */
+import { resolveAssetUrl } from '../utils/assets.js';
 // PrntFlags from prntflags.h (decimal values)
 const SHOW_ANAL = 1; // 0o1
 const SHOW_LEMMA = 2; // 0o2
@@ -85,11 +86,12 @@ export class MorpheusAnalyzer {
             const wasmDir = this.wasmPath.substring(0, this.wasmPath.lastIndexOf('/') + 1);
             Module['locateFile'] = (path, prefix) => {
                 if (path.endsWith('.data') || path.endsWith('.wasm')) {
-                    return wasmDir + path;
+                    // Prefer the host page's prefetched blob, else we re-download the file.
+                    return resolveAssetUrl(path, wasmDir + path);
                 }
                 return prefix + path;
             };
-            this.wasmModule = await Module();
+            this.wasmModule = await Module({ locateFile: Module['locateFile'] });
             this.log('Module instantiated');
             if (!this.wasmModule.ccall) {
                 throw new Error('WASM module does not have ccall method');

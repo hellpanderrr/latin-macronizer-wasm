@@ -8,8 +8,7 @@ import { resolveAssetUrl } from '../utils/assets.js';
 
 export interface WasmTaggerOptions {
   wasmPath?: string;      // Path to the WASM JavaScript wrapper (default: '../wasm/rftagger.js')
-  modelPath?: string;     // Virtual FS path for model (default: '/models/rftagger-ldt.model')
-  modelUrl?: string;      // URL to fetch model from (default: '../wasm/rftagger-ldt.model')
+  modelUrl?: string;      // URL to fetch the model from (default: '/wasm/rftagger-ldt.model')
   memorySize?: number;
   enableCache?: boolean;
 }
@@ -28,7 +27,6 @@ export class WasmTagger {
   private tagger: any;
   private modelLoaded: boolean = false;
   private cache: Map<string, TagResult[]>;
-  private readonly modelPath: string;
   private readonly wasmPath: string;
   private readonly wasmDir: string;
   private readonly modelUrl: string;
@@ -37,7 +35,6 @@ export class WasmTagger {
   private readonly debugMode: boolean;
 
   constructor(options: WasmTaggerOptions = {}) {
-    this.modelPath = options.modelPath || '/wasm/rftagger-ldt.model';
     const effectiveWasmPath = options.wasmPath || '../wasm/rftagger.js';
     this.wasmPath = effectiveWasmPath;
     this.wasmDir = effectiveWasmPath.substring(0, effectiveWasmPath.lastIndexOf('/') + 1);
@@ -77,7 +74,8 @@ export class WasmTagger {
     if (globalRFTagger && typeof globalRFTagger === 'function') {
       return await globalRFTagger({
         printErr: () => {},
-        locateFile: (path: string) => resolveAssetUrl(path, '/wasm/' + path)
+        locateFile: (path: string) =>
+          resolveAssetUrl(path, path.endsWith('.model') ? this.modelUrl : this.wasmDir + path)
       });
     }
 
@@ -92,7 +90,7 @@ export class WasmTagger {
               return resolveAssetUrl(path, this.wasmDir + path);
             }
             if (path.endsWith('.model')) {
-              return resolveAssetUrl(path, '/wasm/rftagger-ldt.model');
+              return resolveAssetUrl(path, this.modelUrl);
             }
             return path;
           }
