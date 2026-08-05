@@ -1,0 +1,920 @@
+[
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "unius ob noxam et furias Aiacis Oilei?",
+  "norm": "unius ob noxam et furias aiacis oilei"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "Hi summo in fluctu pendent; his unda dehiscens",
+  "norm": "hi summo in fluctu pendent his unda dehiscens"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "egressi optata potiuntur Troes harena,",
+  "norm": "egressi optata potiuntur troes harena"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "accestis scopulos, vos et Cyclopea saxa",
+  "norm": "accestis scopulos vos et cyclopea saxa"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "fata tibi; cernes urbem et promissa Lavini",
+  "norm": "fata tibi cernes urbem et promissa lavini"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "imperio explebit, regnumque ab sede Lavini",
+  "norm": "imperio explebit regnumque ab sede lavini"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "qui teneant, nam inculta videt, hominesne feraene,",
+  "norm": "qui teneant nam inculta videt hominesne feraene"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "iactemur, doceas. Ignari hominumque locorumque",
+  "norm": "iactemur doceas ignari hominumque locorumque"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "educunt fetus, aut cum liquentia mella",
+  "norm": "educunt fetus aut cum liquentia mella"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "aerea cui gradibus surgebant limina, nexaeque",
+  "norm": "aerea cui gradibus surgebant limina nexaeque"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "hac Phryges, instaret curru cristatus Achilles.",
+  "norm": "hac phryges instaret curru cristatus achilles"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "per terram, et versa pulvis inscribitur hasta.",
+  "norm": "per terram et versa pulvis inscribitur hasta"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "exercet Diana choros, quam mille secutae",
+  "norm": "exercet diana choros quam mille secutae"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "hinc atque hinc glomerantur oreades; illa pharetram",
+  "norm": "hinc atque hinc glomerantur oreades illa pharetram"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "cum subito adsurgens fluctu nimbosus Orion",
+  "norm": "cum subito adsurgens fluctu nimbosus orion"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "Ilionea petit dextra, laevaque Serestum,",
+  "norm": "ilionea petit dextra laevaque serestum"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "munera laetitiamque dii.",
+  "norm": "munera laetitiamque dii"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "Pergama cum peteret inconcessosque hymenaeos,",
+  "norm": "pergama cum peteret inconcessosque hymenaeos"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "maxima natarum Priami, colloque monile",
+  "norm": "maxima natarum priami colloque monile"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "litora iactetur odiis Iunonis iniquae,",
+  "norm": "litora iactetur odiis iunonis iniquae"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "Ille ubi complexu Aeneae colloque pependit",
+  "norm": "ille ubi complexu aeneae colloque pependit"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "atria; dependent lychni laquearibus aureis",
+  "norm": "atria dependent lychni laquearibus aureis"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "quidve petunt? quae religio? aut quae machina belli?'",
+  "norm": "quidve petunt quae religio aut quae machina belli"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "neu populum antiqua sub religione tueri.",
+  "norm": "neu populum antiqua sub religione tueri"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "obicitur magis atque improvida pectora turbat.",
+  "norm": "obicitur magis atque improvida pectora turbat"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "perfusus sanie vittas atroque veneno,",
+  "norm": "perfusus sanie vittas atroque veneno"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "effugiunt saevaeque petunt Tritonidis arcem,",
+  "norm": "effugiunt saevaeque petunt tritonidis arcem"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "subiciunt lapsus, et stuppea vincula collo",
+  "norm": "subiciunt lapsus et stuppea vincula collo"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "exoritur clamorque virum clangorque tubarum.",
+  "norm": "exoritur clamorque virum clangorque tubarum"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "Ecce autem telis Panthus elapsus Achivum,",
+  "norm": "ecce autem telis panthus elapsus achivum"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "Panthus Othryades, arcis Phoebique sacerdos,",
+  "norm": "panthus othryades arcis phoebique sacerdos"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "corpora perque domos et religiosa deorum",
+  "norm": "corpora perque domos et religiosa deorum"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "luctus, ubique pavor et plurima mortis imago.",
+  "norm": "luctus ubique pavor et plurima mortis imago"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "nostrorum obruimur oriturque miserrima caedes",
+  "norm": "nostrorum obruimur oriturque miserrima caedes"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "religione patrum multos servata per annos;",
+  "norm": "religione patrum multos servata per annos"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "quem non incusavi amens hominumque deorumque,",
+  "norm": "quem non incusavi amens hominumque deorumque"
+ },
+ {
+  "file": "aeneid-2.txt",
+  "meter": "dactylichexameter",
+  "line": "obstipui, steteruntque comae et uox faucibus haesit.",
+  "norm": "obstipui steteruntque comae et uox faucibus haesit"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "(Thraces arant) acri quondam regnata Lycurgo,",
+  "norm": "thraces arant acri quondam regnata lycurgo"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "obstipui steteruntque comae et vox faucibus haesit.",
+  "norm": "obstipui steteruntque comae et vox faucibus haesit"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "ui potitur. quid non mortalia pectora cogis,",
+  "norm": "ui potitur quid non mortalia pectora cogis"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "liminaque laurusque dei, totusque moveri",
+  "norm": "liminaque laurusque dei totusque moveri"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "Idaeumque nemus, hinc fida silentia sacris,",
+  "norm": "idaeumque nemus hinc fida silentia sacris"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "Idomenea ducem, desertaque litora Cretae,",
+  "norm": "idomenea ducem desertaque litora cretae"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "nauticus exoritur vario certamine clamor:",
+  "norm": "nauticus exoritur vario certamine clamor"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "iam medio apparet fluctu nemorosa Zacynthos",
+  "norm": "iam medio apparet fluctu nemorosa zacynthos"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "Dulichiumque Sameque et Neritos ardua saxis.",
+  "norm": "dulichiumque sameque et neritos ardua saxis"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "subicio et raris turbatus vocibus hisco:",
+  "norm": "subicio et raris turbatus vocibus hisco"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "ecqua tamen puero est amissae cura parentis?",
+  "norm": "ecqua tamen puero est amissae cura parentis"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "religio, et cuncti suaserunt numine divi",
+  "norm": "religio et cuncti suaserunt numine divi"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "hac casti maneant in religione nepotes.",
+  "norm": "hac casti maneant in religione nepotes"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "nec revocare situs aut iungere carmina curat:",
+  "norm": "nec revocare situs aut iungere carmina curat"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "umentemque Aurora polo dimoverat umbram,",
+  "norm": "umentemque aurora polo dimoverat umbram"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "deseruere. domus sanie dapibusque cruentis,",
+  "norm": "deseruere domus sanie dapibusque cruentis"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "frangeret ad saxum, sanieque aspersa natarent",
+  "norm": "frangeret ad saxum sanieque aspersa natarent"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "infandi Cyclopes et altis montibus errant.",
+  "norm": "infandi cyclopes et altis montibus errant"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "excitum ruit ad portus et litora complent.",
+  "norm": "excitum ruit ad portus et litora complent"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "constiterunt, silva alta Iovis lucusve Dianae.",
+  "norm": "constiterunt silva alta iovis lucusve dianae"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "contra iussa monent Heleni, Scyllamque Charybdinque",
+  "norm": "contra iussa monent heleni scyllamque charybdinque"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "umentemque Aurora polo dimoverat umbram,",
+  "norm": "umentemque aurora polo dimoverat umbram"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "solane perpetua maerens carpere iuventa",
+  "norm": "solane perpetua maerens carpere iuventa"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "dum pelago desaevit hiems et aquosus Orion,",
+  "norm": "dum pelago desaevit hiems et aquosus orion"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "pectoribus inhians spirantia consulit exta.",
+  "norm": "pectoribus inhians spirantia consulit exta"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "Cretesque Dryopesque fremunt pictique Agathyrsi;",
+  "norm": "cretesque dryopesque fremunt pictique agathyrsi"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "subnexus, rapto potitur: nos munera templis",
+  "norm": "subnexus rapto potitur nos munera templis"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "tum sic Mercurium adloquitur ac talia mandat:",
+  "norm": "tum sic mercurium adloquitur ac talia mandat"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "Mnesthea Sergestumque vocat fortemque Serestum,",
+  "norm": "mnesthea sergestumque vocat fortemque serestum"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "bacchatur, qualis commotis excita sacris",
+  "norm": "bacchatur qualis commotis excita sacris"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "Italiam non sponte sequor.'",
+  "norm": "italiam non sponte sequor"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "et matri praereptus amor.",
+  "norm": "et matri praereptus amor"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "superbis",
+  "norm": "superbis"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "his, germana, malis oneras atque obicis hosti.",
+  "norm": "his germana malis oneras atque obicis hosti"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "omnia Mercurio similis, vocemque coloremque",
+  "norm": "omnia mercurio similis vocemque coloremque"
+ },
+ {
+  "file": "aeneid-4.txt",
+  "meter": "dactylichexameter",
+  "line": "imprecor, arma armis: pugnent ipsique nepotesque.'",
+  "norm": "imprecor arma armis pugnent ipsique nepotesque"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "subiciunt veribus prunas et viscera torrent.",
+  "norm": "subiciunt veribus prunas et viscera torrent"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "infindunt pariter sulcos, totumque dehiscit",
+  "norm": "infindunt pariter sulcos totumque dehiscit"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "non tam praecipites biiugo certamine campum",
+  "norm": "non tam praecipites biiugo certamine campum"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "Sergesto Mnestheique, Gyan superare morantem.",
+  "norm": "sergesto mnestheique gyan superare morantem"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "olli serva datur operum haud ignara Minervae,",
+  "norm": "olli serva datur operum haud ignara minervae"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "Nisus et Euryalus primi,",
+  "norm": "nisus et euryalus primi"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "Euryalus forma insignis viridique iuventa,",
+  "norm": "euryalus forma insignis viridique iuventa"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "tertius Argolica hac galea contentus abito.'",
+  "norm": "tertius argolica hac galea contentus abito"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "tertius Euryalus;",
+  "norm": "tertius euryalus"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "Euryalumque Helymus sequitur; quo deinde sub ipso",
+  "norm": "euryalumque helymus sequitur quo deinde sub ipso"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "non tamen Euryali, non ille oblitus amorum:",
+  "norm": "non tamen euryali non ille oblitus amorum"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "emicat Euryalus et munere victor amici",
+  "norm": "emicat euryalus et munere victor amici"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "tutatur favor Euryalum lacrimaeque decorae,",
+  "norm": "tutatur favor euryalum lacrimaeque decorae"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "dat Salio villis onerosum atque unguibus aureis.",
+  "norm": "dat salio villis onerosum atque unguibus aureis"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "haec fatus duplicem ex umeris reiecit amictum",
+  "norm": "haec fatus duplicem ex umeris reiecit amictum"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "et magnos membrorum artus, magna ossa lacertosque",
+  "norm": "et magnos membrorum artus magna ossa lacertosque"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "ostentans artemque pater arcumque sonantem.",
+  "norm": "ostentans artemque pater arcumque sonantem"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "hic oculis subitum obicitur magnoque futurum",
+  "norm": "hic oculis subitum obicitur magnoque futurum"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "conicit et faciemque deae vestemque reponit;",
+  "norm": "conicit et faciemque deae vestemque reponit"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "coniciunt. furit immissis Volcanus habenis",
+  "norm": "coniciunt furit immissis volcanus habenis"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "robora navigiis, aptant remosque rudentisque,",
+  "norm": "robora navigiis aptant remosque rudentisque"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "exoritur procurva ingens per litora fletus;",
+  "norm": "exoritur procurva ingens per litora fletus"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "aera dimovit tenebrosum et dispulit umbras,",
+  "norm": "aera dimovit tenebrosum et dispulit umbras"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "nusquam amittebat oculosque sub astra tenebat.",
+  "norm": "nusquam amittebat oculosque sub astra tenebat"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "Tros' ait 'Aenea? cessas? neque enim ante dehiscent",
+  "norm": "tros ait aenea cessas neque enim ante dehiscent"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "(sed terrae graviora manent), in regna Lavini",
+  "norm": "sed terrae graviora manent in regna lavini"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "itque reditque viam totiens. quid Thesea, magnum",
+  "norm": "itque reditque viam totiens quid thesea magnum"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "coniciunt. pars ingenti subiere feretro,",
+  "norm": "coniciunt pars ingenti subiere feretro"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "pingue super oleum fundens ardentibus extis.",
+  "norm": "pingue super oleum fundens ardentibus extis"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "et Metus et malesuada Fames ac turpis Egestas,",
+  "norm": "et metus et malesuada fames ac turpis egestas"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "terribiles visu formae, Letumque Labosque;",
+  "norm": "terribiles visu formae letumque labosque"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "tum consanguineus Leti Sopor et mala mentis",
+  "norm": "tum consanguineus leti sopor et mala mentis"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "ferreique Eumenidum thalami et Discordia demens",
+  "norm": "ferreique eumenidum thalami et discordia demens"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "inice, namque potes, portusque require Velinos;",
+  "norm": "inice namque potes portusque require velinos"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "accepisse lacu, nec Thesea Pirithoumque,",
+  "norm": "accepisse lacu nec thesea pirithoumque"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "deturbat laxatque foros; simul accipit alveo",
+  "norm": "deturbat laxatque foros simul accipit alveo"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "obicit. ille fame rabida tria guttura pandens",
+  "norm": "obicit ille fame rabida tria guttura pandens"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "nomen et arma locum servant; te, amice, nequivi",
+  "norm": "nomen et arma locum servant te amice nequivi"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "vidi et crudelis dantem Salmonea poenas,",
+  "norm": "vidi et crudelis dantem salmonea poenas"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "quos super atra silex iam iam lapsura cadentique",
+  "norm": "quos super atra silex iam iam lapsura cadentique"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "largior hic campos aether et lumine vestit",
+  "norm": "largior hic campos aether et lumine vestit"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "pars pedibus plaudunt choreas et carmina dicunt.",
+  "norm": "pars pedibus plaudunt choreas et carmina dicunt"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "et Capys et Numitor et qui te nomine reddet",
+  "norm": "et capys et numitor et qui te nomine reddet"
+ },
+ {
+  "file": "aeneid-6.txt",
+  "meter": "dactylichexameter",
+  "line": "hi tibi Nomentum et Gabios urbemque Fidenam,",
+  "norm": "hi tibi nomentum et gabios urbemque fidenam"
+ },
+ {
+  "file": "catullus-LXII.txt",
+  "meter": "dactylichexameter",
+  "line": "iam veniet virgo, iam dicetur hymenaeus.",
+  "norm": "iam veniet virgo iam dicetur hymenaeus"
+ },
+ {
+  "file": "catullus-LXII.txt",
+  "meter": "dactylichexameter",
+  "line": "tertia sola tua est: noli pugnare duobus,",
+  "norm": "tertia sola tua est noli pugnare duobus"
+ },
+ {
+  "file": "catullus-LXII.txt",
+  "meter": "dactylichexameter",
+  "line": "qui genero suo iura simul cum dote dederunt.",
+  "norm": "qui genero suo iura simul cum dote dederunt"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "tum Thetis humanos non despexit hymenaeos,",
+  "norm": "tum thetis humanos non despexit hymenaeos"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "tene Thetis tenuit pulcerrima Nereine?",
+  "norm": "tene thetis tenuit pulcerrima nereine"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "tene suam Tethys concessit ducere neptem,",
+  "norm": "tene suam tethys concessit ducere neptem"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "non glebam prono convellit vomere taurus,",
+  "norm": "non glebam prono convellit vomere taurus"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "Thesea cedentem celeri cum classe tuetur",
+  "norm": "thesea cedentem celeri cum classe tuetur"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "utpote fallaci quae tum primum excita somno",
+  "norm": "utpote fallaci quae tum primum excita somno"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "misera, assiduis quam luctibus externavit",
+  "norm": "misera assiduis quam luctibus externavit"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "omnibus his Thesei dulcem praeoptarit amorem:",
+  "norm": "omnibus his thesei dulcem praeoptarit amorem"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "Eumenides, quibus anguino redimita capillo",
+  "norm": "eumenides quibus anguino redimita capillo"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "quandoquidem fortuna mea ac tua feruida virtus",
+  "norm": "quandoquidem fortuna mea ac tua feruida virtus"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "Thesea ceu pulsae ventorum flamine nubes",
+  "norm": "thesea ceu pulsae ventorum flamine nubes"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "aereum nivei montis liquere cacumen.",
+  "norm": "aereum nivei montis liquere cacumen"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "amissum credens immiti Thesea fato.",
+  "norm": "amissum credens immiti thesea fato"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "harum pars tecta quatiebant cuspide thyrsos,",
+  "norm": "harum pars tecta quatiebant cuspide thyrsos"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "horrificans Zephyrus procliuas incitat undas,",
+  "norm": "horrificans zephyrus procliuas incitat undas"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "ad se quisque vago passim pede discedebant.",
+  "norm": "ad se quisque vago passim pede discedebant"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "persolvit pendens e verticibus praeruptis.",
+  "norm": "persolvit pendens e verticibus praeruptis"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "o decus eximium magnis virtutibus augens,",
+  "norm": "o decus eximium magnis virtutibus augens"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "currite ducentes subtegmina, currite, fusi.",
+  "norm": "currite ducentes subtegmina currite fusi"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "cuius iter caesis angustans corporum acervis",
+  "norm": "cuius iter caesis angustans corporum acervis"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "currite ducentes subtegmina, currite, fusi.",
+  "norm": "currite ducentes subtegmina currite fusi"
+ },
+ {
+  "file": "catullus-LXIV.txt",
+  "meter": "dactylichexameter",
+  "line": "nec se contingi patiuntur lumine claro.",
+  "norm": "nec se contingi patiuntur lumine claro"
+ },
+ {
+  "file": "catullus-CI.txt",
+  "meter": "elegiacdistichs",
+  "line": "quandoquidem fortuna mihi tete abstulit ipsum.",
+  "norm": "quandoquidem fortuna mihi tete abstulit ipsum"
+ },
+ {
+  "file": "catullus-II.txt",
+  "meter": "hendecasyllable",
+  "line": "et solacium sui doloris,",
+  "norm": "et solacium sui doloris"
+ },
+ {
+  "file": "catullus-II.txt",
+  "meter": "hendecasyllable",
+  "line": "tam gratum [est/es] mihi quam ferunt puellae,",
+  "norm": "tam gratum est es mihi quam ferunt puellae"
+ },
+ {
+  "file": "catullus-II.txt",
+  "meter": "hendecasyllable",
+  "line": "quod zonam soluit diu ligitam.",
+  "norm": "quod zonam soluit diu ligitam"
+ },
+ {
+  "file": "catullus-VI.txt",
+  "meter": "hendecasyllable",
+  "line": "ni sint illepidae atque inelegantes,",
+  "norm": "ni sint illepidae atque inelegantes"
+ },
+ {
+  "file": "catullus-VI.txt",
+  "meter": "hendecasyllable",
+  "line": "sertis ac Syrio fragrans olivo,",
+  "norm": "sertis ac syrio fragrans olivo"
+ },
+ {
+  "file": "catullus-VI.txt",
+  "meter": "hendecasyllable",
+  "line": "dic nobis. Volo te ac tuos amores",
+  "norm": "dic nobis volo te ac tuos amores"
+ },
+ {
+  "file": "catullus-VII.txt",
+  "meter": "hendecasyllable",
+  "line": "lasarpiciferis iacet Cyrenis",
+  "norm": "lasarpiciferis iacet cyrenis"
+ },
+ {
+  "file": "catullus-X.txt",
+  "meter": "hendecasyllable",
+  "line": "deferri.\" \"Mane,\" inquii puellae,",
+  "norm": "deferri mane inquii puellae"
+ },
+ {
+  "file": "catullus-XIII.txt",
+  "meter": "hendecasyllable",
+  "line": "nam unguentum dabo, quod meae puellae",
+  "norm": "nam unguentum dabo quod meae puellae"
+ },
+ {
+  "file": "catullus-XIV.txt",
+  "meter": "hendecasyllable",
+  "line": "Vos hinc interea valete abite",
+  "norm": "vos hinc interea valete abite"
+ }
+]

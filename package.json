@@ -11,6 +11,7 @@
     "dev": "tsc --watch",
     "test": "jest",
     "test:parity": "node test/e2e/parity-node.mjs",
+    "test:scansion": "node test/e2e/test-scansion-corpus.mjs",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "eslint src/**/*.ts",
