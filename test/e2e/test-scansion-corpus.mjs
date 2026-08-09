@@ -79,6 +79,8 @@ function normalizeLine(line) {
 
 // Canonical verses that MUST scan — regression protection.
 // Verified as of 2026-08-05: each scans cleanly in the current build.
+// 2026-08-09: added the -ērunt/-ĕrunt alternation fixes (Aen 2.774 obstipuī,
+// Aen 6.212 cōnstitērunt) — the needle matches both the uox and vox spellings.
 const GOLDEN = [
   // { meter, needle } — needle is a distinctive normalized fragment of the line.
   { meter: 'hendecasyllable', needle: 'iam tum cum ausus es unus italorum' },   // Catullus 1.5 — italorum fix
@@ -86,6 +88,8 @@ const GOLDEN = [
   { meter: 'hendecasyllable', needle: 'vivamus mea lesbia atque amemus' },      // Catullus 5.1
   { meter: 'dactylichexameter', needle: 'arma virumque cano troiae qui primus ab oris' }, // Aen 1.1
   { meter: 'hendecasyllable', needle: 'quare habe tibi quidquid hoc libelli' }, // Catullus 1.8
+  { meter: 'dactylichexameter', needle: 'obstipui steteruntque comae et' },     // Aen 2.774 — -ērunt/-ĕrunt fix (uox + vox)
+  { meter: 'dactylichexameter', needle: 'constiterunt silva alta iovis' },      // Aen 6.212 — -ērunt/-ĕrunt fix
 ];
 
 async function createMacronizer() {
@@ -144,10 +148,14 @@ async function main() {
   // ---- 1. Golden lines must scan ----
   console.log('=== Golden lines (must scan) ===');
   const goldenByNeedle = new Map();
-  await collectFailures(m, ({ meter, line }) => {
+  await collectFailures(m, ({ meter, line, feet }) => {
     const n = normalizeLine(line);
+    const scanned = feet !== undefined && feet !== '';
     for (const g of GOLDEN) {
-      if (g.meter === meter && n.includes(g.needle)) goldenByNeedle.set(g.needle, true);
+      // Only a line that actually SCANNED (non-empty feet) counts as passing.
+      // (The feet check is the whole point of the golden list — without it a
+      // golden line that stopped scanning would silently pass.)
+      if (g.meter === meter && n.includes(g.needle) && scanned) goldenByNeedle.set(g.needle, true);
     }
   });
   for (const g of GOLDEN) {

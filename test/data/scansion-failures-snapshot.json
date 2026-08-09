@@ -216,22 +216,10 @@
   "norm": "quem non incusavi amens hominumque deorumque"
  },
  {
-  "file": "aeneid-2.txt",
-  "meter": "dactylichexameter",
-  "line": "obstipui, steteruntque comae et uox faucibus haesit.",
-  "norm": "obstipui steteruntque comae et uox faucibus haesit"
- },
- {
   "file": "aeneid-3.txt",
   "meter": "dactylichexameter",
   "line": "(Thraces arant) acri quondam regnata Lycurgo,",
   "norm": "thraces arant acri quondam regnata lycurgo"
- },
- {
-  "file": "aeneid-3.txt",
-  "meter": "dactylichexameter",
-  "line": "obstipui steteruntque comae et vox faucibus haesit.",
-  "norm": "obstipui steteruntque comae et vox faucibus haesit"
  },
  {
   "file": "aeneid-3.txt",
@@ -334,12 +322,6 @@
   "meter": "dactylichexameter",
   "line": "excitum ruit ad portus et litora complent.",
   "norm": "excitum ruit ad portus et litora complent"
- },
- {
-  "file": "aeneid-3.txt",
-  "meter": "dactylichexameter",
-  "line": "constiterunt, silva alta Iovis lucusve Dianae.",
-  "norm": "constiterunt silva alta iovis lucusve dianae"
  },
  {
   "file": "aeneid-3.txt",

@@ -150,3 +150,30 @@ Statistical POS taggers (like RFTagger) rely on accurate sentence contexts. In L
 
 ### 10. Emscripten WASM vs Native GCC Statistical Tagger Parity
 Even with identical models (`rftagger-ldt.model`), a compiled WebAssembly binary (via Emscripten) might occasionally yield slightly different tag transitions compared to a native GCC-compiled Linux binary due to floating point precision and optimization differences during Viterbi decoding. These differences affect highly ambiguous words (like `omnis`/`lingua` case declensions) but do not impact the correctness of the pipeline architecture.
+
+### 11. Scansion: the -ērunt/-ĕrunt alternation, NOT a ui-diphthong (M-013)
+The original M-013 analysis blamed Aen 2.774 "obstipui, steteruntque" on the
+engine not treating word-final `ui` as a diphthong. That was WRONG, and the
+correction is a general lesson about diagnosing scansion failures:
+- **Gold-quantity experiment first.** Feed the gold per-word quantities
+  (hypotactic.com's macronized Aeneid) into `scanVerse`. If the line still
+  fails with gold quantities, it's a PROSODY-model gap, not a wordlist gap.
+  Only ~1/4 of the corpus failures fixed with gold — the rest were model gaps.
+- **The real mechanism:** the 3rd-pl-perfect -ērunt/-ĕrunt alternation. The
+  wordlist marks `stetērunt`/`cōnstitērunt` with long ē, but the poetic
+  license allows it short. `separateAmbiguousVowels` now rewrites a trailing
+  `[aeiouy]_runt` to `_^` (ambiguous) so both lengths result. This fixed the
+  obstipuī line and cōnstitērunt with linguistically-correct readings.
+- **A tempting `ui`-diphthong merge was a FALSE POSITIVE** — it turned
+  obstupuī into a 3-syllable `LSL` (it's genuinely 4: ob-sti-pu-ī) and caused
+  a 44-line corpus regression (sanguine/anguis: `gu` makes the u consonantal).
+  A scansion "fix" that corrupts the quantity of the very word it unlocks is a
+  wrong reading — the automaton found A path, not THE correct one. Always
+  print the chosen accented forms and eyeball them.
+- **A golden-line regression gate only works if it checks `feet`.** The corpus
+  gate previously marked a needle as passing just because a matching line
+  existed — a golden line that stopped scanning would silently pass. It now
+  requires non-empty feet for that line.
+- **RFTagger POS differs per-line vs whole-file**, so a line that scans alone
+  (different POS → different accents) may still fail in the full file. Judge
+  fixes by the whole-file gate, not by per-line runs.
