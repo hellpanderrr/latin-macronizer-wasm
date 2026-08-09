@@ -397,9 +397,9 @@ export function scanVerses(
 
     // End of verse (newline or last token)
     if (token.text.includes('\n') || index === tokens.length - 1) {
+      const newlineCount = (token.text.match(/\n/g) || []).length;
       if (verse.length > 0) {
         const { indexAccentPairs, feet } = scanVerse(verse, meterAutomatons[automatonIndex]);
-        const newlineCount = (token.text.match(/\n/g) || []).length;
         scannedFeet.push(feet);
         for (let nl = 1; nl < newlineCount; nl++) {
           scannedFeet.push('');
@@ -420,6 +420,15 @@ export function scanVerses(
         automatonIndex++;
         if (automatonIndex === meterAutomatons.length) {
           automatonIndex = 0;
+        }
+      } else {
+        // Empty verse (e.g. a divider line with no words): emit empty-foot
+        // placeholders so scannedFeet stays index-aligned with the source
+        // lines. Previously these lines emitted nothing, shifting every
+        // subsequent line's feet and producing spurious scansion failures.
+        // Do NOT advance the meter automaton — an empty line is not a verse.
+        for (let nl = 0; nl < newlineCount; nl++) {
+          scannedFeet.push('');
         }
       }
     }

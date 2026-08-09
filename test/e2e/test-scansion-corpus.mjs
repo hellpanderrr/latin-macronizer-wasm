@@ -138,9 +138,15 @@ async function collectFailures(m, onLine) {
       }
       const feet = result.scannedFeet || [];
       for (let i = 0; i < lines.length; i++) {
+        // Skip non-verse lines (e.g. the "* * * * * * * *" dividers in the
+        // Catullus files): they have empty feet by design and are not scansion
+        // failures. The engine now emits an empty placeholder for them so the
+        // feet array stays index-aligned with lines.
+        const norm = normalizeLine(lines[i]);
+        if (!norm) continue;
         if (onLine) onLine({ file, meter, line: lines[i], feet: feet[i] });
         if (feet[i] === undefined || feet[i] === '') {
-          failures.push({ file, meter, line: lines[i], norm: normalizeLine(lines[i]) });
+          failures.push({ file, meter, line: lines[i], norm });
         }
       }
     }

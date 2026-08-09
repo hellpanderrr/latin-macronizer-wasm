@@ -81,8 +81,11 @@ async function main() {
       }
       const feet = result.scannedFeet || [];
       for (let i = 0; i < lines.length; i++) {
+        // Skip non-verse lines (dividers) — must match the gate's collectFailures.
+        const norm = normalizeLine(lines[i]);
+        if (!norm) continue;
         if (feet[i] === undefined || feet[i] === '') {
-          failures.push({ file, meter, line: lines[i], norm: normalizeLine(lines[i]) });
+          failures.push({ file, meter, line: lines[i], norm });
         }
       }
     }

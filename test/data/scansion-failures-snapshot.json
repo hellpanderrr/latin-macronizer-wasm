@@ -630,18 +630,6 @@
   "norm": "iam veniet virgo iam dicetur hymenaeus"
  },
  {
-  "file": "catullus-LXII.txt",
-  "meter": "dactylichexameter",
-  "line": "tertia sola tua est: noli pugnare duobus,",
-  "norm": "tertia sola tua est noli pugnare duobus"
- },
- {
-  "file": "catullus-LXII.txt",
-  "meter": "dactylichexameter",
-  "line": "qui genero suo iura simul cum dote dederunt.",
-  "norm": "qui genero suo iura simul cum dote dederunt"
- },
- {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
   "line": "tum Thetis humanos non despexit hymenaeos,",
@@ -722,56 +710,50 @@
  {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
-  "line": "harum pars tecta quatiebant cuspide thyrsos,",
-  "norm": "harum pars tecta quatiebant cuspide thyrsos"
+  "line": "pars e divolso iactabant membra iuvenco,",
+  "norm": "pars e divolso iactabant membra iuvenco"
  },
  {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
-  "line": "horrificans Zephyrus procliuas incitat undas,",
-  "norm": "horrificans zephyrus procliuas incitat undas"
+  "line": "Aurora exoriente vagi sub limina Solis,",
+  "norm": "aurora exoriente vagi sub limina solis"
  },
  {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
-  "line": "ad se quisque vago passim pede discedebant.",
-  "norm": "ad se quisque vago passim pede discedebant"
+  "line": "quorum post abitum princeps e vertice Pelei",
+  "norm": "quorum post abitum princeps e vertice pelei"
  },
  {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
-  "line": "persolvit pendens e verticibus praeruptis.",
-  "norm": "persolvit pendens e verticibus praeruptis"
+  "line": "inde pater divum sancta cum coniuge natisque",
+  "norm": "inde pater divum sancta cum coniuge natisque"
  },
  {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
-  "line": "o decus eximium magnis virtutibus augens,",
-  "norm": "o decus eximium magnis virtutibus augens"
+  "line": "Emathiae tutamen, Opis carissime nato,",
+  "norm": "emathiae tutamen opis carissime nato"
  },
  {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
-  "line": "currite ducentes subtegmina, currite, fusi.",
-  "norm": "currite ducentes subtegmina currite fusi"
+  "line": "testis erit magnis virtutibus unda Scamandri,",
+  "norm": "testis erit magnis virtutibus unda scamandri"
  },
  {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
-  "line": "cuius iter caesis angustans corporum acervis",
-  "norm": "cuius iter caesis angustans corporum acervis"
+  "line": "alta tepefaciet permixta flumina caede.",
+  "norm": "alta tepefaciet permixta flumina caede"
  },
  {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
-  "line": "currite ducentes subtegmina, currite, fusi.",
-  "norm": "currite ducentes subtegmina currite fusi"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
-  "line": "nec se contingi patiuntur lumine claro.",
-  "norm": "nec se contingi patiuntur lumine claro"
+  "line": "talia praefantes quondam felicia Pelei",
+  "norm": "talia praefantes quondam felicia pelei"
  },
  {
   "file": "catullus-CI.txt",
