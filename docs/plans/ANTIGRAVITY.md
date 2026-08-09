@@ -177,3 +177,23 @@ correction is a general lesson about diagnosing scansion failures:
 - **RFTagger POS differs per-line vs whole-file**, so a line that scans alone
   (different POS → different accents) may still fail in the full file. Judge
   fixes by the whole-file gate, not by per-line runs.
+
+### 12. Scansion: gold-confirmed ACCENT_OVERRIDES (wordlist quantity errors)
+After the -ērunt/-ĕrunt fix, a per-word gold comparison (hypotactic.com
+macronized Aeneid) surfaced a second fixable class: the wordlist marks some
+words' first syllable long where the edition has it short. The existing
+ACCENT_OVERRIDES map in Tokenization.ts (previously only 'italorum') is the
+right mechanism — it injects the corrected form as an extra scansion candidate
+while keeping the wordlist form primary for prose.
+- **Verify against the gold word before adding.** Each override was checked
+  against the macronized edition (Lāvini→lā-vī-nī, Orīōn→ŏ-rī-ōn,
+  dehīscēns→dĕ-hīs-cēns, ecqua→short final, Phryges→short e, Trōes→short es,
+  Dīāna→long first i — the INVERSE of the others).
+- **Judge by the whole-file gate, not per-line.** My per-line reconstruction
+  "fixed" ~21 lines, but only 10 survived the real whole-file gate (RFTagger
+  POS differs per-line vs whole-file). Always add overrides, rebuild, and run
+  test/e2e/test-scansion-corpus.mjs — the snapshot delta is the truth.
+- **Prose is untouched** because overrides append candidates; prose uses
+  accented[0] (the wordlist form). Scansion mode lets the meter pick the
+  corrected reading.
+- 10 lines fixed (150→140), zero regressions; GOLDEN list grew to 14 lines.

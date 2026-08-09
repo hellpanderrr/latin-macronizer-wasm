@@ -8,32 +8,8 @@
  {
   "file": "aeneid-1.txt",
   "meter": "dactylichexameter",
-  "line": "Hi summo in fluctu pendent; his unda dehiscens",
-  "norm": "hi summo in fluctu pendent his unda dehiscens"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
-  "line": "egressi optata potiuntur Troes harena,",
-  "norm": "egressi optata potiuntur troes harena"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
   "line": "accestis scopulos, vos et Cyclopea saxa",
   "norm": "accestis scopulos vos et cyclopea saxa"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
-  "line": "fata tibi; cernes urbem et promissa Lavini",
-  "norm": "fata tibi cernes urbem et promissa lavini"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
-  "line": "imperio explebit, regnumque ab sede Lavini",
-  "norm": "imperio explebit regnumque ab sede lavini"
  },
  {
   "file": "aeneid-1.txt",
@@ -62,32 +38,14 @@
  {
   "file": "aeneid-1.txt",
   "meter": "dactylichexameter",
-  "line": "hac Phryges, instaret curru cristatus Achilles.",
-  "norm": "hac phryges instaret curru cristatus achilles"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
   "line": "per terram, et versa pulvis inscribitur hasta.",
   "norm": "per terram et versa pulvis inscribitur hasta"
  },
  {
   "file": "aeneid-1.txt",
   "meter": "dactylichexameter",
-  "line": "exercet Diana choros, quam mille secutae",
-  "norm": "exercet diana choros quam mille secutae"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
   "line": "hinc atque hinc glomerantur oreades; illa pharetram",
   "norm": "hinc atque hinc glomerantur oreades illa pharetram"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
-  "line": "cum subito adsurgens fluctu nimbosus Orion",
-  "norm": "cum subito adsurgens fluctu nimbosus orion"
  },
  {
   "file": "aeneid-1.txt",
@@ -272,12 +230,6 @@
  {
   "file": "aeneid-3.txt",
   "meter": "dactylichexameter",
-  "line": "ecqua tamen puero est amissae cura parentis?",
-  "norm": "ecqua tamen puero est amissae cura parentis"
- },
- {
-  "file": "aeneid-3.txt",
-  "meter": "dactylichexameter",
   "line": "religio, et cuncti suaserunt numine divi",
   "norm": "religio et cuncti suaserunt numine divi"
  },
@@ -340,12 +292,6 @@
   "meter": "dactylichexameter",
   "line": "solane perpetua maerens carpere iuventa",
   "norm": "solane perpetua maerens carpere iuventa"
- },
- {
-  "file": "aeneid-4.txt",
-  "meter": "dactylichexameter",
-  "line": "dum pelago desaevit hiems et aquosus Orion,",
-  "norm": "dum pelago desaevit hiems et aquosus orion"
  },
  {
   "file": "aeneid-4.txt",
@@ -568,12 +514,6 @@
   "meter": "dactylichexameter",
   "line": "Tros' ait 'Aenea? cessas? neque enim ante dehiscent",
   "norm": "tros ait aenea cessas neque enim ante dehiscent"
- },
- {
-  "file": "aeneid-6.txt",
-  "meter": "dactylichexameter",
-  "line": "(sed terrae graviora manent), in regna Lavini",
-  "norm": "sed terrae graviora manent in regna lavini"
  },
  {
   "file": "aeneid-6.txt",

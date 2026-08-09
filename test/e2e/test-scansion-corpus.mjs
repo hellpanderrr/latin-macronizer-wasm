@@ -90,6 +90,13 @@ const GOLDEN = [
   { meter: 'hendecasyllable', needle: 'quare habe tibi quidquid hoc libelli' }, // Catullus 1.8
   { meter: 'dactylichexameter', needle: 'obstipui steteruntque comae et' },     // Aen 2.774 — -ērunt/-ĕrunt fix (uox + vox)
   { meter: 'dactylichexameter', needle: 'constiterunt silva alta iovis' },      // Aen 6.212 — -ērunt/-ĕrunt fix
+  { meter: 'dactylichexameter', needle: 'hi summo in fluctu pendent his unda dehiscens' }, // Aen 1.106 — dehiscens override
+  { meter: 'dactylichexameter', needle: 'fata tibi cernes urbem et promissa lavini' },     // Aen 1.263 — Lavini override
+  { meter: 'dactylichexameter', needle: 'cum subito adsurgens fluctu nimbosus orion' },    // Aen 1.535 — Orion override
+  { meter: 'dactylichexameter', needle: 'ecqua tamen puero est amissae cura' },            // Aen 3.488 — ecqua override
+  { meter: 'dactylichexameter', needle: 'exercet diana choros quam mille' },               // Aen 1.499 — Diana override
+  { meter: 'dactylichexameter', needle: 'hac phryges instaret curru cristatus' },          // Aen 1.102 — Phryges override
+  { meter: 'dactylichexameter', needle: 'egressi optata potiuntur troes harena' },         // Aen 1.30 — Troes override
 ];
 
 async function createMacronizer() {
