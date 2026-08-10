@@ -74,15 +74,17 @@ const ACCENT_OVERRIDES = {
     'religio': ['re^li^gi^o_', 're_li^gi^o_'],
     'religione': ['re^li^gi^o_ne', 're_li^gi^o_ne'],
     'religiosa': ['re^li^gi^o_sa', 're_li^gi^o_sa'],
-    // saniē: wordlist "sanie" (no markers) → segmentAccented gives sa-ni-e all
-    // short; gold Aen 2.221/3.618 confirms all short (SSS).
-    'sanie': ['sa^ni^e', 'sa_ni^e'],
+    // saniē (abl. sg. of sanies, 5th decl): gold sa-ni-ē (SSL, final ē LONG).
+    // Wordlist "sanie" gives SSS; mark the final e long.
+    'sanie': ['sa^ni^e_', 'sa^ni^e'],
     // līquentia (Aen 1.432): gold long li (spondaic line); 5.238/5.776 short li
     // → keep both candidates.
     'liquentia': ['li^quenti^a', 'li_quenti^a'],
-    // exoritur: gold ex-o-ri-tur (LSSL); tur long by position via following
-    // consonant. exori_tur (wordlist) wrongly marks ri long.
-    'exoritur': ['exo^ri_tur', 'exori_tur'],
+    // exoritur: gold ex-o-ri-tur (LSSL); ex long by position (x-cluster), ri
+    // short, tur long by position. exori_tur (wordlist) wrongly marks ri long.
+    'exoritur': ['exo^ri^tur', 'exori_tur'],
+    // potitur: gold po-ti-tur (SSL); wordlist po^ti_tur marks ti long.
+    'potitur': ['po^ti^tur', 'po^ti_tur'],
     // dīmōverat (Aen 3.589, 4.7): gold di-mo-ve-rat (LLSS). Wordlist dimo_verat
     // marks only mo long; add the long first di.
     'dimoverat': ['di_mo_verat', 'di^mo_verat'],
@@ -104,6 +106,38 @@ const ACCENT_OVERRIDES = {
     'coniciunt': ['co_ni^ciunt', 'coni^ciunt'],
     'conicit': ['co_ni^cit', 'coni^cit'],
     'inice': ['i_ni^ce', 'ini^ce'],
+    // ── M-013b: Greek-name quantity cluster (gold-verified, hypotactic) ──
+    // Each: wordlist form → gold per-syllable pattern.
+    // Ilionea → Ī-lĭ-o-nē-ă (LSSLS); wordlist I_li^o^nea_ gives LSSSL (final a long).
+    'ilionea': ['i_lione_a', 'i_li^one_a'],
+    // Idomenea → Ī-do-me-nē-ă (LSSLS); wordlist I_do^me^nea_ gives LSSSL.
+    'idomenea': ['i_domene_a', 'i_do^mene_a'],
+    // Mnesthea → Mnēs-the-a (LSS); wordlist Mnesthea_ gives LSL (final a long).
+    'mnesthea': ['mnesthea', 'mne_sthea'],
+    // Salmonea → Sal-mō-ne-a (LLSS); wordlist Salmo_nea_ gives LLL.
+    'salmonea': ['salmo_nea', 'sa_lmo_nea'],
+    // Tritonidis → Trī-tō-ni-dis (LLSS); wordlist Tri_to_ni^di_s gives LLSL.
+    'tritonidis': ['tri_to_nidis', 'tri_to_ni^dis'],
+    // Panthus → Pan-thūs (LL); wordlist panthus (no markers) gives LS.
+    'panthus': ['panthu_s', 'pa_nthu_s'],
+    // Othryades → O-thry-a-dēs (LSSL); wordlist Othry^a^de_s gives SSSL/LSSL/LSL.
+    'othryades': ['othryade_s', 'o_thryade_s'],
+    // Same → Sa-mē (SL); wordlist Sa^me gives SS.
+    'same': ['sa^me_', 'same_'],
+    // Cyclopea → Cȳ-clō-pe-a (LLSS); wordlist Cy^clo_pe_a gives LLLL (all long).
+    'cyclopea': ['cy_clo_pea', 'cyclo_pea'],
+    // Scamandri → Sca-man-drī (SLL); wordlist Sca^mandri_ gives SSLL.
+    'scamandri': ['sca^mandri_', 'scamandri_'],
+    // Eumenides → Eu-me-ni-dēs (LSSL); wordlist Eume^ni^de_s gives SSSSL/LSSL.
+    'eumenides': ['eumenide_s', 'e_umenide_s'],
+    // Numitor → Nu-mi-tor (LSL); wordlist numitor gives SSL (all short... check).
+    'numitor': ['nu_mito_r', 'nu_mi^to_r'],
+    // aether → ae-ther (LL); wordlist aether gives LL already (diphthong) — keep for safety.
+    'aether': ['aethe_r', 'aether'],
+    // solis → sō-lis (LS); wordlist solis gives SS.
+    'solis': ['so_lis', 'so^lis'],
+    // choreas → cho-re-ās (SSL); wordlist choreas gives SS.
+    'choreas': ['cho^re^a_s', 'cho^re_as'],
 };
 /**
  * Tokenization class - splits Latin text into tokens
