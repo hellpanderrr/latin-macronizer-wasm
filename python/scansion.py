@@ -99,7 +99,7 @@ def possiblescans(accentedcandidates, followingsegment):
                     0] in "aeiouy":
                     news.append((penaltysofar, scansofar + "C"))
                     news.append((penaltysofar + NOSYNEZISPENALTY, scansofar + "V"))
-                elif thisseg[0] in "ui" and (nextseg[0] in "aeiouy" or prevseg[0] in "aeiouy"):
+                elif thisseg[0] in "uiy" and (nextseg[0] in "aeiouy" or prevseg[0] in "aeiouy"):
                     news.append((penaltysofar, scansofar + "V"))
                     news.append((penaltysofar + SYNEZISPENALTY, scansofar + "C"))
                 elif thisseg[0] in "aeiouy":

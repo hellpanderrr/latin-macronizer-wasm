@@ -103,6 +103,8 @@ const GOLDEN = [
   { meter: 'hendecasyllable', needle: 'quod zonam soluit diu ligatam' },                   // Catullus 2b.13 — soluit override + ligatam corpus fix
   { meter: 'hendecasyllable', needle: 'deferri mane inquii puellae' },                     // Catullus 10.27 — mane override
   { meter: 'hendecasyllable', needle: 'dic nobis volo te ac tuos amores' },                // Catullus 6.16 — volo override
+  { meter: 'dactylichexameter', needle: 'tertius euryalus' },                              // Aen 5.322 — y-synizesis (Euryalus)
+  { meter: 'dactylichexameter', needle: 'non tamen euryali non ille oblitus amorum' },     // Aen 5.334 — y-synizesis (Euryali)
 ];
 
 async function createMacronizer() {

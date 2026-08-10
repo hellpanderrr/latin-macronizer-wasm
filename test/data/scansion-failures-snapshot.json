@@ -398,18 +398,6 @@
  {
   "file": "aeneid-5.txt",
   "meter": "dactylichexameter",
-  "line": "tertius Euryalus;",
-  "norm": "tertius euryalus"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
-  "line": "non tamen Euryali, non ille oblitus amorum:",
-  "norm": "non tamen euryali non ille oblitus amorum"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
   "line": "emicat Euryalus et munere victor amici",
   "norm": "emicat euryalus et munere victor amici"
  },
