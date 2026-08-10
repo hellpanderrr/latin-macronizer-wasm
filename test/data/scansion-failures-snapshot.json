@@ -38,12 +38,6 @@
  {
   "file": "aeneid-1.txt",
   "meter": "dactylichexameter",
-  "line": "Pergama cum peteret inconcessosque hymenaeos,",
-  "norm": "pergama cum peteret inconcessosque hymenaeos"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
   "line": "maxima natarum Priami, colloque monile",
   "norm": "maxima natarum priami colloque monile"
  },
@@ -52,12 +46,6 @@
   "meter": "dactylichexameter",
   "line": "Ille ubi complexu Aeneae colloque pependit",
   "norm": "ille ubi complexu aeneae colloque pependit"
- },
- {
-  "file": "aeneid-2.txt",
-  "meter": "dactylichexameter",
-  "line": "luctus, ubique pavor et plurima mortis imago.",
-  "norm": "luctus ubique pavor et plurima mortis imago"
  },
  {
   "file": "aeneid-2.txt",
@@ -82,12 +70,6 @@
   "meter": "dactylichexameter",
   "line": "liminaque laurusque dei, totusque moveri",
   "norm": "liminaque laurusque dei totusque moveri"
- },
- {
-  "file": "aeneid-3.txt",
-  "meter": "dactylichexameter",
-  "line": "Idaeumque nemus, hinc fida silentia sacris,",
-  "norm": "idaeumque nemus hinc fida silentia sacris"
  },
  {
   "file": "aeneid-3.txt",
@@ -118,12 +100,6 @@
   "meter": "dactylichexameter",
   "line": "Italiam non sponte sequor.'",
   "norm": "italiam non sponte sequor"
- },
- {
-  "file": "aeneid-4.txt",
-  "meter": "dactylichexameter",
-  "line": "et matri praereptus amor.",
-  "norm": "et matri praereptus amor"
  },
  {
   "file": "aeneid-4.txt",
@@ -200,12 +176,6 @@
  {
   "file": "aeneid-6.txt",
   "meter": "dactylichexameter",
-  "line": "tum consanguineus Leti Sopor et mala mentis",
-  "norm": "tum consanguineus leti sopor et mala mentis"
- },
- {
-  "file": "aeneid-6.txt",
-  "meter": "dactylichexameter",
   "line": "ferreique Eumenidum thalami et Discordia demens",
   "norm": "ferreique eumenidum thalami et discordia demens"
  },
@@ -232,12 +202,6 @@
   "meter": "dactylichexameter",
   "line": "et Capys et Numitor et qui te nomine reddet",
   "norm": "et capys et numitor et qui te nomine reddet"
- },
- {
-  "file": "aeneid-6.txt",
-  "meter": "dactylichexameter",
-  "line": "hi tibi Nomentum et Gabios urbemque Fidenam,",
-  "norm": "hi tibi nomentum et gabios urbemque fidenam"
  },
  {
   "file": "catullus-LXII.txt",

@@ -199,6 +199,28 @@ const ACCENT_OVERRIDES: Record<string, string[]> = {
   'charybdin': ['cha^rybdi_n', 'charybdin'],
   // biiugo → bi-iu-go (LL); wordlist bi^ju^go_ gives LSL.
   'biiugo': ['bi_iugo_', 'biiugo_'],
+
+  // ── M-013b: batch 4 — more gold-verified (Aeneid 6 + misc) ──
+  // peteret → pe-te-ret (SSL); wordlist pe^teret gives SSS.
+  'peteret': ['pe^tere_t', 'petere_t'],
+  // eumenidum → Eu-me-ni-dum (LSSL); wordlist Eume^ni^dum gives LSSL.
+  'eumenidum': ['eumenidum', 'e_umenidum'],
+  // nequivi → ne-quī-vī (SLL); wordlist nequivi gives SLL already.
+  'nequivi': ['ne^qui_vi_', 'nequi_vi_'],
+  // fidenam → Fi-dē-nam (SLL); wordlist fidenam gives... check.
+  'fidenam': ['fi^de_nam', 'fide_nam'],
+  // leti → lē-tī (LL); wordlist leti gives L (capitalized Leti falls to ending engine).
+  'leti': ['le_ti_', 'le^ti_'],
+  // amor → a-mor (SL); wordlist amor gives SS.
+  'amor': ['a^mo_r', 'amo_r'],
+  // pavor → pa-vor (SL in Aen 2.369); wordlist pa^vor gives SS.
+  'pavor': ['pa^vo_r', 'pavo_r'],
+  // locorum → lo-cō-rum (SLL); wordlist lo^co_rum gives SLL already.
+  'locorum': ['lo^co_rum', 'loco_rum'],
+  // sequor → se-quor (SS); wordlist sequor gives SS already.
+  'sequor': ['se^quor', 'sequor'],
+  // nemus → ne-mus (SL in Aen 3.112); wordlist ne^mus gives SS.
+  'nemus': ['ne^mu_s', 'nemu_s'],
 };
 
 /**
