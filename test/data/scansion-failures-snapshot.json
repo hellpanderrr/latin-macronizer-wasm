@@ -18,12 +18,6 @@
   "norm": "aerea cui gradibus surgebant limina nexaeque"
  },
  {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
-  "line": "per terram, et versa pulvis inscribitur hasta.",
-  "norm": "per terram et versa pulvis inscribitur hasta"
- },
- {
   "file": "aeneid-2.txt",
   "meter": "dactylichexameter",
   "line": "nostrorum obruimur oriturque miserrima caedes",
@@ -34,12 +28,6 @@
   "meter": "dactylichexameter",
   "line": "quem non incusavi amens hominumque deorumque,",
   "norm": "quem non incusavi amens hominumque deorumque"
- },
- {
-  "file": "aeneid-3.txt",
-  "meter": "dactylichexameter",
-  "line": "(Thraces arant) acri quondam regnata Lycurgo,",
-  "norm": "thraces arant acri quondam regnata lycurgo"
  },
  {
   "file": "aeneid-3.txt",
@@ -148,12 +136,6 @@
   "meter": "dactylichexameter",
   "line": "omnibus his Thesei dulcem praeoptarit amorem:",
   "norm": "omnibus his thesei dulcem praeoptarit amorem"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
-  "line": "aereum nivei montis liquere cacumen.",
-  "norm": "aereum nivei montis liquere cacumen"
  },
  {
   "file": "catullus-LXIV.txt",

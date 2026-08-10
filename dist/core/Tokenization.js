@@ -255,6 +255,12 @@ const ACCENT_OVERRIDES = {
     'reiecit': ['re^ie_cit', 'reje_cit'],
     // dehiscent → de-hī-scent (SLL) Aen 6.52; wordlist de_hi_scent gives LLL.
     'dehiscent': ['de^hi_scent', 'de_hi_scent'],
+    // thraces → Thrā-ces (LS) Aen 3.14; wordlist Thra_ce_s gives LL.
+    'thraces': ['thra_ce^s', 'thra_ces'],
+    // pulvis → pul-vis (LL) Aen 1.478; wordlist pulvis gives LS.
+    'pulvis': ['pulvi_s', 'pulvis'],
+    // aereum → ā-e-re-um (LSSL) Cat 64.241 (gold reads āerium); wordlist aere^um gives LSL.
+    'aereum': ['a_e^re^um', 'a_erium'],
 };
 /**
  * Tokenization class - splits Latin text into tokens
