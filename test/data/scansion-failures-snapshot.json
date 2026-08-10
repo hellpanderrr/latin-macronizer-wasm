@@ -338,12 +338,6 @@
  {
   "file": "aeneid-4.txt",
   "meter": "dactylichexameter",
-  "line": "superbis",
-  "norm": "superbis"
- },
- {
-  "file": "aeneid-4.txt",
-  "meter": "dactylichexameter",
   "line": "his, germana, malis oneras atque obicis hosti.",
   "norm": "his germana malis oneras atque obicis hosti"
  },
@@ -478,12 +472,6 @@
   "meter": "dactylichexameter",
   "line": "coniciunt. pars ingenti subiere feretro,",
   "norm": "coniciunt pars ingenti subiere feretro"
- },
- {
-  "file": "aeneid-6.txt",
-  "meter": "dactylichexameter",
-  "line": "pingue super oleum fundens ardentibus extis.",
-  "norm": "pingue super oleum fundens ardentibus extis"
  },
  {
   "file": "aeneid-6.txt",
@@ -628,12 +616,6 @@
   "meter": "dactylichexameter",
   "line": "Aurora exoriente vagi sub limina Solis,",
   "norm": "aurora exoriente vagi sub limina solis"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
-  "line": "quorum post abitum princeps e vertice Pelei",
-  "norm": "quorum post abitum princeps e vertice pelei"
  },
  {
   "file": "catullus-LXIV.txt",
