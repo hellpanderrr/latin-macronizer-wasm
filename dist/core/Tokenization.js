@@ -253,6 +253,8 @@ const ACCENT_OVERRIDES = {
     'dimovit': ['di_mo_vi_t', 'dimo_vit'],
     // reiecit → re-ie-cit (SLS) Aen 5.461; wordlist reje_cit gives SLS already? check.
     'reiecit': ['re^ie_cit', 'reje_cit'],
+    // dehiscent → de-hī-scent (SLL) Aen 6.52; wordlist de_hi_scent gives LLL.
+    'dehiscent': ['de^hi_scent', 'de_hi_scent'],
 };
 /**
  * Tokenization class - splits Latin text into tokens

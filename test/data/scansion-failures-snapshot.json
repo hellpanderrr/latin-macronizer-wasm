@@ -110,12 +110,6 @@
  {
   "file": "aeneid-6.txt",
   "meter": "dactylichexameter",
-  "line": "Tros' ait 'Aenea? cessas? neque enim ante dehiscent",
-  "norm": "tros ait aenea cessas neque enim ante dehiscent"
- },
- {
-  "file": "aeneid-6.txt",
-  "meter": "dactylichexameter",
   "line": "et Metus et malesuada Fames ac turpis Egestas,",
   "norm": "et metus et malesuada fames ac turpis egestas"
  },
