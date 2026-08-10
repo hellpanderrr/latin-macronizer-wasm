@@ -227,6 +227,8 @@ const ACCENT_OVERRIDES: Record<string, string[]> = {
   'dicetur': ['di_ce_tu_r', 'di_ce_tur'],
   // thetis → The-tis (SL in Cat 64.29, SS in 64.20) — both candidates.
   'thetis': ['the^ti_s', 'theti_s', 'The^tis'],
+  // tene → tē-ne (LS) Cat 64.29/30 (tēne "whether..."); wordlist te^ne_ gives SL.
+  'tene': ['te_ne', 'te^ne'],
   // nereine → Nē-rē-ī-nē (LLLL) Cat 64.29; wordlist gives... check.
   'nereine': ['ne_re_i_ne_', 'Ne_re_i_ne_'],
   // tethys → Tē-thȳs (LL) Cat 64.30; wordlist gives... check.
@@ -273,6 +275,8 @@ const ACCENT_OVERRIDES: Record<string, string[]> = {
   'amittebat': ['a_mi_tte_ba_t', 'a_mitte_ba_t'],
   // nemorosa → ne-mo-rō-sa (SSLS) Aen 3.270; wordlist ne^mo^ro_sa_ gives SSLL.
   'nemorosa': ['ne^moro_sa', 'nemoro_sa'],
+  // vomere → vō-me-re (LSS) Cat 64.41; wordlist vo^mere gives SSS.
+  'vomere': ['vo_mere', 'vo^mere'],
 };
 
 /**

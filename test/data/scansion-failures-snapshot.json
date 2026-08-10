@@ -182,24 +182,6 @@
  {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
-  "line": "tene Thetis tenuit pulcerrima Nereine?",
-  "norm": "tene thetis tenuit pulcerrima nereine"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
-  "line": "tene suam Tethys concessit ducere neptem,",
-  "norm": "tene suam tethys concessit ducere neptem"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
-  "line": "non glebam prono convellit vomere taurus,",
-  "norm": "non glebam prono convellit vomere taurus"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
   "line": "omnibus his Thesei dulcem praeoptarit amorem:",
   "norm": "omnibus his thesei dulcem praeoptarit amorem"
  },
