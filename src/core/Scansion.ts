@@ -271,15 +271,16 @@ export function scanVerse(
   function recurse(
     wordIndex: number,
     oldNodeIndex: number
-  ): { tail: [number, string][]; tailFeet: string[]; tailPenalty: number } {
+  ): { tail: [number, string][]; tailFeet: string[]; tailPenalty: number; complete: boolean } {
     if (wordIndex === verse.length) {
-      return { tail: [], tailFeet: [], tailPenalty: 0 };
+      return { tail: [], tailFeet: [], tailPenalty: 0, complete: true };
     }
 
     const [tokenIndex, wordScans] = verse[wordIndex];
     let bestTail: [number, string][] = [];
     let bestTailFeet: string[] = [];
     let bestTailPenalty = 100;
+    let bestComplete = false;
 
 
     for (const { penalty: scanPenalty, scansion, accented } of wordScans) {
@@ -311,20 +312,45 @@ export function scanVerse(
         feet.push(foot);
       }
 
-      if (nodeIndex === -1 || (finished && (nodeIndex !== 0 || wordIndex !== verse.length - 1))) {
+      if (nodeIndex === -1) {
         continue;
       }
+      if (finished) {
+        // Once the meter has completed (returned to state 0), no more
+        // syllables may be added. Ending at state 0 is valid only when every
+        // remaining word is fully elided (0 syllables) — the hypermeter case
+        // where a verse-final -que elides into the next line (deorumque +
+        // "aut": deorum completes the hexameter, the -que contributes nothing).
+        if (nodeIndex !== 0) continue;
+        let trailingAllElided = true;
+        for (let w = wordIndex + 1; w < verse.length; w++) {
+          if (!verse[w][1].some(s => s.scansion === '')) {
+            trailingAllElided = false;
+            break;
+          }
+        }
+        if (!trailingAllElided) continue;
+      }
 
-      const { tail, tailFeet, tailPenalty } = recurse(wordIndex + 1, nodeIndex);
+      const { tail, tailFeet, tailPenalty, complete: subComplete } = recurse(wordIndex + 1, nodeIndex);
+      const totalPenalty = scanPenalty + meterPenalty + tailPenalty;
+      // A verse is "complete" only when the last word ends at state 0. Prefer
+      // the complete reading over a partial one on a penalty tie — otherwise an
+      // elided verse-final -que (penalty 0) can win over a real final syllable
+      // (also penalty 0) and yield an incomplete 5-foot scan (Aen 5.826
+      // Cymodoceque). Genuine hypermeters still need the elision because their
+      // penultimate word alone completes the meter (guard above).
+      const complete = wordIndex === verse.length - 1 ? nodeIndex === 0 : subComplete;
 
-      if (scanPenalty + meterPenalty + tailPenalty < bestTailPenalty) {
+      if (totalPenalty < bestTailPenalty || (totalPenalty === bestTailPenalty && complete && !bestComplete)) {
         bestTail = [[tokenIndex, accented] as [number, string], ...tail];
         bestTailFeet = [...feet, ...tailFeet];
-        bestTailPenalty = scanPenalty + meterPenalty + tailPenalty;
+        bestTailPenalty = totalPenalty;
+        bestComplete = complete;
       }
     }
 
-    return { tail: bestTail, tailFeet: bestTailFeet, tailPenalty: bestTailPenalty };
+    return { tail: bestTail, tailFeet: bestTailFeet, tailPenalty: bestTailPenalty, complete: bestComplete };
   }
 
   const { tail, tailFeet } = recurse(0, 0);
@@ -359,6 +385,24 @@ export function scanVerses(
       // line break for the next word; otherwise (normal word) a newline ends
       // the verse and followingSegment is '#' (verse-final anceps).
       const isHyperEnclitic = (token.accented?.[0] || token.text || '').toLowerCase().replace(/[^a-z]/g, '').endsWith('que');
+      // A verse-final -que is a genuine hypermeter candidate (its elision into
+      // the next line's initial vowel completes the hexameter). Mid-line -que
+      // words (atque, namque, -que) must NOT get the dual #/V treatment —
+      // the # (verse-final anceps) reading is meaningless for them and leaks
+      // an artificially cheap penalty that flips the chosen quantity (the
+      // hīc→hĭc / vāgīnā regressions). Detect: the next content token after
+      // spaces/punctuation is a newline (or end of text).
+      let verseFinalQue = false;
+      if (isHyperEnclitic) {
+        let scan = index + 1;
+        while (scan < tokens.length) {
+          const t = tokens[scan];
+          if (t.isSpace) { scan++; continue; }
+          if (t.text.includes('\n')) { verseFinalQue = true; }
+          break; // first content token: newline (verse-final) or a word
+        }
+        if (scan >= tokens.length) verseFinalQue = true;
+      }
       while (true) {
         nextIndex++;
         if (nextIndex === tokens.length) {
@@ -412,13 +456,36 @@ export function scanVerses(
       // can choose whichever lets the hexameter complete.
       if (isHyperEnclitic) {
         const extra = possibleScans(accentCandidates, followingSegment === 'V' ? '#' : 'V');
-        const seen = new Set<string>();
-        const merged: ScanResult[] = [];
-        for (const s of [...scans, ...extra]) {
-          const key = s.scansion + '|' + s.accented;
-          if (!seen.has(key)) {
-            seen.add(key);
-            merged.push(s);
+        let merged: ScanResult[];
+        if (verseFinalQue) {
+          // Verse-final -que: merge both readings keeping the LOWEST penalty
+          // per (scansion, accent) pair. Dedup-first would keep the
+          // higher-penalty reading: the V (eliding) reading's que[S] costs
+          // HIATUSPENALTY 3 while the # (final-anceps) reading's que[S] costs
+          // 0 — dedup-first drops the cheap # form and the line can never
+          // complete with a real final -que (Aen 5.826 Cymodoceque).
+          const byKey = new Map<string, ScanResult>();
+          for (const s of [...scans, ...extra]) {
+            const key = s.scansion + '|' + s.accented;
+            const existing = byKey.get(key);
+            if (!existing || s.penalty < existing.penalty) {
+              byKey.set(key, s);
+            }
+          }
+          merged = [...byKey.values()];
+        } else {
+          // Mid-line -que: keep the pre-existing dedup (first-seen wins) so
+          // the candidate set is byte-identical to before — the min-penalty
+          // merge would leak the # reading's cheap penalty into mid-line
+          // contexts and flip chosen quantities (the hīc/vāgīnā regressions).
+          const seen = new Set<string>();
+          merged = [];
+          for (const s of [...scans, ...extra]) {
+            const key = s.scansion + '|' + s.accented;
+            if (!seen.has(key)) {
+              seen.add(key);
+              merged.push(s);
+            }
           }
         }
         merged.sort((a, b) => a.penalty - b.penalty);

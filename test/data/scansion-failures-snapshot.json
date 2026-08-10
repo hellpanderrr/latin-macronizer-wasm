@@ -1,33 +1,9 @@
 [
  {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
-  "line": "qui teneant, nam inculta videt, hominesne feraene,",
-  "norm": "qui teneant nam inculta videt hominesne feraene"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
-  "line": "iactemur, doceas. Ignari hominumque locorumque",
-  "norm": "iactemur doceas ignari hominumque locorumque"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
-  "line": "aerea cui gradibus surgebant limina, nexaeque",
-  "norm": "aerea cui gradibus surgebant limina nexaeque"
- },
- {
   "file": "aeneid-2.txt",
   "meter": "dactylichexameter",
   "line": "nostrorum obruimur oriturque miserrima caedes",
   "norm": "nostrorum obruimur oriturque miserrima caedes"
- },
- {
-  "file": "aeneid-2.txt",
-  "meter": "dactylichexameter",
-  "line": "quem non incusavi amens hominumque deorumque,",
-  "norm": "quem non incusavi amens hominumque deorumque"
  },
  {
   "file": "aeneid-3.txt",
@@ -42,12 +18,6 @@
   "norm": "iam medio apparet fluctu nemorosa zacynthos"
  },
  {
-  "file": "aeneid-3.txt",
-  "meter": "dactylichexameter",
-  "line": "contra iussa monent Heleni, Scyllamque Charybdinque",
-  "norm": "contra iussa monent heleni scyllamque charybdinque"
- },
- {
   "file": "aeneid-4.txt",
   "meter": "dactylichexameter",
   "line": "Cretesque Dryopesque fremunt pictique Agathyrsi;",
@@ -60,18 +30,6 @@
   "norm": "italiam non sponte sequor"
  },
  {
-  "file": "aeneid-4.txt",
-  "meter": "dactylichexameter",
-  "line": "omnia Mercurio similis, vocemque coloremque",
-  "norm": "omnia mercurio similis vocemque coloremque"
- },
- {
-  "file": "aeneid-4.txt",
-  "meter": "dactylichexameter",
-  "line": "imprecor, arma armis: pugnent ipsique nepotesque.'",
-  "norm": "imprecor arma armis pugnent ipsique nepotesque"
- },
- {
   "file": "aeneid-5.txt",
   "meter": "dactylichexameter",
   "line": "emicat Euryalus et munere victor amici",
@@ -80,20 +38,8 @@
  {
   "file": "aeneid-5.txt",
   "meter": "dactylichexameter",
-  "line": "et magnos membrorum artus, magna ossa lacertosque",
-  "norm": "et magnos membrorum artus magna ossa lacertosque"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
   "line": "ostentans artemque pater arcumque sonantem.",
   "norm": "ostentans artemque pater arcumque sonantem"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
-  "line": "robora navigiis, aptant remosque rudentisque,",
-  "norm": "robora navigiis aptant remosque rudentisque"
  },
  {
   "file": "aeneid-6.txt",
@@ -122,12 +68,6 @@
  {
   "file": "aeneid-6.txt",
   "meter": "dactylichexameter",
-  "line": "quos super atra silex iam iam lapsura cadentique",
-  "norm": "quos super atra silex iam iam lapsura cadentique"
- },
- {
-  "file": "aeneid-6.txt",
-  "meter": "dactylichexameter",
   "line": "et Capys et Numitor et qui te nomine reddet",
   "norm": "et capys et numitor et qui te nomine reddet"
  },
@@ -142,12 +82,6 @@
   "meter": "dactylichexameter",
   "line": "pars e divolso iactabant membra iuvenco,",
   "norm": "pars e divolso iactabant membra iuvenco"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
-  "line": "inde pater divum sancta cum coniuge natisque",
-  "norm": "inde pater divum sancta cum coniuge natisque"
  },
  {
   "file": "catullus-LXIV.txt",

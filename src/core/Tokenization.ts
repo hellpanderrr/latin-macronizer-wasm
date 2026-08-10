@@ -51,6 +51,10 @@ const ACCENT_OVERRIDES: Record<string, string[]> = {
   'orion': ['O_ri_o_n', 'o^ri_o_n'],
   // dehīscēns → dĕ-hīs-cēns (Aen 1.106): wordlist de_hi_sce_ns has long de.
   'dehiscens': ['de_hi_sce_ns', 'de^hi_sce_ns'],
+  // dehiscit → dĕ-hīs-cit (SLL) Aen 5.142: "infindunt pariter sulcos, totumque
+  // dehiscit" needs the short de (wordlist has dēhiscit with long de, which
+  // can't fit the dactyl position). Same dĕ-hīs- shape as dehiscens.
+  'dehiscit': ['de^hi_sci_t', 'de_hi_sci_t'],
   // ecqua → ec-qua (Aen 3.488): wordlist ecqua_ has long final a.
   'ecqua': ['ecqua_', 'ecqua'],
   // Phryges → phry-ges (Aen 1.102): wordlist phry^ge_s has long e.
@@ -291,9 +295,16 @@ const ACCENT_OVERRIDES: Record<string, string[]> = {
   'pulvis': ['pulvi_s', 'pulvis'],
   // aereum → ā-e-re-um (LSSL) Cat 64.241 (gold reads āerium); wordlist aere^um gives LSL.
   'aereum': ['a_e^re^um', 'a_erium'],
-  // videt → vi-det (LS) Aen 1.308 (gold: det long by position before h);
-  // wordlist vi^det gives SS.
-  'videt': ['vi_det', 'vi^det'],
+  // videt → vĭ-dēt (SL) Aen 1.308: gold per-syllable is vĭ-dēt (final syllable
+  // long — the line "qui teneant, nam inculta videt, hominēsne feraene" only
+  // scans with SL here). The earlier vi_det (LS) reading was wrong: the final
+  // -t before h+vowel does NOT make position, and gold=SL anyway.
+  'videt': ['vi^det', 'vi^de_t'],
+  // cymodoce → Cȳ-mo-do-cē (LSSL) Aen 5.826: the ending-engine form cymodoce_
+  // scans SSSL (all short vowels); the correct Greek quantity is L-S-S-L
+  // (final cē long). With this form the line completes with -que as a real
+  // final syllable (gold Cymodoceque=LSSLL) — not as an elided hypermeter.
+  'cymodoce': ['cy_mo^do^ce_'],
 };
 
 /**
@@ -871,6 +882,11 @@ export class Tokenization {
           }
         }
         isAmbiguous = accented.length > 1;
+        // The override is authoritative for this wordform — clear the unknown
+        // flag so the scansion fallback (allVowelsAmbiguous, which guesses every
+        // vowel-length combo and lets the cheapest—often wrong—form win, e.g.
+        // Cymodoce all-long) is not added on top of it.
+        isUnknown = false;
       }
 
       // Update token with accented candidates and flags
