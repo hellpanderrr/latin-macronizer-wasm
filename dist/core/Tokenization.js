@@ -194,6 +194,45 @@ const ACCENT_OVERRIDES = {
     'sequor': ['se^quor', 'sequor'],
     // nemus → ne-mus (SL in Aen 3.112); wordlist ne^mus gives SS.
     'nemus': ['ne^mu_s', 'nemu_s'],
+    // ── M-013b: batch 5 — Catullus quantity fixes (gold-verified) ──
+    // dicetur → dī-cē-tur (LLL) Cat 62.4; wordlist di_ce_tur gives LLS.
+    'dicetur': ['di_ce_tu_r', 'di_ce_tur'],
+    // thetis → The-tis (SL in Cat 64.29, SS in 64.20) — both candidates.
+    'thetis': ['the^ti_s', 'theti_s', 'The^tis'],
+    // nereine → Nē-rē-ī-nē (LLLL) Cat 64.29; wordlist gives... check.
+    'nereine': ['ne_re_i_ne_', 'Ne_re_i_ne_'],
+    // tethys → Tē-thȳs (LL) Cat 64.30; wordlist gives... check.
+    'tethys': ['te_thy_s', 'Te_thy_s'],
+    // suam → su-am (SL) Cat 64.30; wordlist suam gives... check.
+    'suam': ['su^am', 'suam'],
+    // thesei → Thē-sei (LL) Cat 64.121; wordlist The_se_i_ gives LLL.
+    'thesei': ['the_sei', 'the_se^i'],
+    // redimita → re-di-mi-ta (SSLS) Cat 64.194; wordlist redi^mi^ta_ gives SSSL.
+    'redimita': ['re^dimi_ta', 'redi_mi^ta'],
+    // aerium → ā-e-ri-um (LSSL) Cat 64.241 (gold reads aerium/āerium); wordlist aereum gives LSL.
+    'aerium': ['a_e^rium', 'a_erium'],
+    // liquere → li-quē-re (LLS) Cat 64.241; wordlist gives... check.
+    'liquere': ['li_que_re', 'li^que_re'],
+    // opis → o-pis (SL) Cat 64.325 (gen. of ops); wordlist capitalized Opis gives LL.
+    'opis': ['o^pi_s', 'o_pi_s'],
+    // clarissime → clā-ris-si-me (LLSS) Cat 64.325; wordlist gives... check.
+    'clarissime': ['cla_rissime', 'cla_ri_ssime'],
+    // pelei → Pē-lei (LL) Cat 64.383; wordlist pe_le_i_ gives LLL.
+    'pelei': ['pe_lei', 'pe_le^i'],
+    // tepefaciet → te-pe-fa-ci-et (SLSSL) Cat 64.361; wordlist te^pe^fa^ciet gives SSSSL.
+    'tepefaciet': ['te^pe_facie_t', 'tepe_facie_t'],
+    // alta → al-ta (LS) Cat 64.361; wordlist alta gives LS already.
+    'alta': ['alta', 'a_lta'],
+    // despexit → dē-spe-xit (LLL) Cat 64.20; wordlist de_spexit gives LLS.
+    'despexit': ['de_spexi_t', 'de_spexit'],
+    // hymenaeos → hy-me-nae-os (SSLL) Cat 64.20; wordlist gives... check.
+    'hymenaeos': ['hy^menaeo_s', 'hymenaeo_s'],
+    // tenuit → te-nu-it (SSL) Cat 64.29; wordlist tenuit gives... check.
+    'tenuit': ['te^nui_t', 'tenui_t'],
+    // concessit → con-ces-sit (LLL) Cat 64.30; wordlist concessit gives... check.
+    'concessit': ['concessi_t', 'co_ncessi_t'],
+    // capillo → ca-pil-lo (SLL) Cat 64.194; wordlist capillo_ gives LLL.
+    'capillo': ['ca^pillo_', 'capillo_'],
 };
 /**
  * Tokenization class - splits Latin text into tokens

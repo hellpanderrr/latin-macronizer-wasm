@@ -204,18 +204,6 @@
   "norm": "et capys et numitor et qui te nomine reddet"
  },
  {
-  "file": "catullus-LXII.txt",
-  "meter": "dactylichexameter",
-  "line": "iam veniet virgo, iam dicetur hymenaeus.",
-  "norm": "iam veniet virgo iam dicetur hymenaeus"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
-  "line": "tum Thetis humanos non despexit hymenaeos,",
-  "norm": "tum thetis humanos non despexit hymenaeos"
- },
- {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
   "line": "tene Thetis tenuit pulcerrima Nereine?",
@@ -242,12 +230,6 @@
  {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
-  "line": "Eumenides, quibus anguino redimita capillo",
-  "norm": "eumenides quibus anguino redimita capillo"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
   "line": "aereum nivei montis liquere cacumen.",
   "norm": "aereum nivei montis liquere cacumen"
  },
@@ -266,25 +248,7 @@
  {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
-  "line": "Emathiae tutamen, Opis carissime nato,",
-  "norm": "emathiae tutamen opis carissime nato"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
   "line": "testis erit magnis virtutibus unda Scamandri,",
   "norm": "testis erit magnis virtutibus unda scamandri"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
-  "line": "alta tepefaciet permixta flumina caede.",
-  "norm": "alta tepefaciet permixta flumina caede"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
-  "line": "talia praefantes quondam felicia Pelei",
-  "norm": "talia praefantes quondam felicia pelei"
  }
 ]
