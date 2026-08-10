@@ -24,12 +24,6 @@
   "norm": "per terram et versa pulvis inscribitur hasta"
  },
  {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
-  "line": "hinc atque hinc glomerantur oreades; illa pharetram",
-  "norm": "hinc atque hinc glomerantur oreades illa pharetram"
- },
- {
   "file": "aeneid-2.txt",
   "meter": "dactylichexameter",
   "line": "nostrorum obruimur oriturque miserrima caedes",
@@ -98,12 +92,6 @@
  {
   "file": "aeneid-5.txt",
   "meter": "dactylichexameter",
-  "line": "haec fatus duplicem ex umeris reiecit amictum",
-  "norm": "haec fatus duplicem ex umeris reiecit amictum"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
   "line": "et magnos membrorum artus, magna ossa lacertosque",
   "norm": "et magnos membrorum artus magna ossa lacertosque"
  },
@@ -118,12 +106,6 @@
   "meter": "dactylichexameter",
   "line": "robora navigiis, aptant remosque rudentisque,",
   "norm": "robora navigiis aptant remosque rudentisque"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
-  "line": "aera dimovit tenebrosum et dispulit umbras,",
-  "norm": "aera dimovit tenebrosum et dispulit umbras"
  },
  {
   "file": "aeneid-6.txt",

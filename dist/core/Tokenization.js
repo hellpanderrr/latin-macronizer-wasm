@@ -139,8 +139,8 @@ const ACCENT_OVERRIDES = {
     // choreas → cho-re-ās (SSL); wordlist choreas gives SS.
     'choreas': ['cho^re^a_s', 'cho^re_as'],
     // ── M-013b: batch 3 — more gold-verified quantity fixes (hypotactic) ──
-    // oreades → o-rē-a-des (LSLS); wordlist o^re_a^de_s gives SLSL.
-    'oreades': ['o_rea_des', 'o_re^a_des'],
+    // oreades → o-rē-a-des (SLSS per gold Aen 1.500); wordlist O^re_a^de_s gives SLSL.
+    'oreades': ['o^re_ades', 'o_re^a_des'],
     // aureis → au-reis (LL); wordlist aure^i_s gives LSL (i not part of ei diphthong).
     'aureis': ['aureis', 'a_ureis'],
     // deorum → de-o-rum (SLL); wordlist de^o_rum gives SLL already — keep for safety.
@@ -248,6 +248,11 @@ const ACCENT_OVERRIDES = {
     'nemorosa': ['ne^moro_sa', 'nemoro_sa'],
     // vomere → vō-me-re (LSS) Cat 64.41; wordlist vo^mere gives SSS.
     'vomere': ['vo_mere', 'vo^mere'],
+    // ── M-013b: batch 8 — more gold-verified ──
+    // dimovit → dī-mō-vit (LLL) Aen 5.839; wordlist dimo_vit gives SLL.
+    'dimovit': ['di_mo_vi_t', 'dimo_vit'],
+    // reiecit → re-ie-cit (SLS) Aen 5.461; wordlist reje_cit gives SLS already? check.
+    'reiecit': ['re^ie_cit', 'reje_cit'],
 };
 /**
  * Tokenization class - splits Latin text into tokens
