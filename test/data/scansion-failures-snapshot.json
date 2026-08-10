@@ -1,11 +1,5 @@
 [
  {
-  "file": "aeneid-2.txt",
-  "meter": "dactylichexameter",
-  "line": "nostrorum obruimur oriturque miserrima caedes",
-  "norm": "nostrorum obruimur oriturque miserrima caedes"
- },
- {
   "file": "aeneid-3.txt",
   "meter": "dactylichexameter",
   "line": "liminaque laurusque dei, totusque moveri",
@@ -34,12 +28,6 @@
   "meter": "dactylichexameter",
   "line": "emicat Euryalus et munere victor amici",
   "norm": "emicat euryalus et munere victor amici"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
-  "line": "ostentans artemque pater arcumque sonantem.",
-  "norm": "ostentans artemque pater arcumque sonantem"
  },
  {
   "file": "aeneid-6.txt",

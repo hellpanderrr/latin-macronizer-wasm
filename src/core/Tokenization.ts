@@ -177,6 +177,11 @@ const ACCENT_OVERRIDES: Record<string, string[]> = {
   'deorum': ['de^o_rum', 'de_o_rum'],
   // oritur → o-ri-tur (SSL); wordlist oritur gives SSL — keep for safety.
   'oritur': ['o^ri_tur', 'oritu_r'],
+  // obruimur → ō-bru-i-mur (LSSL) Aen 2.411: gold per-syllable LSSL. The
+  // wordlist obru^imur scans LSS/LS etc. but never LSSL — the line
+  // "nostrorum obruimur oriturque miserrima caedes" needs the long first
+  // syllable (o before br = position) + final -mur long.
+  'obruimur': ['obru^imur', 'o_bru^i^mu_r'],
   // arant → a-rant (SL); wordlist a^rant gives SL already.
   'arant': ['a^rant', 'arant'],
   // situs → si-tūs (SL); wordlist si^tus gives SS.
@@ -225,6 +230,11 @@ const ACCENT_OVERRIDES: Record<string, string[]> = {
   'sequor': ['se^quor', 'sequor'],
   // nemus → ne-mus (SL in Aen 3.112); wordlist ne^mus gives SS.
   'nemus': ['ne^mu_s', 'nemu_s'],
+  // pater → pă-tēr (SL) Aen 5.521: "ostentans artemque pater arcumque
+  // sonantem" needs the final -ter long (gold pater=SL); wordlist pa^ter
+  // gives SS. The -r before "arcumque" (vowel) makes no position — gold marks
+  // the syllable long regardless.
+  'pater': ['pa^ter', 'pa^te_r'],
 
   // ── M-013b: batch 5 — Catullus quantity fixes (gold-verified) ──
   // dicetur → dī-cē-tur (LLL) Cat 62.4; wordlist di_ce_tur gives LLS.
