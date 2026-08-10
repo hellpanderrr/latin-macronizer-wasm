@@ -2,12 +2,6 @@
  {
   "file": "aeneid-1.txt",
   "meter": "dactylichexameter",
-  "line": "unius ob noxam et furias Aiacis Oilei?",
-  "norm": "unius ob noxam et furias aiacis oilei"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
   "line": "accestis scopulos, vos et Cyclopea saxa",
   "norm": "accestis scopulos vos et cyclopea saxa"
  },
@@ -398,18 +392,6 @@
  {
   "file": "aeneid-5.txt",
   "meter": "dactylichexameter",
-  "line": "Nisus et Euryalus primi,",
-  "norm": "nisus et euryalus primi"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
-  "line": "Euryalus forma insignis viridique iuventa,",
-  "norm": "euryalus forma insignis viridique iuventa"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
   "line": "tertius Argolica hac galea contentus abito.'",
   "norm": "tertius argolica hac galea contentus abito"
  },
@@ -422,12 +404,6 @@
  {
   "file": "aeneid-5.txt",
   "meter": "dactylichexameter",
-  "line": "Euryalumque Helymus sequitur; quo deinde sub ipso",
-  "norm": "euryalumque helymus sequitur quo deinde sub ipso"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
   "line": "non tamen Euryali, non ille oblitus amorum:",
   "norm": "non tamen euryali non ille oblitus amorum"
  },
@@ -436,12 +412,6 @@
   "meter": "dactylichexameter",
   "line": "emicat Euryalus et munere victor amici",
   "norm": "emicat euryalus et munere victor amici"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
-  "line": "tutatur favor Euryalum lacrimaeque decorae,",
-  "norm": "tutatur favor euryalum lacrimaeque decorae"
  },
  {
   "file": "aeneid-5.txt",
@@ -518,12 +488,6 @@
  {
   "file": "aeneid-6.txt",
   "meter": "dactylichexameter",
-  "line": "itque reditque viam totiens. quid Thesea, magnum",
-  "norm": "itque reditque viam totiens quid thesea magnum"
- },
- {
-  "file": "aeneid-6.txt",
-  "meter": "dactylichexameter",
   "line": "coniciunt. pars ingenti subiere feretro,",
   "norm": "coniciunt pars ingenti subiere feretro"
  },
@@ -542,12 +506,6 @@
  {
   "file": "aeneid-6.txt",
   "meter": "dactylichexameter",
-  "line": "terribiles visu formae, Letumque Labosque;",
-  "norm": "terribiles visu formae letumque labosque"
- },
- {
-  "file": "aeneid-6.txt",
-  "meter": "dactylichexameter",
   "line": "tum consanguineus Leti Sopor et mala mentis",
   "norm": "tum consanguineus leti sopor et mala mentis"
  },
@@ -562,12 +520,6 @@
   "meter": "dactylichexameter",
   "line": "inice, namque potes, portusque require Velinos;",
   "norm": "inice namque potes portusque require velinos"
- },
- {
-  "file": "aeneid-6.txt",
-  "meter": "dactylichexameter",
-  "line": "accepisse lacu, nec Thesea Pirithoumque,",
-  "norm": "accepisse lacu nec thesea pirithoumque"
  },
  {
   "file": "aeneid-6.txt",
@@ -656,20 +608,8 @@
  {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
-  "line": "Thesea cedentem celeri cum classe tuetur",
-  "norm": "thesea cedentem celeri cum classe tuetur"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
   "line": "utpote fallaci quae tum primum excita somno",
   "norm": "utpote fallaci quae tum primum excita somno"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
-  "line": "misera, assiduis quam luctibus externavit",
-  "norm": "misera assiduis quam luctibus externavit"
  },
  {
   "file": "catullus-LXIV.txt",
@@ -686,26 +626,8 @@
  {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
-  "line": "quandoquidem fortuna mea ac tua feruida virtus",
-  "norm": "quandoquidem fortuna mea ac tua feruida virtus"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
-  "line": "Thesea ceu pulsae ventorum flamine nubes",
-  "norm": "thesea ceu pulsae ventorum flamine nubes"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
   "line": "aereum nivei montis liquere cacumen.",
   "norm": "aereum nivei montis liquere cacumen"
- },
- {
-  "file": "catullus-LXIV.txt",
-  "meter": "dactylichexameter",
-  "line": "amissum credens immiti Thesea fato.",
-  "norm": "amissum credens immiti thesea fato"
  },
  {
   "file": "catullus-LXIV.txt",
@@ -754,71 +676,5 @@
   "meter": "dactylichexameter",
   "line": "talia praefantes quondam felicia Pelei",
   "norm": "talia praefantes quondam felicia pelei"
- },
- {
-  "file": "catullus-CI.txt",
-  "meter": "elegiacdistichs",
-  "line": "quandoquidem fortuna mihi tete abstulit ipsum.",
-  "norm": "quandoquidem fortuna mihi tete abstulit ipsum"
- },
- {
-  "file": "catullus-II.txt",
-  "meter": "hendecasyllable",
-  "line": "et solacium sui doloris,",
-  "norm": "et solacium sui doloris"
- },
- {
-  "file": "catullus-II.txt",
-  "meter": "hendecasyllable",
-  "line": "tam gratum [est/es] mihi quam ferunt puellae,",
-  "norm": "tam gratum est es mihi quam ferunt puellae"
- },
- {
-  "file": "catullus-II.txt",
-  "meter": "hendecasyllable",
-  "line": "quod zonam soluit diu ligitam.",
-  "norm": "quod zonam soluit diu ligitam"
- },
- {
-  "file": "catullus-VI.txt",
-  "meter": "hendecasyllable",
-  "line": "ni sint illepidae atque inelegantes,",
-  "norm": "ni sint illepidae atque inelegantes"
- },
- {
-  "file": "catullus-VI.txt",
-  "meter": "hendecasyllable",
-  "line": "sertis ac Syrio fragrans olivo,",
-  "norm": "sertis ac syrio fragrans olivo"
- },
- {
-  "file": "catullus-VI.txt",
-  "meter": "hendecasyllable",
-  "line": "dic nobis. Volo te ac tuos amores",
-  "norm": "dic nobis volo te ac tuos amores"
- },
- {
-  "file": "catullus-VII.txt",
-  "meter": "hendecasyllable",
-  "line": "lasarpiciferis iacet Cyrenis",
-  "norm": "lasarpiciferis iacet cyrenis"
- },
- {
-  "file": "catullus-X.txt",
-  "meter": "hendecasyllable",
-  "line": "deferri.\" \"Mane,\" inquii puellae,",
-  "norm": "deferri mane inquii puellae"
- },
- {
-  "file": "catullus-XIII.txt",
-  "meter": "hendecasyllable",
-  "line": "nam unguentum dabo, quod meae puellae",
-  "norm": "nam unguentum dabo quod meae puellae"
- },
- {
-  "file": "catullus-XIV.txt",
-  "meter": "hendecasyllable",
-  "line": "Vos hinc interea valete abite",
-  "norm": "vos hinc interea valete abite"
  }
 ]

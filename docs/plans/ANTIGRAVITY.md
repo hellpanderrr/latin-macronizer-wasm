@@ -197,3 +197,24 @@ while keeping the wordlist form primary for prose.
   accented[0] (the wordlist form). Scansion mode lets the meter pick the
   corrected reading.
 - 10 lines fixed (150→140), zero regressions; GOLDEN list grew to 14 lines.
+
+### 13. Scansion: parallel subagent integration (corpus corrections + overrides)
+Two parallel subagents advanced M-013 in one session:
+- **est-prodelision was tested and REJECTED** — only 2 failing lines contain
+  "est", neither on the death path, and the existing 'V'-elision branch already
+  produces prodelision's metrical effect. Adding surface area for zero gate
+  benefit is the exact false-positive trap the ui-merge fell into.
+- **The subagent found a REAL gate bug:** empty verses (divider lines) emitted
+  no foot, shifting scannedFeet alignment and both creating spurious failures
+  AND hiding real ones. Fix: emit empty-foot placeholders for empty verses;
+  gate skips non-verse (normalized-empty) lines. Always re-check alignment
+  invariants when a corpus has non-verse lines.
+- **Corpus corrections belong in the corpus, not the engine.** 4 lines in
+  catullus-II/LXIV had typos/editorial markers (solacium→solaciolum,
+  [est/es]→est, ligitam→ligatam, misera→a misera). Verify against sources
+  (Latin Library, wikisource, negenborn scanned Catullus) before touching.
+- **Verify chosen forms, not just "it scans".** A line "scanning" via a
+  wrong reading (like a hemistich accepting a partial) can look like success.
+  Print the macronized output and check quantities: sŏ-lu-it, in-ē-lĕ-gantēs,
+  fra-grāns (ā long by position before -ns), vŏlŏ, dăbŏ, cŷ-rē-nīs, mănĕ,
+  ă-bī-te, tētĕ, ŏ-ĭ-lē-ī, Thē-sĕ-ă, Eu-ry-ă-lus all verified correct.

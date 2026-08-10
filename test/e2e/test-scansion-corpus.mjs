@@ -97,6 +97,12 @@ const GOLDEN = [
   { meter: 'dactylichexameter', needle: 'exercet diana choros quam mille' },               // Aen 1.499 — Diana override
   { meter: 'dactylichexameter', needle: 'hac phryges instaret curru cristatus' },          // Aen 1.102 — Phryges override
   { meter: 'dactylichexameter', needle: 'egressi optata potiuntur troes harena' },         // Aen 1.30 — Troes override
+  { meter: 'dactylichexameter', needle: 'unius ob noxam et furias aiacis oilei' },         // Aen 1.41 — Oilei override
+  { meter: 'dactylichexameter', needle: 'quid thesea magnum' },                            // Aen 6.122 — Thesea override
+  { meter: 'elegiacdistichs', needle: 'quandoquidem fortuna mihi tete abstulit' },         // Catullus 101.5 — quandoquidem+tete overrides
+  { meter: 'hendecasyllable', needle: 'quod zonam soluit diu ligatam' },                   // Catullus 2b.13 — soluit override + ligatam corpus fix
+  { meter: 'hendecasyllable', needle: 'deferri mane inquii puellae' },                     // Catullus 10.27 — mane override
+  { meter: 'hendecasyllable', needle: 'dic nobis volo te ac tuos amores' },                // Catullus 6.16 — volo override
 ];
 
 async function createMacronizer() {
