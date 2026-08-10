@@ -390,16 +390,20 @@ export function scanVerses(
       // words (atque, namque, -que) must NOT get the dual #/V treatment —
       // the # (verse-final anceps) reading is meaningless for them and leaks
       // an artificially cheap penalty that flips the chosen quantity (the
-      // hīc→hĭc / vāgīnā regressions). Detect: the next content token after
-      // spaces/punctuation is a newline (or end of text).
+      // hīc→hĭc / vāgīnā regressions). Detect: skip spaces AND punctuation;
+      // if the first content token we reach is a newline (or end of text) the
+      // -que is verse-final, if it's a word it's mid-line. (The punctuation
+      // skip matters: "Cymodoceque." ends que + '.' + newline — without it
+      // the -que is misdetected as mid-line and loses the cheap # reading.)
       let verseFinalQue = false;
       if (isHyperEnclitic) {
         let scan = index + 1;
         while (scan < tokens.length) {
           const t = tokens[scan];
-          if (t.isSpace) { scan++; continue; }
-          if (t.text.includes('\n')) { verseFinalQue = true; }
-          break; // first content token: newline (verse-final) or a word
+          if (t.isWord) { verseFinalQue = false; break; } // mid-line -que
+          if (t.isSpace && !t.text.includes('\n')) { scan++; continue; }
+          if (t.text.includes('\n')) { verseFinalQue = true; break; }
+          scan++; continue; // punctuation (e.g. '.', ',') — skip
         }
         if (scan >= tokens.length) verseFinalQue = true;
       }
