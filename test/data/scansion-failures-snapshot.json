@@ -30,12 +30,6 @@
   "norm": "hinc atque hinc glomerantur oreades illa pharetram"
  },
  {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
-  "line": "munera laetitiamque dii.",
-  "norm": "munera laetitiamque dii"
- },
- {
   "file": "aeneid-2.txt",
   "meter": "dactylichexameter",
   "line": "nostrorum obruimur oriturque miserrima caedes",
@@ -94,12 +88,6 @@
   "meter": "dactylichexameter",
   "line": "imprecor, arma armis: pugnent ipsique nepotesque.'",
   "norm": "imprecor arma armis pugnent ipsique nepotesque"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
-  "line": "infindunt pariter sulcos, totumque dehiscit",
-  "norm": "infindunt pariter sulcos totumque dehiscit"
  },
  {
   "file": "aeneid-5.txt",

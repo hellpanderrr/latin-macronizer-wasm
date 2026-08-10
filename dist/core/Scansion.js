@@ -290,7 +290,7 @@ export function scanVerse(verse, automaton) {
  * Returns array of scansion feet strings (one per verse).
  */
 export function scanVerses(tokens, meterAutomatons) {
-    var _a;
+    var _a, _b;
     const scannedFeet = [];
     let verse = [];
     let automatonIndex = 0;
@@ -300,16 +300,26 @@ export function scanVerses(tokens, meterAutomatons) {
             // Determine following segment (what the next word starts with)
             let followingText = '';
             let nextIndex = index;
+            // Hypermeter: a verse-final -que elides into the next line's initial
+            // vowel (e.g. nexaequ'aere). For a word ending in -que we look past the
+            // line break for the next word; otherwise (normal word) a newline ends
+            // the verse and followingSegment is '#' (verse-final anceps).
+            const isHyperEnclitic = (((_a = token.accented) === null || _a === void 0 ? void 0 : _a[0]) || token.text || '').toLowerCase().replace(/[^a-z]/g, '').endsWith('que');
             while (true) {
                 nextIndex++;
-                if (nextIndex === tokens.length || tokens[nextIndex].text.includes('\n')) {
+                if (nextIndex === tokens.length) {
                     break;
+                }
+                if (tokens[nextIndex].text.includes('\n')) {
+                    if (!isHyperEnclitic)
+                        break; // normal word: verse ends here
+                    continue; // hypermeter: skip the newline, keep looking
                 }
                 if (tokens[nextIndex].isSpace) {
                     followingText += ' ';
                 }
                 else if (tokens[nextIndex].isWord) {
-                    followingText += ((_a = tokens[nextIndex].accented) === null || _a === void 0 ? void 0 : _a[0]) || '';
+                    followingText += ((_b = tokens[nextIndex].accented) === null || _b === void 0 ? void 0 : _b[0]) || '';
                     if (/[aeiouy]/.test(followingText)) {
                         break;
                     }
@@ -342,7 +352,28 @@ export function scanVerses(tokens, meterAutomatons) {
             if (token.isUnknown) {
                 accentCandidates.push(allVowelsAmbiguous(token.text.toLowerCase()));
             }
-            verse.push([index, possibleScans(accentCandidates, followingSegment)]);
+            const scans = possibleScans(accentCandidates, followingSegment);
+            // Hypermeter: a verse-final -que may elide into the next line (e.g.
+            // nexaequ'aere) OR stand as a final anceps syllable. Offer both the
+            // line-broken (#) reading and the eliding (V) reading so the automaton
+            // can choose whichever lets the hexameter complete.
+            if (isHyperEnclitic) {
+                const extra = possibleScans(accentCandidates, followingSegment === 'V' ? '#' : 'V');
+                const seen = new Set();
+                const merged = [];
+                for (const s of [...scans, ...extra]) {
+                    const key = s.scansion + '|' + s.accented;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        merged.push(s);
+                    }
+                }
+                merged.sort((a, b) => a.penalty - b.penalty);
+                verse.push([index, merged]);
+            }
+            else {
+                verse.push([index, scans]);
+            }
         }
         // End of verse (newline or last token)
         if (token.text.includes('\n') || index === tokens.length - 1) {
