@@ -261,6 +261,9 @@ const ACCENT_OVERRIDES = {
     'pulvis': ['pulvi_s', 'pulvis'],
     // aereum → ā-e-re-um (LSSL) Cat 64.241 (gold reads āerium); wordlist aere^um gives LSL.
     'aereum': ['a_e^re^um', 'a_erium'],
+    // videt → vi-det (LS) Aen 1.308 (gold: det long by position before h);
+    // wordlist vi^det gives SS.
+    'videt': ['vi_det', 'vi^det'],
 };
 /**
  * Tokenization class - splits Latin text into tokens
