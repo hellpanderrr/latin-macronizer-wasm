@@ -69,6 +69,41 @@ const ACCENT_OVERRIDES = {
     'euryalum': ['Eury^a_lum', 'Eury^a^lum'],
     // Letum → lētum (Aen 6.277): capitalized proper noun falls to ending engine.
     'letum': ['letum', 'le_tum'],
+    // ── M-013b: true-quantity cluster (gold-verified, hypotactic per-syllable) ──
+    // rēligiō/ne/sa: L&S double quantity; Vergil scans long re. (6 lines)
+    'religio': ['re^li^gi^o_', 're_li^gi^o_'],
+    'religione': ['re^li^gi^o_ne', 're_li^gi^o_ne'],
+    'religiosa': ['re^li^gi^o_sa', 're_li^gi^o_sa'],
+    // saniē: wordlist "sanie" (no markers) → segmentAccented gives sa-ni-e all
+    // short; gold Aen 2.221/3.618 confirms all short (SSS).
+    'sanie': ['sa^ni^e', 'sa_ni^e'],
+    // līquentia (Aen 1.432): gold long li (spondaic line); 5.238/5.776 short li
+    // → keep both candidates.
+    'liquentia': ['li^quenti^a', 'li_quenti^a'],
+    // exoritur: gold ex-o-ri-tur (LSSL); tur long by position via following
+    // consonant. exori_tur (wordlist) wrongly marks ri long.
+    'exoritur': ['exo^ri_tur', 'exori_tur'],
+    // dīmōverat (Aen 3.589, 4.7): gold di-mo-ve-rat (LLSS). Wordlist dimo_verat
+    // marks only mo long; add the long first di.
+    'dimoverat': ['di_mo_verat', 'di^mo_verat'],
+    // excita (Aen 4.301): gold ex-ci-ta (LSS). Wordlist excita_ marks final a
+    // long; override with final short.
+    'excita': ['exci^ta', 'exci^ta_'],
+    // ── M-013b: closed-prefix cluster (gold-verified) ──
+    // subiciunt/obicitur/coniciunt/inice: the prefix vowel is short in the
+    // wordlist (subi^ciunt → su-bi-ci-unt = SSS...), but the meter needs the
+    // prefix syllable CLOSED (sub-i-ci-unt = LSS...). The prefix vowel stays
+    // short in the orthography; marking the syllable heavy (as the existing
+    // dehiscens pattern does) lets the meter pick it. Gold: sub:long i:short
+    // ci:short unt:long.
+    'subiciunt': ['su_bi^ciunt', 'subi^ciunt'],
+    'subicio': ['su_bi^cio', 'subi^cio'],
+    'obicitur': ['o_bi^citur', 'obi^citur'],
+    'obicit': ['o_bi^cit', 'obi^cit'],
+    'obicis': ['o_bi^cis', 'obi^cis'],
+    'coniciunt': ['co_ni^ciunt', 'coni^ciunt'],
+    'conicit': ['co_ni^cit', 'coni^cit'],
+    'inice': ['i_ni^ce', 'ini^ce'],
 };
 /**
  * Tokenization class - splits Latin text into tokens
