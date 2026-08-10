@@ -135,7 +135,7 @@ const ACCENT_OVERRIDES = {
     // Eumenides → Eu-me-ni-dēs (LSSL); wordlist Eume^ni^de_s gives SSSSL/LSSL.
     'eumenides': ['eumenide_s', 'e_umenide_s'],
     // Numitor → Nu-mi-tor (LSL); wordlist numitor gives SSL (all short... check).
-    'numitor': ['nu_mito_r', 'nu_mi^to_r'],
+    'numitor': ['nu_mito_r', 'nu^mi^to_r', 'nu_mi^to_r'],
     // aether → ae-ther (LL); wordlist aether gives LL already (diphthong) — keep for safety.
     'aether': ['aethe_r', 'aether'],
     // solis → sō-lis (LS); wordlist solis gives SS.

@@ -54,12 +54,6 @@
   "norm": "nomen et arma locum servant te amice nequivi"
  },
  {
-  "file": "aeneid-6.txt",
-  "meter": "dactylichexameter",
-  "line": "et Capys et Numitor et qui te nomine reddet",
-  "norm": "et capys et numitor et qui te nomine reddet"
- },
- {
   "file": "catullus-LXIV.txt",
   "meter": "dactylichexameter",
   "line": "omnibus his Thesei dulcem praeoptarit amorem:",
