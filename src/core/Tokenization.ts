@@ -261,6 +261,18 @@ const ACCENT_OVERRIDES: Record<string, string[]> = {
   'concessit': ['concessi_t', 'co_ncessi_t'],
   // capillo → ca-pil-lo (SLL) Cat 64.194; wordlist capillo_ gives LLL.
   'capillo': ['ca^pillo_', 'capillo_'],
+
+  // ── M-013b: batch 6 — more gold-verified (Aeneid) ──
+  // colloque → col-lo-que (LLS) Aen 1.654/715; wordlist collo^que gives LSS.
+  'colloque': ['co_llo_que', 'collo_que'],
+  // zacynthos → Za-cyn-thos (SLL) Aen 3.270; wordlist Za^cyntho_s gives SLL.
+  'zacynthos': ['za^cyntho_s', 'zacyntho_s'],
+  // cyclopes → Cȳ-clo-pes (LLS) Aen 3.644; wordlist cyclo_pe_s gives LLL.
+  'cyclopes': ['cy_clo_pes', 'cyclo_pes'],
+  // amittebat → ā-mit-tē-bat (LLLL) Aen 5.853; wordlist amittebat gives... check.
+  'amittebat': ['a_mi_tte_ba_t', 'a_mitte_ba_t'],
+  // nemorosa → ne-mo-rō-sa (SSLS) Aen 3.270; wordlist ne^mo^ro_sa_ gives SSLL.
+  'nemorosa': ['ne^moro_sa', 'nemoro_sa'],
 };
 
 /**

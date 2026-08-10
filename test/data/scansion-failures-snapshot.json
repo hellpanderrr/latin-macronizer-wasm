@@ -36,18 +36,6 @@
   "norm": "munera laetitiamque dii"
  },
  {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
-  "line": "maxima natarum Priami, colloque monile",
-  "norm": "maxima natarum priami colloque monile"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
-  "line": "Ille ubi complexu Aeneae colloque pependit",
-  "norm": "ille ubi complexu aeneae colloque pependit"
- },
- {
   "file": "aeneid-2.txt",
   "meter": "dactylichexameter",
   "line": "nostrorum obruimur oriturque miserrima caedes",
@@ -76,12 +64,6 @@
   "meter": "dactylichexameter",
   "line": "iam medio apparet fluctu nemorosa Zacynthos",
   "norm": "iam medio apparet fluctu nemorosa zacynthos"
- },
- {
-  "file": "aeneid-3.txt",
-  "meter": "dactylichexameter",
-  "line": "infandi Cyclopes et altis montibus errant.",
-  "norm": "infandi cyclopes et altis montibus errant"
  },
  {
   "file": "aeneid-3.txt",
@@ -154,12 +136,6 @@
   "meter": "dactylichexameter",
   "line": "aera dimovit tenebrosum et dispulit umbras,",
   "norm": "aera dimovit tenebrosum et dispulit umbras"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
-  "line": "nusquam amittebat oculosque sub astra tenebat.",
-  "norm": "nusquam amittebat oculosque sub astra tenebat"
  },
  {
   "file": "aeneid-6.txt",
