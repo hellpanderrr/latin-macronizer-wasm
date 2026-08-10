@@ -163,6 +163,42 @@ const ACCENT_OVERRIDES: Record<string, string[]> = {
   'solis': ['so_lis', 'so^lis'],
   // choreas → cho-re-ās (SSL); wordlist choreas gives SS.
   'choreas': ['cho^re^a_s', 'cho^re_as'],
+
+  // ── M-013b: batch 3 — more gold-verified quantity fixes (hypotactic) ──
+  // oreades → o-rē-a-des (LSLS); wordlist o^re_a^de_s gives SLSL.
+  'oreades': ['o_rea_des', 'o_re^a_des'],
+  // aureis → au-reis (LL); wordlist aure^i_s gives LSL (i not part of ei diphthong).
+  'aureis': ['aureis', 'a_ureis'],
+  // deorum → de-o-rum (SLL); wordlist de^o_rum gives SLL already — keep for safety.
+  'deorum': ['de^o_rum', 'de_o_rum'],
+  // oritur → o-ri-tur (SSL); wordlist oritur gives SSL — keep for safety.
+  'oritur': ['o^ri_tur', 'oritu_r'],
+  // arant → a-rant (SL); wordlist a^rant gives SL already.
+  'arant': ['a^rant', 'arant'],
+  // situs → si-tūs (SL); wordlist si^tus gives SS.
+  'situs': ['si^tu_s', 'situ_s'],
+  // excitum → ex-cī-tum (LLL); wordlist exci^tum gives LSL.
+  'excitum': ['exci_tum', 'e_xci_tum'],
+  // solane → sō-la-ne (LSS); wordlist so_la_ne gives LLS.
+  'solane': ['so_lane', 'so_la^ne'],
+  // pectoribus → pec-to-ri-bus (LSSL); wordlist pectoribus gives LSSS.
+  'pectoribus': ['pectoribu_s', 'pe_ctoribu_s'],
+  // abito → a-bī-tō (SLL); wordlist a_bi_to_ gives LLL.
+  'abito': ['a^bi_to_', 'abi_to_'],
+  // adloquitur → ad-lo-qui-tur (LSSL); wordlist adlo^quitur gives LSSS/SSSS.
+  'adloquitur': ['adloquitu_r', 'a_dloquitu_r'],
+  // iactetur → iacte-tur (LLL); wordlist jacte_tur gives LLS.
+  'iactetur': ['iacte_tu_r', 'i^acte_tu_r'],
+  // datur → da-tur (SL); wordlist da^tur gives SS.
+  'datur': ['da^tu_r', 'da^tur'],
+  // mnesthei → Mnēs-thei (LL, -ei diphthong); wordlist mnesthei_ gives LSL.
+  'mnesthei': ['mne_sthei', 'mnesthei'],
+  // gyan → Gy-ān (SL); wordlist gyan gives SS.
+  'gyan': ['gy_an', 'gy^an'],
+  // charybdin → Cha-ryb-din (SLL); wordlist charybdin gives SLL — keep for safety.
+  'charybdin': ['cha^rybdi_n', 'charybdin'],
+  // biiugo → bi-iu-go (LL); wordlist bi^ju^go_ gives LSL.
+  'biiugo': ['bi_iugo_', 'biiugo_'],
 };
 
 /**

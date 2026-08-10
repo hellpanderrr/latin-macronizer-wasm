@@ -50,20 +50,8 @@
  {
   "file": "aeneid-1.txt",
   "meter": "dactylichexameter",
-  "line": "litora iactetur odiis Iunonis iniquae,",
-  "norm": "litora iactetur odiis iunonis iniquae"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
   "line": "Ille ubi complexu Aeneae colloque pependit",
   "norm": "ille ubi complexu aeneae colloque pependit"
- },
- {
-  "file": "aeneid-1.txt",
-  "meter": "dactylichexameter",
-  "line": "atria; dependent lychni laquearibus aureis",
-  "norm": "atria dependent lychni laquearibus aureis"
  },
  {
   "file": "aeneid-2.txt",
@@ -110,20 +98,8 @@
  {
   "file": "aeneid-3.txt",
   "meter": "dactylichexameter",
-  "line": "nec revocare situs aut iungere carmina curat:",
-  "norm": "nec revocare situs aut iungere carmina curat"
- },
- {
-  "file": "aeneid-3.txt",
-  "meter": "dactylichexameter",
   "line": "infandi Cyclopes et altis montibus errant.",
   "norm": "infandi cyclopes et altis montibus errant"
- },
- {
-  "file": "aeneid-3.txt",
-  "meter": "dactylichexameter",
-  "line": "excitum ruit ad portus et litora complent.",
-  "norm": "excitum ruit ad portus et litora complent"
  },
  {
   "file": "aeneid-3.txt",
@@ -134,26 +110,8 @@
  {
   "file": "aeneid-4.txt",
   "meter": "dactylichexameter",
-  "line": "solane perpetua maerens carpere iuventa",
-  "norm": "solane perpetua maerens carpere iuventa"
- },
- {
-  "file": "aeneid-4.txt",
-  "meter": "dactylichexameter",
-  "line": "pectoribus inhians spirantia consulit exta.",
-  "norm": "pectoribus inhians spirantia consulit exta"
- },
- {
-  "file": "aeneid-4.txt",
-  "meter": "dactylichexameter",
   "line": "Cretesque Dryopesque fremunt pictique Agathyrsi;",
   "norm": "cretesque dryopesque fremunt pictique agathyrsi"
- },
- {
-  "file": "aeneid-4.txt",
-  "meter": "dactylichexameter",
-  "line": "tum sic Mercurium adloquitur ac talia mandat:",
-  "norm": "tum sic mercurium adloquitur ac talia mandat"
  },
  {
   "file": "aeneid-4.txt",
@@ -188,38 +146,8 @@
  {
   "file": "aeneid-5.txt",
   "meter": "dactylichexameter",
-  "line": "non tam praecipites biiugo certamine campum",
-  "norm": "non tam praecipites biiugo certamine campum"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
-  "line": "Sergesto Mnestheique, Gyan superare morantem.",
-  "norm": "sergesto mnestheique gyan superare morantem"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
-  "line": "olli serva datur operum haud ignara Minervae,",
-  "norm": "olli serva datur operum haud ignara minervae"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
-  "line": "tertius Argolica hac galea contentus abito.'",
-  "norm": "tertius argolica hac galea contentus abito"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
   "line": "emicat Euryalus et munere victor amici",
   "norm": "emicat euryalus et munere victor amici"
- },
- {
-  "file": "aeneid-5.txt",
-  "meter": "dactylichexameter",
-  "line": "dat Salio villis onerosum atque unguibus aureis.",
-  "norm": "dat salio villis onerosum atque unguibus aureis"
  },
  {
   "file": "aeneid-5.txt",
