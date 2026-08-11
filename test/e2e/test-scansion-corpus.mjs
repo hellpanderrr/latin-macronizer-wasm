@@ -77,6 +77,29 @@ function normalizeLine(line) {
   return stripMacrons(line).toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+// A line is an INCOMPLETE scan if its feet string is missing or shorter than a
+// full scan of its meter. Meter-dependent (M-013d — the gate used to check
+// `feet === ''` only, so a hexameter that scanned 5 feet (`SSDDD`) passed):
+//   dactylichexameter: 6 feet. A 5-foot scan is a hidden partial — a complete
+//     verse that only scanned 5 of 6 feet (the M-013d failure class). Lines
+//     scanning 1-4 feet are genuine hemistichs/fragments (Hic cursus fuit:,
+//     Dardanidae.) — correct partials, NOT failures, so they are not flagged.
+//   hendecasyllable: 11 positions (-/u). Any short scan is incomplete.
+//   elegiacdistichs: both hexameter (6) and pentameter (D,D,-,D,D,- = 6) emit 6.
+function isIncompleteScan(feet, meter) {
+  if (feet === undefined || feet === '') return true;
+  switch (meter) {
+    case 'dactylichexameter':
+      return feet.length === 5; // 1-4 feet = genuine hemistich, not a failure
+    case 'hendecasyllable':
+      return feet.length < 11;
+    case 'elegiacdistichs':
+      return feet.length < 6;
+    default:
+      return false;
+  }
+}
+
 // Canonical verses that MUST scan — regression protection.
 // Verified as of 2026-08-05: each scans cleanly in the current build.
 // 2026-08-09: added the -ērunt/-ĕrunt alternation fixes (Aen 2.774 obstipuī,
@@ -153,7 +176,7 @@ async function collectFailures(m, onLine) {
         const norm = normalizeLine(lines[i]);
         if (!norm) continue;
         if (onLine) onLine({ file, meter, line: lines[i], feet: feet[i] });
-        if (feet[i] === undefined || feet[i] === '') {
+        if (isIncompleteScan(feet[i], meter)) {
           failures.push({ file, meter, line: lines[i], norm });
         }
       }
@@ -171,9 +194,11 @@ async function main() {
   const goldenByNeedle = new Map();
   await collectFailures(m, ({ meter, line, feet }) => {
     const n = normalizeLine(line);
-    const scanned = feet !== undefined && feet !== '';
+    // A golden line must scan to a FULL meter (not just non-empty) — a golden
+    // line that regressed to a 5-foot partial must fail.
+    const scanned = !isIncompleteScan(feet, meter);
     for (const g of GOLDEN) {
-      // Only a line that actually SCANNED (non-empty feet) counts as passing.
+      // Only a line that actually SCANNED (full-length feet) counts as passing.
       // (The feet check is the whole point of the golden list — without it a
       // golden line that stopped scanning would silently pass.)
       if (g.meter === meter && n.includes(g.needle) && scanned) goldenByNeedle.set(g.needle, true);

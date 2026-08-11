@@ -73,7 +73,10 @@ for (const book of Object.keys(gold['Vergil']['Aeneid'])) {
 const catPath = goldPath.replace('vergil.json', 'catullus.json');
 if (fs.existsSync(catPath)) {
   const cg = JSON.parse(fs.readFileSync(catPath, 'utf8'));
-  const poem = cg['Catullus'][0]['poem content'];
+  const poems = cg['Catullus']['Poems']['poems'];
+  // The corpus has Catullus 64 as catullus-LXIV.txt (hexameter). Find poem 64.
+  const poem64 = poems.find(p => String(p['poem number']) === '64');
+  const poem = poem64 ? poem64['poem content'] : [];
   for (const entry of poem) {
     const words = [];
     for (const seg of entry.segments) for (const w of seg.words) words.push(w);

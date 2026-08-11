@@ -459,7 +459,17 @@ export function scanVerses(
       // line-broken (#) reading and the eliding (V) reading so the automaton
       // can choose whichever lets the hexameter complete.
       if (isHyperEnclitic) {
-        const extra = possibleScans(accentCandidates, followingSegment === 'V' ? '#' : 'V');
+        // The extra #/V reading is only meaningful for a -que that can elide
+        // into a following VOWEL: a verse-final -que (hypermeter into the next
+        // line) or a mid-line -que before a vowel (atque, namque). A mid-line
+        // -que before a CONSONANT cannot elide — offering the V reading would
+        // inject an empty-scansion que[] candidate whose cheap penalty lets the
+        // DP skip the syllable and prefer an INCOMPLETE 5-foot scan over the
+        // correct complete hexameter (cum tacet omnis... pictaeque volucres:
+        // que[S]+volucres[SLL]=6ft pen1 loses to que[]+volucres[SSL]=5ft pen0).
+        // So when the following segment is NOT a vowel, offer no extra.
+        const canElide = followingSegment === 'V';
+        const extra = canElide ? possibleScans(accentCandidates, followingSegment === 'V' ? '#' : 'V') : [];
         let merged: ScanResult[];
         if (verseFinalQue) {
           // Verse-final -que: merge both readings keeping the LOWEST penalty

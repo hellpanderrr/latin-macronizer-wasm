@@ -52,6 +52,22 @@ function normalizeLine(line) {
   return stripMacrons(line).toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+// Must mirror test-scansion-corpus.mjs's isIncompleteScan exactly — the
+// snapshot records the same lines the gate flags.
+function isIncompleteScan(feet, meter) {
+  if (feet === undefined || feet === '') return true;
+  switch (meter) {
+    case 'dactylichexameter':
+      return feet.length === 5; // 1-4 feet = genuine hemistich, not a failure
+    case 'hendecasyllable':
+      return feet.length < 11;
+    case 'elegiacdistichs':
+      return feet.length < 6;
+    default:
+      return false;
+  }
+}
+
 async function createMacronizer() {
   const m = new Macronizer({ useWasm: true, wordlistUrl: '/macrons.txt' });
   m.morpheusAnalyzer = null;
@@ -84,7 +100,7 @@ async function main() {
         // Skip non-verse lines (dividers) — must match the gate's collectFailures.
         const norm = normalizeLine(lines[i]);
         if (!norm) continue;
-        if (feet[i] === undefined || feet[i] === '') {
+        if (isIncompleteScan(feet[i], meter)) {
           failures.push({ file, meter, line: lines[i], norm });
         }
       }

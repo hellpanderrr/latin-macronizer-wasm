@@ -1,5 +1,23 @@
 [
  {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "Tune ille Aeneas, quem Dardanio Anchisae",
+  "norm": "tune ille aeneas quem dardanio anchisae"
+ },
+ {
+  "file": "aeneid-1.txt",
+  "meter": "dactylichexameter",
+  "line": "munera laetitiamque dii.",
+  "norm": "munera laetitiamque dii"
+ },
+ {
+  "file": "aeneid-3.txt",
+  "meter": "dactylichexameter",
+  "line": "Nereidum matri et Neptuno Aegaeo,",
+  "norm": "nereidum matri et neptuno aegaeo"
+ },
+ {
   "file": "aeneid-3.txt",
   "meter": "dactylichexameter",
   "line": "liminaque laurusque dei, totusque moveri",
@@ -22,6 +40,12 @@
   "meter": "dactylichexameter",
   "line": "Italiam non sponte sequor.'",
   "norm": "italiam non sponte sequor"
+ },
+ {
+  "file": "aeneid-5.txt",
+  "meter": "dactylichexameter",
+  "line": "victor apud rapidum Simoenta sub Ilio alto,",
+  "norm": "victor apud rapidum simoenta sub ilio alto"
  },
  {
   "file": "aeneid-5.txt",
