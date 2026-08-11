@@ -10,6 +10,20 @@ const SYNEZISPENALTY = 3;
 const HIATUSPENALTY = 3;
 const MUTACUMLIQUIDAPENALTY = 1;
 const REPRIORITIZEPENALTY = 1;
+// A COMPLETE reading (ends at state 0) is preferred over an incomplete one
+// even when it costs up to one phonological concession more. Rationale: a
+// hexameter is DEFINED as ending at state 0 — an incomplete 5-foot scan is not
+// a hexameter. But the DP treats "stop early" as free (0 penalty), so a
+// complete reading that needs real quantities (long vowels, synizesis) at
+// 1-3 penalty loses to a 5-foot partial that avoids those costs by simply not
+// finishing. Bounded at 3 (one HIATUS/SYNEZIS penalty) so it fixes genuine
+// hexameters whose complete path is within one concession (Tune ille Aen 1.617,
+// victor Simoenta Aen 5.261) but does NOT force completion where the only
+// complete path requires multiple corruptions (Nereidum Aen 3.74 — the gold
+// path is pen6 above the cheap path, so it correctly stays a 5-foot partial
+// rather than completing with wrong quantities). A genuine hemistich/fragment
+// has no complete path at all, so the bonus never invents completion there.
+const COMPLETIONBONUS = 3;
 /**
  * Generate accented forms for unknown words: mark all vowels as ambiguous (short)
  */
@@ -299,10 +313,16 @@ export function scanVerse(verse, automaton) {
             // Cymodoceque). Genuine hypermeters still need the elision because their
             // penultimate word alone completes the meter (guard above).
             const complete = wordIndex === verse.length - 1 ? nodeIndex === 0 : subComplete;
-            if (totalPenalty < bestTailPenalty || (totalPenalty === bestTailPenalty && complete && !bestComplete)) {
+            // M-013f completion bonus: a reading that ends at state 0 gets up to
+            // COMPLETIONBONUS off its penalty, so a real 6-foot hexameter wins over a
+            // 5-foot truncation when its complete path is within one phonological
+            // concession (Tune ille, victor Simoenta). Bounded so it does NOT force a
+            // multi-corruption completion (Nereidum stays a correct 5-foot partial).
+            const effectivePenalty = complete && wordIndex === verse.length - 1 ? totalPenalty - COMPLETIONBONUS : totalPenalty;
+            if (effectivePenalty < bestTailPenalty || (effectivePenalty === bestTailPenalty && complete && !bestComplete)) {
                 bestTail = [[tokenIndex, accented], ...tail];
                 bestTailFeet = [...feet, ...tailFeet];
-                bestTailPenalty = totalPenalty;
+                bestTailPenalty = effectivePenalty;
                 bestComplete = complete;
             }
         }

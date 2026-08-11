@@ -69,8 +69,11 @@ const ACCENT_OVERRIDES = {
     // Thesea → Thē-sĕ-ă (Aen 6.122, 6.123, LXIV): wordlist has long se.
     'thesea': ['The_se_a', 'The_se^a'],
     // Euryalus / Euryalum → Eu-ry-ă-lus (Aen 5.295, 5.323): wordlist has long a.
-    'euryalus': ['Eury^a_lus', 'Eury^a^lus'],
-    'euryalum': ['Eury^a_lum', 'Eury^a^lum'],
+    // e^u^ry^a^lu_s (LSSL, Aen 5.337) is the gold 4-syllable reading with y as a
+    // consonant (e-ury-a-lu-s) — the wordlist forms Eu-ry-a-lus give LSLS/LSSS
+    // and never reach the gold LSSL that completes "emicat Euryalus et munere".
+    'euryalus': ['Eury^a_lus', 'Eury^a^lus', 'e^u^ry^a^lu_s'],
+    'euryalum': ['Eury^a_lum', 'Eury^a^lum', 'e^u^ry^a^lu_m'],
     // Letum → lētum (Aen 6.277): capitalized proper noun falls to ending engine.
     'letum': ['letum', 'le_tum'],
     // ── M-013b: true-quantity cluster (gold-verified, hypotactic per-syllable) ──
@@ -208,6 +211,11 @@ const ACCENT_OVERRIDES = {
     // gives SS. The -r before "arcumque" (vowel) makes no position — gold marks
     // the syllable long regardless.
     'pater': ['pa^ter', 'pa^te_r'],
+    // ── M-013f: five-foot partial completion cluster (gold-verified) ──
+    // Īliō → ī-li-ō (LSS) Aen 5.261: gold "sub Īliō altō". Wordlist I_lio_ gives
+    // LS/LL (2-syllable) — never the gold 3-syllable LSS. Add i_li^o^ (LSS) so
+    // the completion bonus can prefer the complete hexameter (DDSDDS, gold).
+    'ilio': ['I_lio_', 'i_li^o^'],
     // ── M-013b: batch 5 — Catullus quantity fixes (gold-verified) ──
     // dicetur → dī-cē-tur (LLL) Cat 62.4; wordlist di_ce_tur gives LLS.
     'dicetur': ['di_ce_tu_r', 'di_ce_tur'],
