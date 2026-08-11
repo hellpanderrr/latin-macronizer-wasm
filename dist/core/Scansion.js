@@ -521,9 +521,22 @@ export function scanVerses(tokens, meterAutomatons) {
                 // placeholders so scannedFeet stays index-aligned with the source
                 // lines. Previously these lines emitted nothing, shifting every
                 // subsequent line's feet and producing spurious scansion failures.
-                // Do NOT advance the meter automaton — an empty line is not a verse.
+                // Advance the meter automaton by the number of empty positions: in an
+                // ALTERNATING-meter poem (elegiac distichs = hex/pent), a lacuna
+                // (gold line position with no words, e.g. Catullus 68 line 47) still
+                // consumes a meter slot — skipping it desyncs every subsequent line
+                // (pentameters scanned against the hexameter automaton fail, ~112
+                // lines in Catullus 68). For single-meter corpora (hexameter,
+                // hendecasyllable) advancing is harmless — the index wraps to 0.
+                // (Dividers in single-meter files were the original "don't advance"
+                // rationale; in alternating-meter files there are no transcriber
+                // dividers, only genuine lacunae.)
                 for (let nl = 0; nl < newlineCount; nl++) {
                     scannedFeet.push('');
+                    automatonIndex++;
+                    if (automatonIndex === meterAutomatons.length) {
+                        automatonIndex = 0;
+                    }
                 }
             }
         }

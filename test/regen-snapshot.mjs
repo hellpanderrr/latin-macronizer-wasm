@@ -86,7 +86,12 @@ async function main() {
     for (const file of fs.readdirSync(meterDir)) {
       if (!file.endsWith('.txt')) continue;
       const text = fs.readFileSync(path.join(meterDir, file), 'utf-8');
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      // Keep INTERIOR empty lines (lacunae — real verse positions) so the
+      // automaton alternation matches the source; drop only the trailing
+      // file-final newline artifact. Must mirror test-scansion-corpus.mjs.
+      const raw = text.split('\n');
+      if (raw.length > 0 && raw[raw.length - 1].trim() === '') raw.pop();
+      const lines = raw.map(l => l.trim());
       const joined = lines.join('\n');
       let result;
       try {

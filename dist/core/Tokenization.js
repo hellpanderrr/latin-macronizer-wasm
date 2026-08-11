@@ -216,6 +216,40 @@ const ACCENT_OVERRIDES = {
     // LS/LL (2-syllable) — never the gold 3-syllable LSS. Add i_li^o^ (LSS) so
     // the completion bonus can prefer the complete hexameter (DDSDDS, gold).
     'ilio': ['I_lio_', 'i_li^o^'],
+    // ── M-013g: Aeneid 7-12 + broader corpus — Greek names & quantity fixes
+    // (gold-verified, hypotactic per-syllable). The 3x corpus expansion
+    // (e39b29f) surfaced systematic wordlist-quantity errors books 1-6 never
+    // hit. Each: wordlist form → gold pattern.
+    // Euander/Euandri/Euandrum/Euandre → E-u-an-der (LLL/LLS, u as vowel):
+    // wordlist Evandro_/Euandri_/etc. give 4-syll SLL/LSL. (Aen 10.492, 11.45,
+    // 11.55, 11.140, 11.148, 10.780, 11.31)
+    'euandro': ['e_u^a^ndro_', 'Evandro_'],
+    'euandri': ['e_u_a^ndri^', 'Euandri_'],
+    'euandrum': ['e_u_a^ndru^m', 'Evandrum'],
+    'euandre': ['e_u^a^ndre^', 'Evandre'],
+    // Arcades → Ar-ca-dēs (LSS) Aen 10.491, 11.93, 11.142: wordlist arca^de_s
+    // gives LSL (long a). (Not formable via brute — segmenter; see below.)
+    // obice/obiciunt → ŏ-bĭ-c- (LSS/LSSL) Aen 10.377, 10.115: wordlist obi^ce/
+    // obi^ciunt give SSS/SSSL — the closed-prefix o + short bi. Same class as
+    // the M-013b obicitur cluster.
+    'obice': ['o_bi^ce^', 'obi^ce'],
+    'obiciunt': ['o_bi^ci^u^nt', 'obi^ciunt'],
+    // Laride → Lā-rī-dē (LLL) Aen 10.391, 10.395: wordlist la_ri^de LSS.
+    'laride': ['la_ri_de_', 'la_ri^de'],
+    // Cisseis → Cis-sē-īs (LLL) Aen 10.705: wordlist Cissei_s LSL.
+    'cisseis': ['ci^sse_i^s', 'Cissei_s'],
+    // Atinas → A-tī-nās (SLL) Aen 11.xxx: wordlist A_ti_na_s LLL.
+    'atinas': ['a^ti_na^s', 'A_ti_na_s'],
+    // Mago → Ma-gō (SL) Aen 10.521: wordlist Ma_go_ LL.
+    'mago': ['ma^go_', 'Ma_go_'],
+    // sinit → sĭ-nit (SL) Aen 10.433: wordlist si^nit SS.
+    'sinit': ['si^ni^t', 'si^nit'],
+    // dabat → dă-bat (SL) Aen 10.383: wordlist da^bat SS.
+    'dabat': ['da^ba^t', 'da^bat'],
+    // juvat → jŭ-vat (SL) Aen 10.284: wordlist ju^vat SS.
+    'juvat': ['ju^va_t', 'ju^vat'],
+    // Thybri → Thy-brī (LS) Aen 10.421: wordlist Thybri_ LL.
+    'thybri': ['thy_bri^', 'Thybri_'],
     // ── M-013b: batch 5 — Catullus quantity fixes (gold-verified) ──
     // dicetur → dī-cē-tur (LLL) Cat 62.4; wordlist di_ce_tur gives LLS.
     'dicetur': ['di_ce_tu_r', 'di_ce_tur'],

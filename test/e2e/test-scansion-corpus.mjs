@@ -156,7 +156,14 @@ async function collectFailures(m, onLine) {
     for (const file of fs.readdirSync(meterDir)) {
       if (!file.endsWith('.txt')) continue;
       const text = fs.readFileSync(path.join(meterDir, file), 'utf-8');
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      // Keep INTERIOR empty lines — in gold-extracted corpora they are LACUNAE
+      // (real verse positions with no words, e.g. Catullus 68 lines 47/142/143),
+      // and the engine advances the meter automaton on them so an alternating
+      // elegiac poem stays hex/pent/hex/pent. Drop only the trailing file-final
+      // newline artifact.
+      const raw = text.split('\n');
+      if (raw.length > 0 && raw[raw.length - 1].trim() === '') raw.pop();
+      const lines = raw.map(l => l.trim());
       const joined = lines.join('\n');
       let result;
       try {
