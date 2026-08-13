@@ -77,7 +77,6 @@ async function createMacronizer() {
 }
 
 async function main() {
-  const m = await createMacronizer();
   const failures = [];
   for (const meter of fs.readdirSync(CORPUS)) {
     const meterDir = path.join(CORPUS, meter);
@@ -93,13 +92,19 @@ async function main() {
       if (raw.length > 0 && raw[raw.length - 1].trim() === '') raw.pop();
       const lines = raw.map(l => l.trim());
       const joined = lines.join('\n');
+      // Recreate the macronizer PER FILE: the WASM RFTagger module accumulates
+      // linear memory across whole-file scans and OOMs after ~13 large files
+      // (aeneid books). The wordlist re-parse (~2-3s) is the cost of bounding it.
+      const m = await createMacronizer();
       let result;
       try {
         result = await m.macronize(stripMacrons(joined), { macronize: true, alsomaius: false, performutov: false, performitoj: false, scan: meter });
       } catch (e) {
         failures.push({ file, meter, line: `[ERROR: ${e.message}]`, norm: `__error_${file}__` });
+        m.destroy();
         continue;
       }
+      m.destroy();
       const feet = result.scannedFeet || [];
       for (let i = 0; i < lines.length; i++) {
         // Skip non-verse lines (dividers) — must match the gate's collectFailures.
@@ -109,10 +114,10 @@ async function main() {
           failures.push({ file, meter, line: lines[i], norm });
         }
       }
+      if (failures.length % 100 === 0) console.log(`  ${file}: ${lines.length} lines, cumulative failures ${failures.length}`);
     }
   }
   fs.writeFileSync(SNAPSHOT, JSON.stringify(failures, null, 1));
   console.log(`Wrote ${failures.length} failing lines to ${SNAPSHOT}`);
-  m.destroy();
 }
 main().catch(e => { console.error('Fatal:', e); process.exit(1); });

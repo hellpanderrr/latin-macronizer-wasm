@@ -516,6 +516,28 @@ const ACCENT_OVERRIDES: Record<string, string[]> = {
   // (final cē long). With this form the line completes with -que as a real
   // final syllable (gold Cymodoceque=LSSLL) — not as an elided hypermeter.
   'cymodoce': ['cy_mo^do^ce_'],
+
+  // Gold-confirmed quantity fixes (negenborn full-Catullus scansion, M-023m).
+  // The wordlist reading lacks the quantity the verse needs; the extra form
+  // becomes a scansion candidate the meter can pick (prose keeps accented[0]).
+  // Erechtēī → e-rech-thei (3-syll SLL): wordlist has only 4-syll readings
+  // (E^rechthei_ SLSL / E^rechthe_i_ SLLL); the synizesis -eī is needed.
+  'erechthei': ['erechthei'],
+  // āereă (LXIV 292) — the ā of aēreus is long; wordlist aere^a has short a.
+  'aerea': ['a_erea_'],
+  // lāsarpīciferīs (VII 4) — the ā of lasarpicium is long; wordlist short.
+  'lasarpiciferis': ['la_sarpi_ciferis'],
+  // rēiecta (LXVI 81) — the re- prefix is long; wordlist rejecta has short e.
+  'reiecta': ['reiecta_'],
+  // sĭc (XXII 5) — sic is always short; wordlist only has si_c (long).
+  'sic': ['sic'],
+  // lĭquisse (XXXI 6) — linquo's i is short; wordlist li_quisse over-lengthens.
+  'liquisse': ['liquisse'],
+  // dĕprēnsa (XXV 13) — the de- prefix is short (prens long by position);
+  // wordlist de_pre_nsa_ over-lengthens the first syllable.
+  'deprensa': ['deprensa'],
+  // Pēgaseo (LVIIIb 2) — Pegasus has long ē; wordlist pe_ga^se_o_ is LSLL.
+  'pegaseo': ['pe_gaseo_'],
 };
 
 /**

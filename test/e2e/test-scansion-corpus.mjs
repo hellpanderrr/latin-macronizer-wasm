@@ -147,7 +147,7 @@ function scanLine(m, line, meter) {
   });
 }
 
-async function collectFailures(m, onLine) {
+async function collectFailures(onLine) {
   const failures = [];
   for (const meter of fs.readdirSync(CORPUS)) {
     const meterDir = path.join(CORPUS, meter);
@@ -165,6 +165,11 @@ async function collectFailures(m, onLine) {
       if (raw.length > 0 && raw[raw.length - 1].trim() === '') raw.pop();
       const lines = raw.map(l => l.trim());
       const joined = lines.join('\n');
+      // Recreate the macronizer PER FILE: the WASM RFTagger module accumulates
+      // linear memory across whole-file scans and OOMs after ~13 large files
+      // (aeneid books / catullus-LXIV). The wordlist re-parse is the cost of
+      // bounding it; per-file behavior is unaffected (each macronize is whole-file).
+      const m = await createMacronizer();
       let result;
       try {
         result = await m.macronize(stripMacrons(joined), {
@@ -172,8 +177,10 @@ async function collectFailures(m, onLine) {
         });
       } catch (e) {
         failures.push({ file, meter, line: `[ERROR: ${e.message}]`, norm: `__error_${file}__` });
+        m.destroy();
         continue;
       }
+      m.destroy();
       const feet = result.scannedFeet || [];
       for (let i = 0; i < lines.length; i++) {
         // Skip non-verse lines (e.g. the "* * * * * * * *" dividers in the
@@ -193,13 +200,12 @@ async function collectFailures(m, onLine) {
 }
 
 async function main() {
-  const m = await createMacronizer();
   let failed = 0;
 
   // ---- 1. Golden lines must scan ----
   console.log('=== Golden lines (must scan) ===');
   const goldenByNeedle = new Map();
-  await collectFailures(m, ({ meter, line, feet }) => {
+  await collectFailures(({ meter, line, feet }) => {
     const n = normalizeLine(line);
     // A golden line must scan to a FULL meter (not just non-empty) — a golden
     // line that regressed to a 5-foot partial must fail.
@@ -227,7 +233,7 @@ async function main() {
     process.exit(1);
   }
   const known = new Set(snapshot.map(f => `${f.file}|${f.meter}|${f.norm}`));
-  const current = await collectFailures(m);
+  const current = await collectFailures();
 
   const newFailures = current.filter(f => !known.has(`${f.file}|${f.meter}|${f.norm}`));
   const fixedLines = [...known].filter(k => {
@@ -256,7 +262,6 @@ async function main() {
     console.log('  ✓ no new failures — failure set is exactly the known baseline');
   }
 
-  m.destroy();
   console.log(`\n=== ${failed === 0 ? 'PASS' : 'FAIL'} (${failed} problem(s)) ===`);
   process.exit(failed > 0 ? 1 : 0);
 }

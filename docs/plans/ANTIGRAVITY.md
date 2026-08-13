@@ -218,3 +218,56 @@ Two parallel subagents advanced M-013 in one session:
   Print the macronized output and check quantities: sŏ-lu-it, in-ē-lĕ-gantēs,
   fra-grāns (ā long by position before -ns), vŏlŏ, dăbŏ, cŷ-rē-nīs, mănĕ,
   ă-bī-te, tētĕ, ŏ-ĭ-lē-ī, Thē-sĕ-ă, Eu-ry-ă-lus all verified correct.
+
+### 14. Full-Catullus scansion gold (negenborn.net) → wordlist bug fixes (M-023m)
+Downloaded the complete negenborn.net scanned Catullus (118 pages: carmina
+1-116 minus spurious 18/19/20, plus fragments 2b/14b/58b/78b/95b) — a full
+gold with BOTH long (macron) AND short (breve) marks on every
+quantity-relevant vowel. This is a strict superset of the macron-only
+hypotactic Aeneid gold used for M-013.
+
+- **The gold lives in `test/data/gold/catullus/<meter>/`**, DECOUPLED from the
+  harness corpus (`test/data/corpus/` untouched — its 99 files + snapshot stay
+  byte-identical, so the scan-completeness gate is unaffected). Raw source:
+  `wiktionary_pron/tmp/catullus_scansion/txt/` (gitignored in the site repo).
+- **Conversion `test/build-catullus-corpus.mjs`** modernizes medieval u→v via
+  the WORDLIST as oracle (flip each unmarked u to v, keep the candidate the
+  wordlist form-index contains — cui/suus stay, nouum→novum; the wordlist has
+  BOTH spellings, so the tiebreak is "most v's"), classifies each carmen by
+  meter, and writes the full-marked poems. Set `CATULLUS_TXT_DIR` to regenerate.
+- **The right comparison is SCAN-BASED, not prose per-vowel.** A naive per-vowel
+  match of `accented[0]` (prose layer) to the gold gave ~70% agreement that is
+  ~30% position-length by nature (lepidum→le^pi^dum is nature-short; the gold
+  marks it long at the -um/consonant) — NOT actionable. Worse, `accented[0]` is
+  the tagger's ranked candidate (short-biased: `^` sorts before `_`) and
+  context-flips (tribus, patrona). The actionable method: for each line that
+  FAILS to scan, align engine words to gold words and report the FIRST word
+  whose gold L/S pattern no engine candidate can produce, then brute-force the
+  `_`/`^` form that unlocks it.
+- **`test/catullus-blocker.mjs`** = the actionable comparison (adapts
+  `gold-blocker.mjs`'s brute-force fix finder to the macron/breve gold, all
+  Catullus meters). Output: per failing line, `BLOCKER: word needs gold PATTERN
+  (engine: ...)` + `FIX: 'form'` candidates. `test/catullus-gold-diag.mjs` is
+  the JSON version.
+- **8 gold-confirmed wordlist quantity bugs FIXED via ACCENT_OVERRIDES**
+  (each verified: the target line now scans; overrides only ADD candidates so
+  prose/scansion can't regress):
+  - `erechthei` — Erechtēī needs the 3-syllable synizesis SLL; wordlist only
+    had 4-syllable readings.
+  - `aerea` — āereă: the ā is long; wordlist aere^a had short a.
+  - `lasarpiciferis` — lāsarpīciferīs: long ā; wordlist short.
+  - `reiecta` — rēiecta: re- long; wordlist rejecta short e.
+  - `sic` — sĭc always short; wordlist only had si_c (long).
+  - `liquisse` — lĭquisse (linquo short i); wordlist li_quisse over-lengthened.
+  - `deprensa` — dĕprēnsa: de- short; wordlist de_pre_nsa_ over-lengthened.
+  - `pegaseo` — Pēgaseo: long ē; wordlist pe_ga^se_o_ was LSLL.
+- **Remaining ~247 failing lines across the gold** are dominated by iambic
+  poems + final-syllable/elision cases the segmenter can't resolve (no `_`/`^`
+  form produces the gold pattern) — the bulk are NOT wordlist bugs. The ~17
+  remaining blockers-with-fixes need human triage (some are gold-editorial
+  errors like `tu`, `hoc`, `ridete` where the final-syllable quantity is
+  metrical, not lexical).
+- **Lesson (the advisor's, confirmed):** comparing prose lexical quantity to
+  metrical gold is the wrong layer — ~30% of Latin syllables are long-by-
+  position, so "70% agree" is a trivial baseline, and the interesting bugs hide
+  in the LONG bucket. Only the failing-line blocker scan is actionable.
