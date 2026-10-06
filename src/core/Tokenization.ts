@@ -538,7 +538,34 @@ const ACCENT_OVERRIDES: Record<string, string[]> = {
   'deprensa': ['deprensa'],
   // Pēgaseo (LVIIIb 2) — Pegasus has long ē; wordlist pe_ga^se_o_ is LSLL.
   'pegaseo': ['pe_gaseo_'],
+
+  // ── M-023m triage (2026-09-21): blockers checked against L&S headwords ──
+  // hoc nom/acc is always short hŏc (only abl. hōc is long); the tagger can
+  // land on the ablative ho_c reading in "hŏc est" (XXXI 11). Additive only —
+  // corrects the homograph selection, contradicts no dictionary quantity.
+  'hoc': ['ho^c'],
+  // REJECTED after L&S check (do not re-add from a blocker run):
+  //   ridete — L&S headword rīdĕo (LONG ī); the gold rĭdētĕ (XXXI 14) puts the
+  //     short on the FIRST syllable, which a hendecasyllable fixes long — so
+  //     the gold mark here is a blip/license, not a short-i lexeme. (Overriding
+  //     would itself break the meter.) Caution: a hendecasyllable's first
+  //     syllable is NOT anceps; earlier notes calling line-initial anceps were
+  //     wrong — the general rule is: L&S headword is the arbiter, not the gold
+  //     position.
+  //   vesaniente — L&S "vē-sānus" (long ē); gold vĕsaniente (XXV 13)
+  //     contradicts the lexicon.
+  //   renidere — L&S rĕnīdĕo, 2nd conj → inf. renīdēre (long dē); the gold's
+  //     short syllables sit at the elision against "usque" (XXXIX 15) —
+  //     segmenter/elision limitation, not a quantity bug.
+  // vorago — APPLIED: L&S headword vŏrāgo (breve on ŏ, long ā, breve on final
+  // ō; Perseus entry title). The wordlist vo^ra_go_ = vŏ-rā-GŌ marks the final
+  // ō LONG; L&S and the gold (XVII 11 vŏrāgŏ) both read it SHORT. The added
+  // vo^ra_go = vŏrāgŏ (SLS) lets the meter pick the correct reading. (Earlier
+  // note claiming "Wiktionary nom. vorāgō long ō, line-end anceps" was wrong —
+  // L&S, not Wiktionary's orthographic macrons, is the arbiter.)
+  'vorago': ['vo^ra_go'],
 };
+
 
 /**
  * Tokenization class - splits Latin text into tokens
