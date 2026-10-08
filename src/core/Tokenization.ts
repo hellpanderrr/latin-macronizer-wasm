@@ -23,7 +23,8 @@ import {
   levenshteinDistance,
   underscoreToUnicode,
   prefixesWithShortJ,
-  stripStressMark
+  stripStressMark,
+  stripLengthMark
 } from '../utils/latin';
 
 export interface TokenizationOptions {
@@ -633,11 +634,22 @@ export class Tokenization {
     let possibleSentenceEnd = false;
 
     for (let i = 0; i < text.length; i++) {
-      // Pre-existing stress accents are stripped from the input: pasting an
-      // already-accentuated liturgical text must re-accentuate idempotently
-      // instead of failing every wordlist lookup (the acute is not part of
-      // any wordform). Covers the combining mark and the precomposed forms.
-      const char = stripStressMark(text[i]);
+      // Pre-existing stress accents AND length marks are stripped from the
+      // input: pasting an already-accentuated or already-macronized text must
+      // look up and re-mark identically to its plain spelling. Python's
+      // Token.__init__ does the same (postags.removemacrons). Without the
+      // length-mark strip the lookup key keeps the macrons, the word is
+      // unknown, and the stress pass sees no quantities (wrong accent).
+      // 1:1 character mapping, so start/end indices stay valid.
+      const char = stripLengthMark(stripStressMark(text[i]));
+
+      // A standalone combining mark (NFD-decomposed input) strips to nothing:
+      // skip it without closing the current word, or "sānctificētur" written
+      // as base+combining would split into pieces.
+      if (char === '') {
+        position++;
+        continue;
+      }
 
       // Check if character is part of a word. \p{L}\p{M} (not just \w) so
       // ligatures and accented letters stay inside the word: "cælis" is ONE

@@ -8,7 +8,7 @@
  * that the accent always reflects THOSE length marks.
  */
 import { applyStress } from '../../src/core/Stress';
-import { stripStressMark } from '../../src/utils/latin';
+import { stripStressMark, stripLengthMark } from '../../src/utils/latin';
 
 describe('applyStress — penult by nature (rule 3)', () => {
   it('long vowel in the penult takes the accent', () => {
@@ -107,6 +107,16 @@ describe('applyStress — ligatures and case', () => {
 
   it('precomposed and combining acutes in the input are replaced, not doubled', () => {
     expect(applyStress('sanctificétur', 'sa_ncti^fi^ce_tur')).toBe('sanctificétur');
+  });
+});
+
+describe('stripLengthMark (macronized input)', () => {
+  it('removes macrons and breves, combining and precomposed', () => {
+    expect(stripLengthMark('sānctificētur')).toBe('sanctificetur');
+    expect(stripLengthMark('dīvīsa')).toBe('divisa');
+    expect(stripLengthMark('āb̆')).toBe('ab'); // NFD macron/breve
+    expect(stripLengthMark('nōn est')).toBe('non est');     // non-word chars untouched
+    expect(stripLengthMark('sanctificétur')).toBe('sanctificétur'); // acutes are stripStressMark's job
   });
 });
 
