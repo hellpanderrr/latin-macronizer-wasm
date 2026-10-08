@@ -1215,15 +1215,19 @@ export class Tokenization {
         }
         const accentedBearer = bearer.accented?.[0];
         if (!accentedBearer) continue;
-        const combinedPlain = bearer.text + encliticToken.text;
+        // Base on the DISPLAYED forms (macronized when the option is on), so
+        // macrons survive alongside the acute.
+        const stemDisplay = bearer.macronizedText ?? bearer.text;
+        const encliticDisplay = encliticToken.macronizedText ?? encliticToken.text;
+        const combinedPlain = stemDisplay + encliticDisplay;
         const combinedAccented = accentedBearer + (encliticToken.accented?.[0] ?? encliticToken.text);
         const stressedCombined = applyStress(combinedPlain, combinedAccented, true);
         if (stressedCombined !== combinedPlain) {
           // The accent never lands inside the enclitic (rule 2), so the
           // stressed form ends with the enclitic unchanged.
-          const stemStressed = encliticToken.text.length > 0 &&
-            stressedCombined.endsWith(encliticToken.text)
-            ? stressedCombined.slice(0, stressedCombined.length - encliticToken.text.length)
+          const stemStressed = encliticDisplay.length > 0 &&
+            stressedCombined.endsWith(encliticDisplay)
+            ? stressedCombined.slice(0, stressedCombined.length - encliticDisplay.length)
             : stressedCombined;
           this.tokens[i] = bearer.with({ stressedText: stemStressed });
         }
@@ -1247,13 +1251,17 @@ export class Tokenization {
     // Use original text for alignment (alignMacronized will handle u->v, i->j conversions)
     let text = token.text;
 
-    // Stress accents are independent of macronization and orthographic
-    // conversion: compute them first so accents-only mode (domacronize off)
-    // still gets them.
+    // Stress accents are computed on the DISPLAYED form (the macronized text
+    // when macronization is on), so `sānctificētur` + stress gives
+    // `sānctificḗtur` NFC (both marks on the same vowel). The reading's length
+    // marks supply the quantity in every mode.
     let stressedText: string | undefined;
-    if (accent && !token.isenclitic && token.accented && token.accented.length > 0) {
-      stressedText = applyStress(text, token.accented[0], token.hasenclitic === true);
-    }
+    const computeStress = (display: string): string | undefined => {
+      if (!accent || token.isenclitic || !token.accented || token.accented.length === 0) {
+        return undefined;
+      }
+      return applyStress(display, token.accented[0], token.hasenclitic === true);
+    };
 
     // Python Token.macronize has a guard that returns plain when !domacronize
     // AND neither orthographic conversion is requested.  When conversions ARE
@@ -1262,7 +1270,7 @@ export class Tokenization {
     // specifically has 'v'/'j').  Do the same here by deferring to
     // alignMacronized which mirrors Python's logic.
     if (!domacronize && !performutov && !performitoj) {
-      return token.with({ text, macronized: true, stressedText });
+      return token.with({ text, macronized: true, stressedText: computeStress(text) });
     }
 
     // Get the accented form (with _ markers) from getAccents
@@ -1270,7 +1278,7 @@ export class Tokenization {
 
     if (!accentedCandidates || accentedCandidates.length === 0) {
       // No accented form available, fallback
-      return token.with({ text, macronized: true, stressedText });
+      return token.with({ text, macronized: true, stressedText: computeStress(text) });
     }
 
     // Use the first (best) accented candidate
@@ -1291,7 +1299,7 @@ export class Tokenization {
 
     // If accented form became empty after cleaning, fallback to plain text
     if (!accentedUnderscore) {
-      return token.with({ text, macronized: true, stressedText });
+      return token.with({ text, macronized: true, stressedText: computeStress(text) });
     }
 
     // Apply DP alignment to produce macronized output
@@ -1319,7 +1327,7 @@ export class Tokenization {
     return token.with({
       macronizedText: macronizedUnicode,
       macronized: true,
-      stressedText
+      stressedText: computeStress(macronizedUnicode)
     });
   }
 

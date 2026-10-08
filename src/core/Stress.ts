@@ -43,6 +43,20 @@ const SINGLE_SOUND = ['ch', 'th', 'ph'];
 
 const VOWELS = 'aeiouy';
 
+/** Macron (and breve) vowels count as their base vowel for syllabification and
+ *  coordinates: they are one character in the input and one in the output, so
+ *  mapping stays 1:1 while `sānctificētur` stays a valid stress input. */
+const VOWEL_BASE: Record<string, string> = {
+  ā: 'a', ē: 'e', ī: 'i', ō: 'o', ū: 'u', ȳ: 'y',
+  ă: 'a', ĕ: 'e', ĭ: 'i', ŏ: 'o', ŭ: 'u',
+  Ā: 'a', Ē: 'e', Ī: 'i', Ō: 'o', Ū: 'u', Ȳ: 'y',
+  Ă: 'a', Ĕ: 'e', Ĭ: 'i', Ŏ: 'o', Ŭ: 'u',
+};
+
+function vowelBase(ch: string): string {
+  return VOWEL_BASE[ch] ?? ch;
+}
+
 /**
  * Words whose liturgical syllabification deviates from the plain letter
  * sequence. Values are expected nucleus starts (in the ligature-expanded
@@ -99,9 +113,9 @@ function syllabify(word: string): Nucleus[] {
   const nuclei: Nucleus[] = [];
   let i = 0;
   while (i < word.length) {
-    const ch = word[i];
+    const ch = vowelBase(word[i]);
     if (VOWELS.includes(ch)) {
-      const pair = word.slice(i, i + 2);
+      const pair = word.slice(i, i + 2).split('').map(vowelBase).join('');
       if (DIPHTHONGS.includes(pair)) {
         nuclei.push({ start: i, end: i + 2 });
         i += 2;
@@ -110,7 +124,7 @@ function syllabify(word: string): Nucleus[] {
         i > 0 &&
         (word[i - 1] === 'q' || word[i - 1] === 'g') &&
         i + 1 < word.length &&
-        VOWELS.includes(word[i + 1])
+        VOWELS.includes(vowelBase(word[i + 1]))
       ) {
         // Consonantal u in qu/gu — part of the onset, not a nucleus.
         i += 1;
@@ -226,7 +240,9 @@ export function applyStress(
   if (nucleusStart >= map.length) return plain;
 
   const originalIndex = map[nucleusStart];
-  const target = expanded[nucleusStart].toLowerCase();
+  // The displayed word may already carry a macron/breve on the target vowel
+  // (sānctificētur): compare on the base vowel.
+  const target = vowelBase(expanded[nucleusStart].toLowerCase());
   if (
     originalIndex === undefined ||
     !VOWELS.includes(target)
