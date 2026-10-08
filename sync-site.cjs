@@ -17,9 +17,21 @@
 const fs = require('fs');
 const path = require('path');
 
-const SITE_DIR =
-  process.env.MACRONIZER_SITE_DIR ||
-  path.resolve(__dirname, '../../wiktionary_pron/wiktionary_pron/macronizer');
+// The site checkout can sit at different depths depending on how the repos are
+// laid out side by side (…/projects/wiktionary_pron/wiktionary_pron/macronizer,
+// …/projects/latin-macronizer-wasm + …/wiktionary_pron/…, etc). Probe the known
+// candidates before giving up.
+function findSiteDir() {
+  if (process.env.MACRONIZER_SITE_DIR) return process.env.MACRONIZER_SITE_DIR;
+  const candidates = [
+    path.resolve(__dirname, '../wiktionary_pron/wiktionary_pron/macronizer'),
+    path.resolve(__dirname, '../../wiktionary_pron/wiktionary_pron/macronizer'),
+    path.resolve(__dirname, '../wiktionary_pron/macronizer'),
+  ];
+  return candidates.find((c) => fs.existsSync(c)) || candidates[0];
+}
+
+const SITE_DIR = findSiteDir();
 
 const BASE = '/wiktionary_pron/macronizer';
 const SRC_DIST = path.join(__dirname, 'dist');

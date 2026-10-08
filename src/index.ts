@@ -11,7 +11,8 @@ export {
   Macronizer,
   Token,
   Tokenization,
-  Tokenizer
+  Tokenizer,
+  applyStress
 } from './core/index.js';
 
 // Analysis engines

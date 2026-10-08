@@ -20,7 +20,8 @@
     "format:check": "prettier --check src/**/*.ts",
     "build:wasm": "bash native/build/emscripten-build.sh",
     "build:wasm:docker": "docker-compose -f native/build/docker-compose.yml up wasm-builder",
-    "copy-assets": "node copy-assets.cjs"
+    "copy-assets": "node copy-assets.cjs",
+    "test:accent": "node test/e2e/test-accent-corpus.mjs"
   },
   "keywords": [
     "latin",

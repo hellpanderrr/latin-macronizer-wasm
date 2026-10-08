@@ -23,6 +23,7 @@ export interface TokenOptions {
   lemma?: string;
   macronized?: boolean;
   macronizedText?: string;  // Macronized form of the text
+  stressedText?: string;    // Stress-accented form (liturgical acute placement)
   originalText?: string;    // Original text before normalization
   accented?: string[];   // List of candidate accented forms (with _ markers)
   accentedSources?: AccentedSource[];  // lemma/tag behind each accented form
@@ -49,6 +50,7 @@ export class Token {
   public readonly lemma: string;
   public readonly macronized: boolean;
   public readonly macronizedText?: string;  // Macronized form
+  public readonly stressedText?: string;   // Stress-accented form (acute)
   public readonly originalText: string;    // Original text before normalization
   public readonly accented?: string[];   // Candidate accented forms (with _ markers)
   public readonly accentedSources?: AccentedSource[];
@@ -71,6 +73,7 @@ export class Token {
     this.lemma = options.lemma || text.toLowerCase();
     this.macronized = options.macronized || false;
     this.macronizedText = options.macronizedText;
+    this.stressedText = options.stressedText;
     this.originalText = options.originalText || text;
     this.accented = options.accented;
     this.accentedSources = options.accentedSources;
@@ -99,6 +102,7 @@ export class Token {
       lemma: options.lemma ?? this.lemma,
       macronized: options.macronized ?? this.macronized,
       macronizedText: options.macronizedText ?? this.macronizedText,
+      stressedText: options.stressedText ?? this.stressedText,
       originalText: options.originalText ?? this.originalText,
       accented: options.accented ?? this.accented,
       accentedSources: options.accentedSources ?? this.accentedSources,

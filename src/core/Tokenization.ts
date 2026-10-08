@@ -13,6 +13,7 @@ import { normalizeTag } from '../utils/latin';
 import { WordlistEngine, WordlistEntry } from '../analysis/WordlistEngine';
 import { scanVerses as doScanVerses, MeterAutomaton } from './Scansion';
 import { alignMacronized, AlignOptions } from './alignMacronized';
+import { applyStress } from './Stress';
 import {
   toAscii,
   isWhitespace,
@@ -21,7 +22,8 @@ import {
   tagDistance,
   levenshteinDistance,
   underscoreToUnicode,
-  prefixesWithShortJ
+  prefixesWithShortJ,
+  stripStressMark
 } from '../utils/latin';
 
 export interface TokenizationOptions {
@@ -631,10 +633,17 @@ export class Tokenization {
     let possibleSentenceEnd = false;
 
     for (let i = 0; i < text.length; i++) {
-      const char = text[i];
+      // Pre-existing stress accents are stripped from the input: pasting an
+      // already-accentuated liturgical text must re-accentuate idempotently
+      // instead of failing every wordlist lookup (the acute is not part of
+      // any wordform). Covers the combining mark and the precomposed forms.
+      const char = stripStressMark(text[i]);
 
-      // Check if character is part of a word
-      if (/\w/.test(char) || char === '-' || char === '_') {
+      // Check if character is part of a word. \p{L}\p{M} (not just \w) so
+      // ligatures and accented letters stay inside the word: "cælis" is ONE
+      // token, not "c" + "æ" + "lis" (Python's tokenizer is Unicode-aware
+      // here too: [^\W\d_]+).
+      if (/[\w\p{L}\p{M}]/u.test(char) || char === '-' || char === '_') {
         if (currentWord === '') {
           wordStart = position;
         }
@@ -1174,6 +1183,7 @@ export class Tokenization {
     alsomaius: boolean,
     performutov: boolean,
     performitoj: boolean,
+    accent: boolean = false,
   ): void {
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];
@@ -1184,7 +1194,39 @@ export class Tokenization {
           alsomaius,
           performutov,
           performitoj,
+          accent,
         );
+      }
+    }
+    // Enclitic bearings get their stress from the COMBINED stem+enclitic form
+    // (rosáque, Filiúmque): rule 2 puts the accent on the syllable before the
+    // enclitic, which needs the enclitic present to be counted at all.
+    if (accent) {
+      for (let i = 0; i < this.tokens.length; i++) {
+        const bearer = this.tokens[i];
+        const encliticToken = this.tokens[i + 1];
+        if (
+          !bearer.isWord ||
+          !bearer.hasenclitic ||
+          !encliticToken ||
+          !encliticToken.isenclitic
+        ) {
+          continue;
+        }
+        const accentedBearer = bearer.accented?.[0];
+        if (!accentedBearer) continue;
+        const combinedPlain = bearer.text + encliticToken.text;
+        const combinedAccented = accentedBearer + (encliticToken.accented?.[0] ?? encliticToken.text);
+        const stressedCombined = applyStress(combinedPlain, combinedAccented, true);
+        if (stressedCombined !== combinedPlain) {
+          // The accent never lands inside the enclitic (rule 2), so the
+          // stressed form ends with the enclitic unchanged.
+          const stemStressed = encliticToken.text.length > 0 &&
+            stressedCombined.endsWith(encliticToken.text)
+            ? stressedCombined.slice(0, stressedCombined.length - encliticToken.text.length)
+            : stressedCombined;
+          this.tokens[i] = bearer.with({ stressedText: stemStressed });
+        }
       }
     }
   }
@@ -1200,9 +1242,18 @@ export class Tokenization {
     alsomaius: boolean,
     performutov: boolean,
     performitoj: boolean,
+    accent: boolean = false,
   ): Token {
     // Use original text for alignment (alignMacronized will handle u->v, i->j conversions)
     let text = token.text;
+
+    // Stress accents are independent of macronization and orthographic
+    // conversion: compute them first so accents-only mode (domacronize off)
+    // still gets them.
+    let stressedText: string | undefined;
+    if (accent && !token.isenclitic && token.accented && token.accented.length > 0) {
+      stressedText = applyStress(text, token.accented[0], token.hasenclitic === true);
+    }
 
     // Python Token.macronize has a guard that returns plain when !domacronize
     // AND neither orthographic conversion is requested.  When conversions ARE
@@ -1211,7 +1262,7 @@ export class Tokenization {
     // specifically has 'v'/'j').  Do the same here by deferring to
     // alignMacronized which mirrors Python's logic.
     if (!domacronize && !performutov && !performitoj) {
-      return token.with({ text, macronized: true });
+      return token.with({ text, macronized: true, stressedText });
     }
 
     // Get the accented form (with _ markers) from getAccents
@@ -1219,7 +1270,7 @@ export class Tokenization {
 
     if (!accentedCandidates || accentedCandidates.length === 0) {
       // No accented form available, fallback
-      return token.with({ text, macronized: true });
+      return token.with({ text, macronized: true, stressedText });
     }
 
     // Use the first (best) accented candidate
@@ -1240,7 +1291,7 @@ export class Tokenization {
 
     // If accented form became empty after cleaning, fallback to plain text
     if (!accentedUnderscore) {
-      return token.with({ text, macronized: true });
+      return token.with({ text, macronized: true, stressedText });
     }
 
     // Apply DP alignment to produce macronized output
@@ -1267,7 +1318,8 @@ export class Tokenization {
 
     return token.with({
       macronizedText: macronizedUnicode,
-      macronized: true
+      macronized: true,
+      stressedText
     });
   }
 
@@ -1294,6 +1346,31 @@ export class Tokenization {
       if (text) {
         text = text.replace(/_/g, '');
       }
+      result += text;
+
+      lastEnd = token.endIndex ?? (start + (token.text?.length || text.length));
+    }
+
+    return result;
+  }
+
+  /**
+   * Reconstruct the stressed-accents text (stressedText ?? text per token,
+   * enclitic tokens contribute their own text). Mirrors detokenize().
+   */
+  detokenizeStressed(): string {
+    let result = '';
+    let lastEnd = 0;
+
+    for (const token of this.tokens) {
+      const start = token.startIndex ?? lastEnd;
+
+      if (start > lastEnd) {
+        const whitespace = this.originalText?.substring(lastEnd, start) || ' ';
+        result += whitespace;
+      }
+
+      const text = token.stressedText ?? token.text;
       result += text;
 
       lastEnd = token.endIndex ?? (start + (token.text?.length || text.length));
