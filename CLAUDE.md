@@ -65,6 +65,7 @@ Three layers: **analysis engines** (POS tagging, morphology, dictionaries) → *
 - **`src/core/Token.ts`** — Immutable token class with `with()` for property updates.
 - **`src/core/alignMacronized.ts`** — DP edit-distance algorithm that places macrons by aligning plain text against accented forms. Port of Python `Token.macronize()`. Critical for correctness.
 - **`src/core/Scansion.ts`** — Verse meter scanning (dactylic hexameter, elegiac distichs, hendecasyllable, iambic trimeter/dimeter). Port of Python `scansion.py`. Uses automaton approach with 5 meter options matching Python exactly.
+- **`src/core/Stress.ts`** — Opt-in liturgical stress accents (acute placement, `accent` option). Own prose syllabifier (the verse one strips h / expands x·z·qu for the meter). Quantity comes from the chosen accented reading; rules per gregorio-project/latin-ecclesiastic-accents. Enclitic-ness comes from the token layer (`hasenclitic`), never guessed from letters. Gold corpus + `npm run test:accent`.
 - **`src/analysis/WasmTagger.ts`** — Wraps RFTagger C++ compiled to WASM. Falls back to `FallbackTagger` (simple suffix rules) when WASM unavailable.
 - **`src/analysis/MorpheusAnalyzer.ts`** — Wraps Morpheus C analyzer compiled to WASM. Analyzes unknown words (crucial for handling out-of-vocabulary Latin). Uses `ccall()` to invoke C functions from `cruncher.wasm`.
 - **`src/analysis/WordlistEngine.ts`** — IndexedDB-backed wordform database (~812k entries from `macrons.txt`). Replaces Python's SQLite. Integrates with Morpheus for unknown words.
