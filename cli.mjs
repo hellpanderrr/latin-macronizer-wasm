@@ -102,8 +102,15 @@ const macronizer = new Macronizer({
 
 // The Morpheus analyzer is browser-only (its WASM glue needs `document`), so
 // under Node it is disabled exactly like the parity test does. Without this,
-// initialize() throws before any text is processed.
+// initialize() throws before any text is processed. The WordlistEngine still
+// needs a stub: words missing from macrons.txt go through ensureAnalyzed(),
+// which throws when the analyzer is null. The stub reports no analyses, which
+// is exactly Python's NULL-row behavior for Morpheus-unknown words.
 macronizer.morpheusAnalyzer = null;
+macronizer.wordlistEngine.setMorpheusAnalyzer({
+  isInitialized: () => true,
+  analyzeBatch: (words) => words.map((w) => ({ word: w, success: false, analyses: [] })),
+});
 
 const startTime = Date.now();
 await macronizer.initialize((pct, msg) => {

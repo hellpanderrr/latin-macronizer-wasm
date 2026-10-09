@@ -60,6 +60,44 @@ describe('applyStress — antepenult (rule 4)', () => {
   });
 });
 
+describe('applyStress — A&G §§ 11–12 conformance (qu glide, consonantal i)', () => {
+  it('the u of qu is not a consonant: qu-words take the antepenult', () => {
+    // A&G § 11, Note 3. Corpus: Dénique (Breviarium O.P.), áliquid 47×,
+    // réliqui 8×, útique (Ps 54/57), ítaque (Adventus, Regula).
+    expect(applyStress('denique', 'de_ni^que')).toBe('dénique');
+    expect(applyStress('reliquus', 're^li^quus')).toBe('réliquus');
+    expect(applyStress('aliquid', 'aliquid')).toBe('áliquid');
+    expect(applyStress('aliquis', 'aliquis')).toBe('áliquis');
+    expect(applyStress('itaque', 'i^ta^que')).toBe('ítaque');
+    expect(applyStress('utique', 'u^ti^que^')).toBe('útique');
+    expect(applyStress('undique', 'undique')).toBe('úndique');
+    expect(applyStress('antequam', 'antequam')).toBe('ántequam');
+    expect(applyStress('utraque', 'utraque')).toBe('útraque');
+    expect(applyStress('subsequi', 'subse^qui_')).toBe('súbsequi');
+    expect(applyStress('persequens', 'perse^que_ns')).toBe('pérsequens');
+    // The glide is why these do NOT move to the penult even though t/qu
+    // would otherwise count as two consonants.
+    expect(applyStress('relinquit', 're^linquit')).toBe('relínquit');
+    expect(applyStress('reliquit', 're^li_quit')).toBe('relíquit');
+  });
+
+  it('a consonantal i (j) closes the syllable like x (A&G § 11. d)', () => {
+    // Corpus: alicúius (Regula ×2), eiúsdem 6× (missal + Regula).
+    expect(applyStress('alicuius', 'alicujus')).toBe('alicúius');
+    expect(applyStress('eiusdem', 'ejusdem')).toBe('eiúsdem');
+  });
+
+  it('gu keeps counting as a closing pair where the glide has its own nucleus', () => {
+    // -guu- is two separate u's (am-bí-gu-us, ex-í-gu-us), not a glide:
+    // counting stops the accent moving to the last u. Corpus: "Stat rex
+    // ambíguus" (hymn).
+    expect(applyStress('ambiguus', 'ambi^gu^us')).toBe('ambíguus');
+    // But before a vowel the gu glide collapses (sán-gui-ne), and the corpus
+    // agrees: sánguine 82×.
+    expect(applyStress('sanguine', 'sanguine')).toBe('sánguine');
+  });
+});
+
 describe('applyStress — words of one or two syllables (rule 1)', () => {
   it('no accent is written', () => {
     expect(applyStress('pater', 'pa^ter')).toBe('pater');
@@ -92,6 +130,15 @@ describe('applyStress — liturgical exceptions', () => {
   it('Maria, Mariae take the Hebrew-name penult accent', () => {
     expect(applyStress('Maria', 'ma^ria')).toBe('María'); // case preserved
     expect(applyStress('Maríæ', 'Ma^ri_^ae')).toBe('Maríæ');
+  });
+
+  it('words whose lexical accent the reading does not carry', () => {
+    // cuīque's wordlist row has no length mark; corpus: "prout cuíque opus
+    // erat" (Regula Sancti Benedicti).
+    expect(applyStress('cuique', 'cuique')).toBe('cuíque');
+    // tibine is tibi + -ne (A&G § 12: tĭbĭ'ne); the whole-word rows are
+    // tibinus forms, so the enclitic split never fires.
+    expect(applyStress('tibine', 'ti_bi^ne')).toBe('tibíne');
   });
 });
 
