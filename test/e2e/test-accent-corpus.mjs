@@ -18,6 +18,9 @@
 //
 // Usage: node test/e2e/test-accent-corpus.mjs
 // Exit code 0 = no regression against test/data/accent-failures-snapshot.json
+// NOTE: imports dist/core/Stress.js — run `npm run build` (or at least
+// `npx tsc && node fix-imports.cjs`) after a src/ edit, or this validates
+// stale compiled code.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -95,6 +98,7 @@ for (const file of files) {
       const lookup = expand(plain);
 
       let accented;
+      let isEncliticSplit = false;
       if (wordlist.has(lookup)) {
         accented = wordlist.get(lookup);
       } else {
@@ -107,10 +111,15 @@ for (const file of files) {
           continue;
         }
         accented = wordlist.get(stem) + enclitic;
+        isEncliticSplit = true;
       }
 
       const gold = accentIndexes(word);
-      const stressed = applyStress(plain, accented);
+      // Pass the enclitic flag for assembled stem+enclitic forms, exactly as the
+      // token layer does (rule 2: the accent moves to the syllable before the
+      // enclitic whatever its quantity) — the harness must exercise the same call
+      // the engine makes, not applyStress's default.
+      const stressed = applyStress(plain, accented, isEncliticSplit);
       const ourIndexes = accentIndexes(stressed);
       const ours = ourIndexes.length === 1 ? ourIndexes[0] : null;
       const key = `${word}|${accented}`;
@@ -146,23 +155,55 @@ for (const d of disagreements) {
 }
 
 // ---------- snapshot: fail on regression, allow improvement ----------
-if (UPDATE || !fs.existsSync(SNAPSHOT)) {
+// Only an explicit --update writes the baseline. A missing snapshot in a
+// normal run is an error (a clean checkout must not accept whatever the
+// current code produces as its own baseline), and the regression gate covers
+// BOTH disagreement categories: comparing only placedDisagree would let an
+// implementation that stops placing accents at all pass (placedDisagree falls
+// to 0 while noneDisagree rises).
+if (UPDATE) {
   fs.writeFileSync(
     SNAPSHOT,
-    JSON.stringify({ placedDisagree: results.placedDisagree, disagreements }, null, 2) + '\n',
+    JSON.stringify(
+      { placedDisagree: results.placedDisagree, noneDisagree: results.noneDisagree, disagreements },
+      null,
+      2,
+    ) + '\n',
   );
-  console.log(`Snapshot written: ${path.relative(ROOT, SNAPSHOT)} (${results.placedDisagree} disagreements)`);
+  console.log(
+    `Snapshot written: ${path.relative(ROOT, SNAPSHOT)} ` +
+      `(${results.placedDisagree} placed, ${results.noneDisagree} missing)`,
+  );
   process.exit(0);
+}
+if (!fs.existsSync(SNAPSHOT)) {
+  console.error(
+    `No snapshot at ${path.relative(ROOT, SNAPSHOT)} — run with --update once ` +
+      `(after verifying the disagreements are correct) to create the baseline.`,
+  );
+  process.exit(1);
 }
 
 const prev = JSON.parse(fs.readFileSync(SNAPSHOT, 'utf8'));
+// Older snapshots predate noneDisagree; treat missing as 0 so the first run
+// after this change still compares placed counts properly.
 if (results.placedDisagree > prev.placedDisagree) {
   console.error(
-    `REGRESSION: ${results.placedDisagree} disagreements, snapshot has ${prev.placedDisagree}. ` +
+    `REGRESSION: ${results.placedDisagree} placed disagreements, snapshot has ${prev.placedDisagree}. ` +
       `Run with --update after verifying the new mismatches are correct.`,
   );
   process.exit(1);
 }
-if (results.placedDisagree < prev.placedDisagree) {
-  console.log(`Improved: ${prev.placedDisagree} -> ${results.placedDisagree} disagreements. Re-run with --update.`);
+if (results.noneDisagree > (prev.noneDisagree ?? 0)) {
+  console.error(
+    `REGRESSION: ${results.noneDisagree} words where gold has an acute but none was placed ` +
+      `(snapshot has ${prev.noneDisagree ?? 0}). Run with --update after verifying.`,
+  );
+  process.exit(1);
+}
+if (results.placedDisagree < prev.placedDisagree || results.noneDisagree < (prev.noneDisagree ?? 0)) {
+  console.log(
+    `Improved: placed ${prev.placedDisagree} -> ${results.placedDisagree}, ` +
+      `missing ${prev.noneDisagree ?? 0} -> ${results.noneDisagree}. Re-run with --update.`,
+  );
 }

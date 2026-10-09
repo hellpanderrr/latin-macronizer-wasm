@@ -191,3 +191,24 @@ describe('stripStressMark', () => {
     expect(stripStressMark('sanctificet́ur')).toBe('sanctificetur');
   });
 });
+
+describe('Tokenization.detokenizeStressed (enclitic tokens keep their display form)', () => {
+  // The display text of a token with NO stress accent — the enclitic of a split
+  // pair, or a two-syllable word (rule 1: nomen) — must not fall back to the raw
+  // input: enabling accent used to drop a u→v conversion off the enclitic
+  // (nequeue + u→v: macronized "nequeve" vs stressed "nequéve" before the fix).
+  it('falls back to macronizedText before text, like detokenize() does', () => {
+    // Build the exact split shape by hand (immutable Token API).
+    const { Tokenization } = require('../../src/core/Tokenization');
+    const { Token } = require('../../src/core/Token');
+    const t = new Tokenization('nequeue', { preserveWhitespace: true });
+    t.tokens = [
+      new Token('neque', { text: 'neque', isWord: true, hasenclitic: true, startIndex: 0, endIndex: 5,
+        macronizedText: 'neque', stressedText: 'néque' }),
+      new Token('ue', { text: 'ue', isWord: true, isenclitic: true, startIndex: 5, endIndex: 7,
+        macronizedText: 've' }),   // ortho-converted display; no stress accent of its own
+    ];
+    expect(t.detokenize()).toBe('nequeve');
+    expect(t.detokenizeStressed()).toBe('néqueve');   // was 'néqueue' before the fix
+  });
+});

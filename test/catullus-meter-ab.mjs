@@ -47,11 +47,19 @@ const MACRON_MAP = { 'ā':'a','ē':'e','ī':'i','ō':'o','ū':'u','ȳ':'y','Ā':
   'ă':'a','ĕ':'e','ĭ':'i','ŏ':'o','ŭ':'u','Ă':'A','Ĕ':'E','Ĭ':'I','Ŏ':'O','Ŭ':'U' };
 function stripMarks(s) { return s.replace(/[āēīōūȳĀĒĪŌŪȲăĕĭŏŭĂĔĬŎŬ]/g, ch => MACRON_MAP[ch]); }
 
-function isIncompleteScan(feet, meter) {
+// Complete-path marker lengths (computed from the automatons): hendecasyllable
+// exactly 11; iambic trimeter 17-21; iambic dimeter 11-14. The scanner
+// alternates automatons per line (Macronizer maps 'iambic' to
+// [iambictrimeter, iambicdimeter], automatonIndex starts at 0), so even-indexed
+// verse lines are scanned as trimeters and odd-indexed as dimeters — a complete
+// DIMETER (11 markers) must not be counted a failure. Caveat: a pure-dimeter
+// poem (Catullus 52) still gets the trimeter automaton on even lines, so its
+// numbers stay approximate; this probe is a bin-label triage, not a test.
+function isIncompleteScan(feet, meter, lineIndex) {
   if (feet === undefined || feet === '') return true;
   switch (meter) {
     case 'hendecasyllable': return feet.length < 11;
-    case 'iambic': return feet.length < 12;
+    case 'iambic': return feet.length < (lineIndex % 2 === 0 ? 12 : 11);
     default: return false;
   }
 }

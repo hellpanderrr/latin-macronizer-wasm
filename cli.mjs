@@ -41,13 +41,16 @@ Latin Macronizer — CLI
 Options:
   --scan <meter>  Scan verse meter (hexameter, pentameter, elegiac,
                   hendecasyllable, iambic, or 'prose' for no scansion)
-  --accent        Mark the stress accent (liturgical prose rules): output the
-                  acute-accented text instead of the macronized text
+  --accent        Mark the stress accent (liturgical prose rules). Output is
+                  accent-only (sanctificétur) unless --macrons is also given.
+  --macrons       Keep the macrons in the output (with --accent: both marks,
+                  sānctificḗtur; without: plain macronized text)
   --help, -h      Show this help
 
 Examples:
   node cli.mjs "Gallia est omnis divisa in partes tres"
   node cli.mjs --accent "sanctificetur nomen tuum"
+  node cli.mjs --accent --macrons "sanctificetur nomen tuum"
   cat input.txt | node cli.mjs --scan hexameter
 `);
   process.exit(0);
@@ -55,12 +58,15 @@ Examples:
 
 let scanMode = 'prose';
 let accent = false;
+let macrons = false;
 let inputArg = null;
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--scan' && i + 1 < args.length) {
     scanMode = args[++i];
   } else if (args[i] === '--accent') {
     accent = true;
+  } else if (args[i] === '--macrons') {
+    macrons = true;
   } else if (!args[i].startsWith('--')) {
     inputArg = args[i];
   }
@@ -131,7 +137,14 @@ console.error(
 // ─── Process ──────────────────────────────────────────────────────────
 console.error('Processing...');
 
-const result = await macronizer.macronize(text, { scan: scanMode, accent });
+// --accent alone means the liturgical use case: the acute WITHOUT macrons
+// (sanctificétur), as the help describes. --macrons keeps them, and with
+// --accent the engine composes both on one vowel (sānctificḗtur).
+const result = await macronizer.macronize(text, {
+  scan: scanMode,
+  accent,
+  macronize: accent ? macrons : true,
+});
 
 // Output macronized (or stressed) text to stdout (pipe-friendly)
 process.stdout.write((accent ? result.stressed : result.macronized) + '\n');
