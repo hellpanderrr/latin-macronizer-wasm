@@ -121,9 +121,14 @@ function expandLigatures(s: string): { expanded: string; map: number[] } {
 
 /**
  * Split a lowercase, ligature-expanded word into syllable nuclei.
- * `u` after q/g before a vowel is the consonantal glide (quó-ni-am, sán-guis).
+ * `u` after q/g before a vowel is the consonantal glide (quó-ni-am, sán-guis)
+ * UNLESS the reading marks it long/short — a marked u is the word's own vowel
+ * (ar-gú-o: `argu^a_s` marks the u short; corpus: árguas, argúere), where an
+ * unmarked u after g is the glide (sán-guis, un-guén-tum). Readings never mark
+ * u in qu, so the rule is uniform and qu stays the onset glide throughout
+ * (é-quus, se-qúun-tur — a glide even before u).
  */
-function syllabify(word: string): Nucleus[] {
+function syllabify(word: string, marks?: Map<number, string>): Nucleus[] {
   const nuclei: Nucleus[] = [];
   let i = 0;
   while (i < word.length) {
@@ -138,7 +143,8 @@ function syllabify(word: string): Nucleus[] {
         i > 0 &&
         (word[i - 1] === 'q' || word[i - 1] === 'g') &&
         i + 1 < word.length &&
-        VOWELS.includes(vowelBase(word[i + 1]))
+        VOWELS.includes(vowelBase(word[i + 1])) &&
+        !(marks && marks.has(i))
       ) {
         // Consonantal u in qu/gu — part of the onset, not a nucleus.
         i += 1;
@@ -240,14 +246,16 @@ function chooseNucleus(accented: string, enclitic: boolean): number | null {
     return exception >= 0 ? exception : null;
   }
 
-  const nuclei = syllabify(expanded);
+  // Marks are needed by syllabify itself: a u after g marked in the reading is
+  // the word's own vowel (ar-gú-o, argu^a_s), not the glide.
+  const marks = lengthMarks(accented);
+  const nuclei = syllabify(expanded, marks);
   if (nuclei.length < 3) return null; // rule 1
 
   // Rule 2: an enclitic moves the accent to the syllable before it, whatever
   // its quantity (rosáque, Filiúmque).
   if (enclitic) return nuclei[nuclei.length - 2].start;
 
-  const marks = lengthMarks(accented);
   return penultIsLong(expanded, nuclei, marks)
     ? nuclei[nuclei.length - 2].start
     : nuclei[nuclei.length - 3].start;

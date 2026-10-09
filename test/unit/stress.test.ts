@@ -96,6 +96,22 @@ describe('applyStress — A&G §§ 11–12 conformance (qu glide, consonantal i)
     // agrees: sánguine 82×.
     expect(applyStress('sanguine', 'sanguine')).toBe('sánguine');
   });
+
+  it('a MARKED u after g/q is the word\'s own vowel, not the glide', () => {
+    // arguō is ar-gu-ō (u vocalic); the reading marks it short — argu^a_s.
+    // Corpus: árguas 7×, árguam 2×, árguet 2×, argúere 2× (Antiphonale,
+    // Regula). Fixes 4 corpus placements (net +2; 2 capped-sentence-start
+    // forms were accidental agreements before, and Solesmes' Option-2
+    // "no accent on a capitalized first letter" is deliberately unimplemented).
+    expect(applyStress('arguas', 'argu^a_s')).toBe('árguas');
+    expect(applyStress('arguam', 'argu^am')).toBe('árguam');
+    expect(applyStress('arguet', 'argu^et')).toBe('árguet');
+    expect(applyStress('arguere', 'argu^ere')).toBe('argúere');
+    // qu readings never mark u ('qu' + marked u: 0 rows in macrons.txt), so
+    // the glide holds even before a vowel — é-quus, se-qúun-tur stay 2/3 syll.
+    expect(applyStress('sequuntur', 'sequuntur')).toBe('sequúntur');
+    expect(applyStress('relinquunt', 'relinquunt')).toBe('relínquunt');
+  });
 });
 
 describe('applyStress — words of one or two syllables (rule 1)', () => {
