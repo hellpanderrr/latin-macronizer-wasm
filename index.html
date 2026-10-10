@@ -145,6 +145,10 @@
                 <label for="alsomaius">Also mark <i>māius</i>, <i>Māius</i>, etc.</label>
             </div>
             <div class="option-group">
+                <input type="checkbox" id="accent">
+                <label for="accent">Stress accents (<i>sanctificétur</i>) — works with or without macrons</label>
+            </div>
+            <div class="option-group">
                 <label>Scan as:</label>
                 <select id="scan">
                     <option value="prose">Prose (no scansion)</option>
@@ -266,7 +270,8 @@
                     alsomaius: document.getElementById('alsomaius').checked,
                     scan: document.getElementById('scan').value,
                     performutov: document.getElementById('utov').checked,
-                    performitoj: document.getElementById('itoj').checked
+                    performitoj: document.getElementById('itoj').checked,
+                    accent: document.getElementById('accent').checked
                 });
 
                 displayResult(result);
@@ -434,7 +439,7 @@
                         classes.push('word');
 
                         const classAttr = classes.length > 0 ? ` class="${classes.join(' ')}"` : '';
-                        let displayText = (token.macronizedText || token.text).replace(/_/g, '');
+                        let displayText = (token.stressedText || token.macronizedText || token.text).replace(/_/g, '');
                         if (!displayText) displayText = token.text.replace(/_/g, '');
 
                         lineHtml += `<span${classAttr} data-word-index="${wordIndex}">${escapeHtml(displayText)}</span>`;

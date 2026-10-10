@@ -16,6 +16,7 @@ Morpheus analysis (unknowns) → suffix rules → scansion → DP alignment → 
 - **Wordlist** — 812k wordform entries from `macrons.txt` (32MB), served as plain text, cached in IndexedDB or in-memory Map
 - **Scansion** — automaton-based verse meter scanning (dactylic hexameter, elegiac distichs, hendecasyllable, iambic trimeter + dimeter)
 - **DP alignment** — edit-distance algorithm placing macrons by matching plain text against accented forms
+- **Stress accents** (opt-in) — the acute accent placement of the Roman liturgical books (`sanctificétur`, `Dómine`), computed from the same vowel quantities; with macrons on, both marks combine (`sānctificḗtur`)
 
 ## Quick start
 
@@ -43,6 +44,9 @@ node cli.mjs caesar.txt
 # Verse scanning
 node cli.mjs --scan hexameter arma_virumque.txt
 
+# Liturgical stress accents instead of macrons
+node cli.mjs --accent "sanctificetur nomen tuum"
+
 # Full usage
 node cli.mjs --help
 ```
@@ -58,6 +62,8 @@ npm run build:prod     # Production build
 
 ```bash
 npm test               # Unit tests (Jest)
+npm run test:parity    # Byte-parity vs the Python reference (Node)
+npm run test:accent    # Stress accents vs the liturgical gold corpus
 npm run lint           # Lint
 npm run format         # Format code
 ```

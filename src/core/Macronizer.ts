@@ -32,6 +32,7 @@ export interface MacronizeOptions {
   performutov?: boolean;
   performitoj?: boolean;
   scan?: string; // Meter: 'dactylichexameter', 'elegiacdistichs', 'hendecasyllable', 'iambic', or 'prose'
+  accent?: boolean; // Liturgical stress accents (acute placement) in the output
 }
 
 export interface Statistics {
@@ -44,6 +45,9 @@ export interface Statistics {
 export interface MacronizeResult {
   original: string;
   macronized: string;
+  /** Stress-accented reconstruction (liturgical acute placement), when the
+   *  `accent` option is on; otherwise identical to `macronized`. */
+  stressed: string;
   tokens: Token[];
   taggedTokens: Token[];
   /** Word coverage fraction (0..1): proportion recognized by lemma/pattern engine.
@@ -161,10 +165,11 @@ export class Macronizer {
     const performutov = options.performutov === true; // default false
     const performitoj = options.performitoj === true; // default false
     const scanOption = options.scan || 'prose'; // default: no scansion
+    const accent = options.accent === true; // default false
 
     // Check cache (hashing the text avoids multi-kilobyte cache keys)
     const textHash = hashFnv32(text);
-    const cacheKey = `${textHash}|m=${doMacronize}|a=${alsomaius}|v=${performutov}|j=${performitoj}|s=${scanOption}`;
+    const cacheKey = `${textHash}|m=${doMacronize}|a=${alsomaius}|v=${performutov}|j=${performitoj}|s=${scanOption}|ac=${accent}`;
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
     }
@@ -238,14 +243,15 @@ export class Macronizer {
       }
     }
 
-    // Step 5: Macronize (DP alignment with alsomaius)
-    tokenization.macronize(doMacronize, alsomaius, performutov, performitoj);
+    // Step 5: Macronize (DP alignment with alsomaius) + optional stress accents
+    tokenization.macronize(doMacronize, alsomaius, performutov, performitoj, accent);
 
     // Final tokens
     const macronizedTokens = tokenization.tokens;
 
     // Step 6: Reconstruct text
     const macronizedText = tokenization.detokenize();
+    const stressedText = accent ? tokenization.detokenizeStressed() : macronizedText;
 
     // Calculate word coverage (fraction of tokens recognized by lemma or pattern engine)
     const coverage = this.calcCoverage(originalTokens, macronizedTokens);
@@ -254,6 +260,7 @@ export class Macronizer {
     const result: MacronizeResult = {
       original: text,
       macronized: macronizedText,
+      stressed: stressedText,
       tokens: originalTokens,
       taggedTokens: macronizedTokens,
       confidence: coverage,

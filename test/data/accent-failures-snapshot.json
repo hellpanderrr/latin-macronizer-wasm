@@ -1,0 +1,176 @@
+{
+  "placedDisagree": 13,
+  "noneDisagree": 0,
+  "disagreements": [
+    {
+      "file": "Benedictiones sollemnes.txt",
+      "word": "filii",
+      "accented": "fi_lii_",
+      "plain": "filii",
+      "stressed": "fílii",
+      "ourIndexes": [
+        1
+      ],
+      "ours": 1,
+      "gold": []
+    },
+    {
+      "file": "Benedictiones sollemnes.txt",
+      "word": "angelo",
+      "accented": "ange^lo_",
+      "plain": "angelo",
+      "stressed": "ángelo",
+      "ourIndexes": [
+        0
+      ],
+      "ours": 0,
+      "gold": []
+    },
+    {
+      "file": "Benedictiones sollemnes.txt",
+      "word": "omnipotens",
+      "accented": "Omni^po^te_ns",
+      "plain": "omnipotens",
+      "stressed": "omnípotens",
+      "ourIndexes": [
+        3
+      ],
+      "ours": 3,
+      "gold": []
+    },
+    {
+      "file": "Exsultet forma brevior.txt",
+      "word": "agámus",
+      "accented": "a^ga^mus",
+      "plain": "agamus",
+      "stressed": "ágamus",
+      "ourIndexes": [
+        0
+      ],
+      "ours": 0,
+      "gold": [
+        2
+      ]
+    },
+    {
+      "file": "Exsultet forma brevior.txt",
+      "word": "véteris",
+      "accented": "ve^te_ris",
+      "plain": "veteris",
+      "stressed": "vetéris",
+      "ourIndexes": [
+        3
+      ],
+      "ours": 3,
+      "gold": [
+        1
+      ]
+    },
+    {
+      "file": "Exsultet forma brevior.txt",
+      "word": "igitur",
+      "accented": "igitur",
+      "plain": "igitur",
+      "stressed": "ígitur",
+      "ourIndexes": [
+        0
+      ],
+      "ours": 0,
+      "gold": []
+    },
+    {
+      "file": "Exsultet forma longior.txt",
+      "word": "alitur",
+      "accented": "a^litur",
+      "plain": "alitur",
+      "stressed": "álitur",
+      "ourIndexes": [
+        0
+      ],
+      "ours": 0,
+      "gold": []
+    },
+    {
+      "file": "Orationes super populum.txt",
+      "word": "pariter",
+      "accented": "pa^ri^ter",
+      "plain": "pariter",
+      "stressed": "páriter",
+      "ourIndexes": [
+        1
+      ],
+      "ours": 1,
+      "gold": []
+    },
+    {
+      "file": "Orationes super populum.txt",
+      "word": "indignátionem",
+      "accented": "indigna_ti^o_nem",
+      "plain": "indignationem",
+      "stressed": "indignatiónem",
+      "ourIndexes": [
+        9
+      ],
+      "ours": 9,
+      "gold": [
+        6
+      ]
+    },
+    {
+      "file": "Orationes super populum.txt",
+      "word": "cónditus",
+      "accented": "condi_tus",
+      "plain": "conditus",
+      "stressed": "condítus",
+      "ourIndexes": [
+        4
+      ],
+      "ours": 4,
+      "gold": [
+        1
+      ]
+    },
+    {
+      "file": "Orationes super populum.txt",
+      "word": "perséveret",
+      "accented": "perse^ve_ret",
+      "plain": "perseveret",
+      "stressed": "persevéret",
+      "ourIndexes": [
+        6
+      ],
+      "ours": 6,
+      "gold": [
+        4
+      ]
+    },
+    {
+      "file": "Vidi aquam.txt",
+      "word": "látere",
+      "accented": "la^te_re",
+      "plain": "latere",
+      "stressed": "latére",
+      "ourIndexes": [
+        3
+      ],
+      "ours": 3,
+      "gold": [
+        1
+      ]
+    },
+    {
+      "file": "Vidi aquam.txt",
+      "word": "pervénit",
+      "accented": "perve^nit",
+      "plain": "pervenit",
+      "stressed": "pérvenit",
+      "ourIndexes": [
+        1
+      ],
+      "ours": 1,
+      "gold": [
+        4
+      ]
+    }
+  ]
+}

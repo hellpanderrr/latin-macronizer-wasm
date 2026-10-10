@@ -13,6 +13,7 @@ import { normalizeTag } from '../utils/latin';
 import { WordlistEngine, WordlistEntry } from '../analysis/WordlistEngine';
 import { scanVerses as doScanVerses, MeterAutomaton } from './Scansion';
 import { alignMacronized, AlignOptions } from './alignMacronized';
+import { applyStress } from './Stress';
 import {
   toAscii,
   isWhitespace,
@@ -21,7 +22,9 @@ import {
   tagDistance,
   levenshteinDistance,
   underscoreToUnicode,
-  prefixesWithShortJ
+  prefixesWithShortJ,
+  stripStressMark,
+  stripLengthMark
 } from '../utils/latin';
 
 export interface TokenizationOptions {
@@ -538,7 +541,34 @@ const ACCENT_OVERRIDES: Record<string, string[]> = {
   'deprensa': ['deprensa'],
   // Pēgaseo (LVIIIb 2) — Pegasus has long ē; wordlist pe_ga^se_o_ is LSLL.
   'pegaseo': ['pe_gaseo_'],
+
+  // ── M-023m triage (2026-09-21): blockers checked against L&S headwords ──
+  // hoc nom/acc is always short hŏc (only abl. hōc is long); the tagger can
+  // land on the ablative ho_c reading in "hŏc est" (XXXI 11). Additive only —
+  // corrects the homograph selection, contradicts no dictionary quantity.
+  'hoc': ['ho^c'],
+  // REJECTED after L&S check (do not re-add from a blocker run):
+  //   ridete — L&S headword rīdĕo (LONG ī); the gold rĭdētĕ (XXXI 14) puts the
+  //     short on the FIRST syllable, which a hendecasyllable fixes long — so
+  //     the gold mark here is a blip/license, not a short-i lexeme. (Overriding
+  //     would itself break the meter.) Caution: a hendecasyllable's first
+  //     syllable is NOT anceps; earlier notes calling line-initial anceps were
+  //     wrong — the general rule is: L&S headword is the arbiter, not the gold
+  //     position.
+  //   vesaniente — L&S "vē-sānus" (long ē); gold vĕsaniente (XXV 13)
+  //     contradicts the lexicon.
+  //   renidere — L&S rĕnīdĕo, 2nd conj → inf. renīdēre (long dē); the gold's
+  //     short syllables sit at the elision against "usque" (XXXIX 15) —
+  //     segmenter/elision limitation, not a quantity bug.
+  // vorago — APPLIED: L&S headword vŏrāgo (breve on ŏ, long ā, breve on final
+  // ō; Perseus entry title). The wordlist vo^ra_go_ = vŏ-rā-GŌ marks the final
+  // ō LONG; L&S and the gold (XVII 11 vŏrāgŏ) both read it SHORT. The added
+  // vo^ra_go = vŏrāgŏ (SLS) lets the meter pick the correct reading. (Earlier
+  // note claiming "Wiktionary nom. vorāgō long ō, line-end anceps" was wrong —
+  // L&S, not Wiktionary's orthographic macrons, is the arbiter.)
+  'vorago': ['vo^ra_go'],
 };
+
 
 /**
  * Tokenization class - splits Latin text into tokens
@@ -604,10 +634,28 @@ export class Tokenization {
     let possibleSentenceEnd = false;
 
     for (let i = 0; i < text.length; i++) {
-      const char = text[i];
+      // Pre-existing stress accents AND length marks are stripped from the
+      // input: pasting an already-accentuated or already-macronized text must
+      // look up and re-mark identically to its plain spelling. Python's
+      // Token.__init__ does the same (postags.removemacrons). Without the
+      // length-mark strip the lookup key keeps the macrons, the word is
+      // unknown, and the stress pass sees no quantities (wrong accent).
+      // 1:1 character mapping, so start/end indices stay valid.
+      const char = stripLengthMark(stripStressMark(text[i]));
 
-      // Check if character is part of a word
-      if (/\w/.test(char) || char === '-' || char === '_') {
+      // A standalone combining mark (NFD-decomposed input) strips to nothing:
+      // skip it without closing the current word, or "sānctificētur" written
+      // as base+combining would split into pieces.
+      if (char === '') {
+        position++;
+        continue;
+      }
+
+      // Check if character is part of a word. \p{L}\p{M} (not just \w) so
+      // ligatures and accented letters stay inside the word: "cælis" is ONE
+      // token, not "c" + "æ" + "lis" (Python's tokenizer is Unicode-aware
+      // here too: [^\W\d_]+).
+      if (/[\w\p{L}\p{M}]/u.test(char) || char === '-' || char === '_') {
         if (currentWord === '') {
           wordStart = position;
         }
@@ -1147,6 +1195,7 @@ export class Tokenization {
     alsomaius: boolean,
     performutov: boolean,
     performitoj: boolean,
+    accent: boolean = false,
   ): void {
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];
@@ -1157,7 +1206,43 @@ export class Tokenization {
           alsomaius,
           performutov,
           performitoj,
+          accent,
         );
+      }
+    }
+    // Enclitic bearings get their stress from the COMBINED stem+enclitic form
+    // (rosáque, Filiúmque): rule 2 puts the accent on the syllable before the
+    // enclitic, which needs the enclitic present to be counted at all.
+    if (accent) {
+      for (let i = 0; i < this.tokens.length; i++) {
+        const bearer = this.tokens[i];
+        const encliticToken = this.tokens[i + 1];
+        if (
+          !bearer.isWord ||
+          !bearer.hasenclitic ||
+          !encliticToken ||
+          !encliticToken.isenclitic
+        ) {
+          continue;
+        }
+        const accentedBearer = bearer.accented?.[0];
+        if (!accentedBearer) continue;
+        // Base on the DISPLAYED forms (macronized when the option is on), so
+        // macrons survive alongside the acute.
+        const stemDisplay = bearer.macronizedText ?? bearer.text;
+        const encliticDisplay = encliticToken.macronizedText ?? encliticToken.text;
+        const combinedPlain = stemDisplay + encliticDisplay;
+        const combinedAccented = accentedBearer + (encliticToken.accented?.[0] ?? encliticToken.text);
+        const stressedCombined = applyStress(combinedPlain, combinedAccented, true);
+        if (stressedCombined !== combinedPlain) {
+          // The accent never lands inside the enclitic (rule 2), so the
+          // stressed form ends with the enclitic unchanged.
+          const stemStressed = encliticDisplay.length > 0 &&
+            stressedCombined.endsWith(encliticDisplay)
+            ? stressedCombined.slice(0, stressedCombined.length - encliticDisplay.length)
+            : stressedCombined;
+          this.tokens[i] = bearer.with({ stressedText: stemStressed });
+        }
       }
     }
   }
@@ -1173,9 +1258,22 @@ export class Tokenization {
     alsomaius: boolean,
     performutov: boolean,
     performitoj: boolean,
+    accent: boolean = false,
   ): Token {
     // Use original text for alignment (alignMacronized will handle u->v, i->j conversions)
     let text = token.text;
+
+    // Stress accents are computed on the DISPLAYED form (the macronized text
+    // when macronization is on), so `sānctificētur` + stress gives
+    // `sānctificḗtur` NFC (both marks on the same vowel). The reading's length
+    // marks supply the quantity in every mode.
+    let stressedText: string | undefined;
+    const computeStress = (display: string): string | undefined => {
+      if (!accent || token.isenclitic || !token.accented || token.accented.length === 0) {
+        return undefined;
+      }
+      return applyStress(display, token.accented[0], token.hasenclitic === true);
+    };
 
     // Python Token.macronize has a guard that returns plain when !domacronize
     // AND neither orthographic conversion is requested.  When conversions ARE
@@ -1184,7 +1282,7 @@ export class Tokenization {
     // specifically has 'v'/'j').  Do the same here by deferring to
     // alignMacronized which mirrors Python's logic.
     if (!domacronize && !performutov && !performitoj) {
-      return token.with({ text, macronized: true });
+      return token.with({ text, macronized: true, stressedText: computeStress(text) });
     }
 
     // Get the accented form (with _ markers) from getAccents
@@ -1192,7 +1290,7 @@ export class Tokenization {
 
     if (!accentedCandidates || accentedCandidates.length === 0) {
       // No accented form available, fallback
-      return token.with({ text, macronized: true });
+      return token.with({ text, macronized: true, stressedText: computeStress(text) });
     }
 
     // Use the first (best) accented candidate
@@ -1213,7 +1311,7 @@ export class Tokenization {
 
     // If accented form became empty after cleaning, fallback to plain text
     if (!accentedUnderscore) {
-      return token.with({ text, macronized: true });
+      return token.with({ text, macronized: true, stressedText: computeStress(text) });
     }
 
     // Apply DP alignment to produce macronized output
@@ -1240,7 +1338,8 @@ export class Tokenization {
 
     return token.with({
       macronizedText: macronizedUnicode,
-      macronized: true
+      macronized: true,
+      stressedText: computeStress(macronizedUnicode)
     });
   }
 
@@ -1267,6 +1366,35 @@ export class Tokenization {
       if (text) {
         text = text.replace(/_/g, '');
       }
+      result += text;
+
+      lastEnd = token.endIndex ?? (start + (token.text?.length || text.length));
+    }
+
+    return result;
+  }
+
+  /**
+   * Reconstruct the stressed-accents text (per token: stressedText, else the
+   * macronized/ortho-converted display, else the raw text). Mirrors
+   * detokenize(): a token WITHOUT a stress accent — the enclitic of a split
+   * pair, or a two-syllable word under rule 1 — must still show its displayed
+   * form, or enabling accent would silently drop a macron or a u→v conversion
+   * on it (nequeue + u→v: macronized "nequeve" but stressed "nequéue").
+   */
+  detokenizeStressed(): string {
+    let result = '';
+    let lastEnd = 0;
+
+    for (const token of this.tokens) {
+      const start = token.startIndex ?? lastEnd;
+
+      if (start > lastEnd) {
+        const whitespace = this.originalText?.substring(lastEnd, start) || ' ';
+        result += whitespace;
+      }
+
+      const text = token.stressedText ?? token.macronizedText ?? token.text;
       result += text;
 
       lastEnd = token.endIndex ?? (start + (token.text?.length || text.length));
