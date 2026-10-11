@@ -53,6 +53,11 @@ export class WordlistEngine {
   /** Bump when macrons.txt content changes, so returning visitors reload
    * instead of keeping a stale dictionary forever. */
   private readonly DATA_VERSION = 1;
+  /** Bump when Morpheus parsing changes what an extra row holds. A mismatch
+   * clears only the extra store (the 812k-entry chunks stay), so a fix to the
+   * analyzer reaches returning visitors without a full wordlist reload.
+   * v2: no-comma Morpheus lines stored the lemma as the form (effuget → effugo). */
+  private readonly EXTRAS_VERSION = 2;
   /** Entries per chunk. 1000 keeps a chunk ~100KB — one get() per unseen
    * wordform neighborhood, small enough to clone cheaply. */
   private readonly CHUNK_SIZE = 1000;
@@ -120,7 +125,7 @@ export class WordlistEngine {
   async isPopulated(): Promise<boolean> {
     if (!this.db) await this.init();
 
-    const meta = await this.idbGet<{ key: string; schemaVersion: number; dataVersion: number; count: number }>(
+    const meta = await this.idbGet<{ key: string; schemaVersion: number; dataVersion: number; extrasVersion?: number; count: number }>(
       this.META_STORE, 'meta'
     );
     if (!meta || meta.schemaVersion !== this.SCHEMA_VERSION || meta.dataVersion !== this.DATA_VERSION || !(meta.count > 0)) {
@@ -129,6 +134,21 @@ export class WordlistEngine {
         await this.clear();
       }
       return false;
+    }
+    // Morpheus rows from an older analyzer: drop them (they are re-derived on
+    // demand), keep the chunks. Meta predating the field counts as stale.
+    if (meta.extrasVersion !== this.EXTRAS_VERSION) {
+      console.log('[WordlistEngine] stored Morpheus analyses are stale, clearing them');
+      await new Promise<void>((resolve, reject) => {
+        const tx = this.db!.transaction([this.EXTRA_STORE, this.META_STORE], 'readwrite');
+        tx.objectStore(this.EXTRA_STORE).clear();
+        tx.objectStore(this.META_STORE).put({ ...meta, extrasVersion: this.EXTRAS_VERSION });
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+      // A lookup made before this check may have cached an old row.
+      // (morpheusCache only ever holds this session's parses.)
+      this.entriesCache.clear();
     }
 
     this.entryCount = meta.count;
@@ -380,6 +400,7 @@ export class WordlistEngine {
         key: 'meta',
         schemaVersion: this.SCHEMA_VERSION,
         dataVersion: this.DATA_VERSION,
+        extrasVersion: this.EXTRAS_VERSION,
         count: entries.length
       });
       tx.oncomplete = () => resolve();
