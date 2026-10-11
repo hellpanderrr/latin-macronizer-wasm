@@ -101,6 +101,14 @@ describe('WordlistEngine — extras from an older analyzer are cleared', () => {
     expect(await engine.getAllEntries('effuget')).toEqual([]);
   });
 
+  it('a lookup cached before the version check does not survive it', async () => {
+    await seed({});
+    engine = new WordlistEngine();
+    expect((await engine.getAllEntries('effuget')).length).toBe(1); // old row, cached
+    expect(await engine.isPopulated()).toBe(true);
+    expect(await engine.getAllEntries('effuget')).toEqual([]);
+  });
+
   it('meta with the current extrasVersion: extras kept', async () => {
     await seed({ extrasVersion: (new WordlistEngine() as any).EXTRAS_VERSION });
     engine = new WordlistEngine();
